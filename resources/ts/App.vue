@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { useTheme } from 'vuetify'
 import ScrollToTop from '@core/components/ScrollToTop.vue'
 import initCore from '@core/initCore'
 import { initConfigStore, useConfigStore } from '@core/stores/config'
 import { hexToRgb } from '@core/utils/colorConverter'
+import { watch } from 'vue'
+import { useTheme } from 'vuetify'
+import { setDevExtremeTheme } from './devextreme-theme-switcher'
 
 const { global } = useTheme()
 
@@ -12,6 +14,15 @@ initCore()
 initConfigStore()
 
 const configStore = useConfigStore()
+
+// DevExtreme tema geçişi
+watch(
+  () => configStore.theme,
+  (theme) => {
+    setDevExtremeTheme(theme === 'dark')
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

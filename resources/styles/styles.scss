@@ -1,1 +1,17 @@
-// Write your overrides
+/* Global SCSS dosyanda */
+.dx-widget,
+.dx-datagrid,
+.dx-datagrid * {
+  font-family: var(--v-font-family, "Inter", sans-serif) !important;
+}
+
+.dx-datagrid-rowsview .dx-row {
+  height: 28px !important;       /* satır yüksekliği */
+  min-height: 28px !important;
+  line-height: 26px !important;
+}
+
+.dx-datagrid-rowsview .dx-row > td {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}

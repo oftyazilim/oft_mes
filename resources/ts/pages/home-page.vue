@@ -1,22 +1,14 @@
 <template>
-
+  <DevExtremeGridExample />
 </template>
-
-
-
 
 <script setup lang="ts">
 
-import { onMounted, ref } from "vue";
-
-import axios from "axios";
-
-const userData = useCookie<any>('userData')
-
+const userData = useCookie<any>("userData");
 
 definePage({
-  meta: { action: 'manage', subject: 'all' }
-})
+  meta: { action: "manage", subject: "all" },
+});
 
-console.log(userData.value.register_id)
+console.log(userData.value.register_id);
 </script>

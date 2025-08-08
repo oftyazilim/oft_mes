@@ -28,6 +28,11 @@ export default [
         to: 'dashboards-logistics',
         icon: { icon: 'tabler-truck' },
       },
+      {
+        title: 'Ana Sayfa',
+        to: 'home-page',
+        icon: { icon: 'tabler-home' },
+      },
     ],
   },
 

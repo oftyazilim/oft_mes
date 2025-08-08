@@ -364,6 +364,7 @@ declare module 'vue' {
     DemoTooltipTooltipOnVariousElements: typeof import('./resources/ts/views/demos/components/tooltip/DemoTooltipTooltipOnVariousElements.vue')['default']
     DemoTooltipTransition: typeof import('./resources/ts/views/demos/components/tooltip/DemoTooltipTransition.vue')['default']
     DemoTooltipVModelSupport: typeof import('./resources/ts/views/demos/components/tooltip/DemoTooltipVModelSupport.vue')['default']
+    DevExtremeGridExample: typeof import('./resources/ts/components/DevExtremeGridExample.vue')['default']
     DialogCloseBtn: typeof import('./resources/ts/@core/components/DialogCloseBtn.vue')['default']
     DropZone: typeof import('./resources/ts/@core/components/DropZone.vue')['default']
     EnableOneTimePasswordDialog: typeof import('./resources/ts/components/dialogs/EnableOneTimePasswordDialog.vue')['default']
