@@ -1,12 +1,11 @@
+// Route meta augmentation to allow array subjects and custom flags
 import "vue-router";
+
 declare module "vue-router" {
   interface RouteMeta {
     action?: string | string[];
     subject?: string | string[];
-    layoutWrapperClasses?: string;
-    navActiveLink?: RouteLocationRaw;
-    layout?: "blank" | "default";
-    unauthenticatedOnly?: boolean;
     public?: boolean;
+    unauthenticatedOnly?: boolean;
   }
 }

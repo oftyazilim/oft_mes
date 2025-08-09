@@ -11,7 +11,7 @@ import AnalyticsTotalEarning from '@/views/dashboards/analytics/AnalyticsTotalEa
 import AnalyticsWebsiteAnalytics from '@/views/dashboards/analytics/AnalyticsWebsiteAnalytics.vue'
 
 definePage({
-  meta: { action: 'manage', subject: 'all' }
+  meta: { action: ['manage', 'read'], subject: ['montaj', 'all'] }
 })
 
 </script>
@@ -107,5 +107,5 @@ definePage({
 </template>
 
 <style lang="scss">
-@use "@core-scss/template/libs/apex-chart.scss";
+@use "@core-scss/template/libs/apex-chart";
 </style>

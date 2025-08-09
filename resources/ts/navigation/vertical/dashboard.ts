@@ -6,6 +6,7 @@ export default [
       {
         title: "Analytics",
         to: "dashboards-analytics",
+        meta: { action: "read", subject: "montaj" },
       },
       {
         title: "CRM",

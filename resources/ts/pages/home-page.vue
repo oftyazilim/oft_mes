@@ -6,8 +6,9 @@
 
 const userData = useCookie<any>("userData");
 
+
 definePage({
-  meta: { action: "manage", subject: "all" },
+  meta: { action: ['manage', 'read'], subject: ['montaj', 'all'] }
 });
 
 console.log(userData.value.register_id);
