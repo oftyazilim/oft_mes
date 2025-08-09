@@ -1,7 +1,6 @@
 <!-- ❗Errors in the form are set on line 60 -->
 <script setup lang="ts">
 import { normalizeAbilityRules } from '@/utils/ability-normalizer'
-import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
 import { emailValidator, requiredValidator } from '@core/utils/validators'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
@@ -62,7 +61,7 @@ const login = async () => {
       },
     })
 
-    const { accessToken, userData, userAbilityRules } = res
+  const { accessToken, userData, userAbilityRules } = res
 
     console.log('Raw userAbilityRules:', userAbilityRules)
     
@@ -76,7 +75,8 @@ const login = async () => {
       : { session: true } // oturum (tarayıcı kapanınca silinsin)
 
     // Ability rules'u cookie'ye kaydet ve ability'yi güncelle
-    useCookie('userAbilityRules', cookieOpts as any).value = userAbilityRules
+  // Save ability rules array directly
+  useCookie('userAbilityRules', cookieOpts as any).value = userAbilityRules
     console.log('Updating ability with rules:', normalizedRules)
     ability.update(normalizedRules as any)
     console.log('Ability updated, rules count:', ability.rules.length)

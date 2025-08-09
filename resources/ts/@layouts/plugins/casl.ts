@@ -69,6 +69,17 @@ export const canNavigate = (to: RouteLocationNormalized) => {
   console.log("Target route meta:", targetRoute?.meta);
   console.log("Ability rules:", ability.rules);
 
+  // If no route in the matched chain defines ACL meta (action & subject), allow by default
+  const hasAclMeta = to.matched.some(
+    (route) => (route.meta as any)?.action && (route.meta as any)?.subject
+  );
+  if (!hasAclMeta) {
+    console.log(
+      "No ACL meta found on route chain. Allowing navigation by default."
+    );
+    return true;
+  }
+
   // If the target route has specific permissions, check those first
   if (targetRoute?.meta?.action && targetRoute?.meta?.subject) {
     const action = targetRoute.meta.action as string | string[];

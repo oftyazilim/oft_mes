@@ -72,10 +72,38 @@ class AuthController extends Controller
                 $permissions = $user->getAllPermissions()->pluck('name');
                 $roles = $user->getRoleNames();
 
-                $userAbilityRules = [
-                    'action' => $permissions->toArray(),
-                    'subject' => $roles->toArray(),
-                ];
+                // Map permissions like 'view_users','edit_users','manage_users' into CASL rules
+                $mapAction = function (string $a) {
+                    return match ($a) {
+                        'view' => 'read',
+                        'edit' => 'update',
+                        default => $a,
+                    };
+                };
+
+                $rules = [];
+                foreach ($permissions as $perm) {
+                    $parts = explode('_', $perm, 2);
+                    if (count($parts) === 2) {
+                        [$act, $subj] = $parts;
+                        $rules[] = [
+                            'action' => $mapAction($act),
+                            'subject' => $subj,
+                        ];
+                    } else {
+                        // e.g., 'manage' => apply to all
+                        if ($perm === 'manage') {
+                            $rules[] = ['action' => 'manage', 'subject' => 'all'];
+                        }
+                    }
+                }
+
+                // If user has 'admin' role, ensure manage all exists
+                if ($roles->contains('admin')) {
+                    $rules[] = ['action' => 'manage', 'subject' => 'all'];
+                }
+
+                $userAbilityRules = $rules;
             } catch (\Exception $e) {
                 // Spatie permission hatası varsa boş array döndür
                 $userAbilityRules = [];

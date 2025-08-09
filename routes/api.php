@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\UsersController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -39,3 +40,12 @@ Route::group(['prefix' => 'roles', 'middleware' => 'auth:sanctum'], function () 
 });
 
 Route::get('/permissions', [AuthController::class, 'permissions']);
+
+// Users API routes
+Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () {
+  Route::get('/', [UsersController::class, 'index']);
+  Route::get('/{id}', [UsersController::class, 'show']);
+  Route::post('/', [UsersController::class, 'store']);
+  Route::put('/{id}', [UsersController::class, 'update']);
+  Route::delete('/{id}', [UsersController::class, 'destroy']);
+});
