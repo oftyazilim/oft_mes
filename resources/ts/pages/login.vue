@@ -3,6 +3,7 @@
 import { normalizeAbilityRules } from '@/utils/ability-normalizer'
 import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
+import { emailValidator, requiredValidator } from '@core/utils/validators'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
 import authV2LoginIllustrationDark from '@images/pages/auth-v2-login-illustration-dark.png'
@@ -39,8 +40,8 @@ const errors = ref<Record<string, string | undefined>>({
 const refVForm = ref<VForm>()
 
 const credentials = ref({
-  email: 'omer@gmail.com',
-  password: 'passomer',
+  email: '',
+  password: '',
 })
 
 const rememberMe = ref(false)
@@ -69,8 +70,13 @@ const login = async () => {
     const normalizedRules = normalizeAbilityRules(userAbilityRules)
     console.log('Normalized rules:', normalizedRules)
     
+    // Cookie ömrünü Remember Me'ye göre ayarla
+    const cookieOpts = rememberMe.value
+      ? { maxAge: 60 * 60 * 24 * 30 } // 30 gün kalıcı
+      : { session: true } // oturum (tarayıcı kapanınca silinsin)
+
     // Ability rules'u cookie'ye kaydet ve ability'yi güncelle
-    useCookie('userAbilityRules').value = userAbilityRules
+    useCookie('userAbilityRules', cookieOpts as any).value = userAbilityRules
     console.log('Updating ability with rules:', normalizedRules)
     ability.update(normalizedRules as any)
     console.log('Ability updated, rules count:', ability.rules.length)
@@ -84,9 +90,10 @@ const login = async () => {
       email: userData.email
     }
     
-    // Cookie'yi basit bir string olarak set et
-    useCookie('userData').value = userDataForCookie.email
-    useCookie('accessToken').value = accessToken
+  // userData cookie'sine objeyi yaz (id, name, email)
+  const userDataCookie = useCookie<{ id: string | number; name: string; email: string }>('userData', cookieOpts as any)
+  userDataCookie.value = userDataForCookie as any
+    useCookie('accessToken', cookieOpts as any).value = accessToken
 
     console.log('Cookies set - userData:', !!useCookie('userData').value, 'accessToken:', !!useCookie('accessToken').value)
     console.log('UserData for cookie:', userDataForCookie)
@@ -171,13 +178,13 @@ const onSubmit = () => {
       >
         <VCardText>
           <h4 class="text-h4 mb-1">
-            Welcome to <span class="text-capitalize"> {{ themeConfig.app.title }} </span>! 👋🏻
+            <span class="text-capitalize"> {{ themeConfig.app.title }}'e hoşgeldiniz' </span>! 👋🏻
           </h4>
           <p class="mb-0">
-            Please sign-in to your account and start the adventure
+            Lütfen hesabınıza giriş yapın ve maceraya başlayın...
           </p>
         </VCardText>
-        <VCardText>
+        <!-- <VCardText>
           <VAlert
             color="primary"
             variant="tonal"
@@ -189,7 +196,7 @@ const onSubmit = () => {
               Client Email: <strong>client@demo.com</strong> / Pass: <strong>client</strong>
             </p>
           </VAlert>
-        </VCardText>
+        </VCardText> -->
         <VCardText>
           <VForm
             ref="refVForm"
@@ -200,8 +207,8 @@ const onSubmit = () => {
               <VCol cols="12">
                 <AppTextField
                   v-model="credentials.email"
-                  label="Email"
-                  placeholder="johndoe@email.com"
+                  label="E-posta"
+                  placeholder="oft@oft.com"
                   type="email"
                   autofocus
                   :rules="[requiredValidator, emailValidator]"
@@ -213,7 +220,7 @@ const onSubmit = () => {
               <VCol cols="12">
                 <AppTextField
                   v-model="credentials.password"
-                  label="Password"
+                  label="Şifre"
                   placeholder="············"
                   :rules="[requiredValidator]"
                   :type="isPasswordVisible ? 'text' : 'password'"
@@ -226,13 +233,13 @@ const onSubmit = () => {
                 <div class="d-flex align-center flex-wrap justify-space-between my-6">
                   <VCheckbox
                     v-model="rememberMe"
-                    label="Remember me"
+                    label="Beni Hatırla"
                   />
                   <RouterLink
                     class="text-primary ms-2 mb-1"
                     :to="{ name: 'forgot-password' }"
                   >
-                    Forgot Password?
+                    Şifremi Unuttum?
                   </RouterLink>
                 </div>
 
@@ -240,12 +247,12 @@ const onSubmit = () => {
                   block
                   type="submit"
                 >
-                  Login
+                  Giriş Yap
                 </VBtn>
               </VCol>
 
               <!-- create account -->
-              <VCol
+              <!-- <VCol
                 cols="12"
                 class="text-center"
               >
@@ -264,15 +271,15 @@ const onSubmit = () => {
                 <VDivider />
                 <span class="mx-4">or</span>
                 <VDivider />
-              </VCol>
+              </VCol> -->
 
               <!-- auth providers -->
-              <VCol
+              <!-- <VCol
                 cols="12"
                 class="text-center"
               >
                 <AuthProvider />
-              </VCol>
+              </VCol> -->
             </VRow>
           </VForm>
         </VCardText>

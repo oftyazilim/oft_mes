@@ -37,7 +37,8 @@ export const setupGuards = (
       console.log('Checking unauthenticatedOnly page:', to.path, 'isLoggedIn:', isLoggedIn)
       if (isLoggedIn) {
         console.log('User is logged in, redirecting to analytics')
-        return "/dashboards/analytics";
+        // return "/dashboards/analytics";
+        return "/home-page";
       } else {
         console.log('User not logged in, allowing access to login page')
         return undefined;

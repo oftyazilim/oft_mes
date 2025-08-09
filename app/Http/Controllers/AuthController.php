@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use App\Models\User;
 use Validator;
 use Spatie\Permission\Models\Permission;
@@ -63,12 +66,12 @@ class AuthController extends Controller
 
             // Create token using Sanctum
             $token = $user->createToken('auth-token')->plainTextToken;
-            
+
             // Spatie permissions - hata kontrolü ile
             try {
                 $permissions = $user->getAllPermissions()->pluck('name');
                 $roles = $user->getRoleNames();
-                
+
                 $userAbilityRules = [
                     'action' => $permissions->toArray(),
                     'subject' => $roles->toArray(),
@@ -77,14 +80,14 @@ class AuthController extends Controller
                 // Spatie permission hatası varsa boş array döndür
                 $userAbilityRules = [];
             }
-            
+
             return response()->json([
                 'accessToken' => $token,
                 'userData' => $user,
                 'userAbilityRules' => $userAbilityRules,
             ]);
         }
-        
+
         return response()->json(['message' => 'Unauthorized'], 401);
     }
 
@@ -92,7 +95,7 @@ class AuthController extends Controller
 
 
 
-    
+
     /**
      * Get the authenticated User
      *
@@ -126,5 +129,67 @@ class AuthController extends Controller
     {
         $permissions = Permission::all(['id', 'name', 'guard_name', 'created_at', 'updated_at']);
         return response()->json($permissions);
+    }
+
+    /**
+     * Send a password reset link to the given email.
+     */
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        // Attempt to send the password reset link to the user's email.
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json([
+                'message' => __($status),
+                'status' => $status,
+            ]);
+        }
+
+        return response()->json([
+            'message' => __($status),
+            'status' => $status,
+        ], 400);
+    }
+
+    /**
+     * Handle an incoming new password request after clicking email link.
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                ])->setRememberToken(Str::random(60));
+
+                $user->save();
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return response()->json([
+                'message' => __($status),
+                'status' => $status,
+            ]);
+        }
+
+        return response()->json([
+            'message' => __($status),
+            'status' => $status,
+        ], 400);
     }
 }
