@@ -7,20 +7,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use App\Models\User;
-use Validator;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
     /**
      * Create user
-     *
-     * @param  [string] name
-     * @param  [string] email
-     * @param  [string] password
-     * @param  [string] password_confirmation
-     * @return [string] message
      */
     public function register(Request $request)
     {
@@ -31,7 +24,7 @@ class AuthController extends Controller
             'c_password' => 'required|same:password'
         ]);
 
-        $user = new User([
+        $user = new \App\Models\User([
             'name'  => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
@@ -45,9 +38,9 @@ class AuthController extends Controller
                 'message' => 'Successfully created user!',
                 'accessToken' => $token,
             ], 201);
-        } else {
-            return response()->json(['error' => 'Provide proper details']);
         }
+
+        return response()->json(['error' => 'Provide proper details']);
     }
 
     /**
@@ -60,74 +53,34 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
-            /** @var \App\Models\User $user */
-            $user = Auth::user();
-
-            // Create token using Sanctum
-            $token = $user->createToken('auth-token')->plainTextToken;
-
-            // Spatie permissions - hata kontrolü ile
-            try {
-                $permissions = $user->getAllPermissions()->pluck('name');
-                $roles = $user->getRoleNames();
-
-                // Map permissions like 'view_users','edit_users','manage_users' into CASL rules
-                $mapAction = function (string $a) {
-                    return match ($a) {
-                        'view' => 'read',
-                        'edit' => 'update',
-                        default => $a,
-                    };
-                };
-
-                $rules = [];
-                foreach ($permissions as $perm) {
-                    $parts = explode('_', $perm, 2);
-                    if (count($parts) === 2) {
-                        [$act, $subj] = $parts;
-                        $rules[] = [
-                            'action' => $mapAction($act),
-                            'subject' => $subj,
-                        ];
-                    } else {
-                        // e.g., 'manage' => apply to all
-                        if ($perm === 'manage') {
-                            $rules[] = ['action' => 'manage', 'subject' => 'all'];
-                        }
-                    }
-                }
-
-                // If user has 'admin' role, ensure manage all exists
-                if ($roles->contains('admin')) {
-                    $rules[] = ['action' => 'manage', 'subject' => 'all'];
-                }
-
-                $userAbilityRules = $rules;
-            } catch (\Exception $e) {
-                // Spatie permission hatası varsa boş array döndür
-                $userAbilityRules = [];
-            }
-
-            return response()->json([
-                'accessToken' => $token,
-                'userData' => $user,
-                'userAbilityRules' => $userAbilityRules,
-            ]);
+        if (!Auth::attempt($credentials)) {
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        return response()->json(['message' => 'Unauthorized'], 401);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // Create token using Sanctum
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        // Build abilities from model helper
+        try {
+            $userAbilityRules = method_exists($user, 'getAbilityRules')
+                ? $user->getAbilityRules()
+                : [];
+        } catch (\Exception $e) {
+            $userAbilityRules = [];
+        }
+
+        return response()->json([
+            'accessToken' => $token,
+            'userData' => $user,
+            'userAbilityRules' => $userAbilityRules,
+        ]);
     }
-
-
-
-
-
 
     /**
      * Get the authenticated User
-     *
-     * @return [json] user object
      */
     public function user(Request $request)
     {
@@ -136,8 +89,6 @@ class AuthController extends Controller
 
     /**
      * Logout user (Revoke the token)
-     *
-     * @return [string] message
      */
     public function logout(Request $request)
     {
@@ -150,8 +101,6 @@ class AuthController extends Controller
 
     /**
      * Get all permissions
-     *
-     * @return [json] permissions collection
      */
     public function permissions()
     {
@@ -168,7 +117,6 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
-        // Attempt to send the password reset link to the user's email.
         $status = Password::sendResetLink(
             $request->only('email')
         );
@@ -219,5 +167,65 @@ class AuthController extends Controller
             'message' => __($status),
             'status' => $status,
         ], 400);
+    }
+
+    /**
+     * DEBUG: Inspect a user's roles/permissions and computed ability rules.
+     * Not for production use. Optionally pass ?id= or /auth/debug/{id}.
+     */
+    public function debugUser(Request $request, int $id = null)
+    {
+        // Optionally restrict to local
+        // if (!config('app.debug')) { abort(403); }
+
+        /** @var \App\Models\User|null $user */
+        $user = null;
+        if ($id) {
+            $user = \App\Models\User::find($id);
+        }
+        if (!$user) {
+            $user = $request->user();
+        }
+        if (!$user) {
+            return response()->json(['error' => 'No user'], 404);
+        }
+
+        // Spatie helpers
+        $helperRoles = $user->getRoleNames();
+        $helperPerms = $user->getAllPermissions()->pluck('name');
+
+        // Direct relations (ignore guard filters)
+        $relRoles = $user->roles()->pluck('name');
+        $relPermsDirect = $user->permissions()->pluck('name');
+
+        // Role-based permissions
+        $rolePermIds = DB::table(config('permission.table_names.role_has_permissions', 'role_has_permissions'))
+            ->join(config('permission.table_names.model_has_roles', 'model_has_roles'), 'role_has_permissions.role_id', '=', 'model_has_roles.role_id')
+            ->where('model_has_roles.model_id', $user->getKey())
+            ->where('model_has_roles.model_type', $user->getMorphClass())
+            ->pluck('permission_id');
+        $relPermsViaRoles = \Spatie\Permission\Models\Permission::whereIn('id', $rolePermIds)->pluck('name');
+
+        // Computed ability rules
+        $abilityRules = [];
+        try {
+            $abilityRules = $user->getAbilityRules();
+        } catch (\Throwable $e) {
+            $abilityRules = ['error' => $e->getMessage()];
+        }
+
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'guard_name' => property_exists($user, 'guard_name') ? $user->guard_name : null,
+            ],
+            'helper_roles' => $helperRoles,
+            'helper_permissions' => $helperPerms,
+            'rel_roles' => $relRoles,
+            'rel_permissions_direct' => $relPermsDirect,
+            'rel_permissions_via_roles' => $relPermsViaRoles,
+            'ability_rules' => $abilityRules,
+        ]);
     }
 }

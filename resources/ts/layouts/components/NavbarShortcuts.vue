@@ -14,9 +14,9 @@ const shortcuts = [
   },
   {
     icon: 'tabler-user',
-    title: 'Users',
-    subtitle: 'Manage Users',
-    to: { name: 'apps-user-list' },
+    title: 'Kullanıcılar',
+    subtitle: 'Kullanıcı Yönetimi',
+    to: { path: "/users" }, // { name: 'apps-user-list' },
   },
   {
     icon: 'tabler-users',
@@ -36,7 +36,6 @@ const shortcuts = [
     subtitle: 'Account Settings',
     to: { name: 'pages-account-settings-tab', params: { tab: 'account' } },
   },
-
 ]
 </script>
 

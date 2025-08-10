@@ -7,9 +7,9 @@
 const userData = useCookie<any>("userData");
 
 
-definePage({
-  meta: { action: ['manage', 'read'], subject: ['montaj', 'all'] }
-});
+// definePage({
+//   meta: { action: ['manage', 'read'], subject: ['dashboard', 'genel', 'montaj', 'all'] }
+// });
 
 // Log cookie robustly: supports string (email) or object { id, name, email }
 console.log('userData cookie raw:', userData.value)

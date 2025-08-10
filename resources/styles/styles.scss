@@ -2,16 +2,51 @@
 .dx-widget,
 .dx-datagrid,
 .dx-datagrid * {
-  font-family: var(--v-font-family, "Inter", sans-serif) !important;
+  font-family: var(--v-font-family, "Inter", sans-serif);     // !important;
+}
+
+/* DevExtreme DataGrid: Vars for font sizes */
+:root {
+  --dx-datagrid-font-size: 15px;        /* satırlar / hücreler */
+  --dx-datagrid-header-font-size: 15px; /* sütun başlıkları */
+  --dx-datagrid-pager-font-size: 15px;  /* sayfalama */
+}
+
+/* Genel grid fontu */
+.dx-datagrid {
+  font-size: var(--dx-datagrid-font-size);
+}
+
+/* Satır hücreleri */
+.dx-datagrid-rowsview .dx-row > td {
+  font-size: var(--dx-datagrid-font-size) !important;
+}
+
+/* Düzenleme alanları (inline editors) */
+.dx-datagrid-rowsview .dx-row .dx-editor-cell .dx-texteditor-input {
+  font-size: var(--dx-datagrid-font-size) !important;
+}
+
+/* Başlıklar */
+.dx-datagrid-headers,
+.dx-datagrid-headers .dx-header-row > td,
+.dx-datagrid-headers .dx-header-row .dx-datagrid-text-content {
+  font-size: var(--dx-datagrid-header-font-size) !important;
+}
+
+/* Pager */
+.dx-datagrid .dx-pager,
+.dx-datagrid .dx-pager * {
+  font-size: var(--dx-datagrid-pager-font-size) !important;
 }
 
 .dx-datagrid-rowsview .dx-row {
-  height: 28px !important;       /* satır yüksekliği */
-  min-height: 28px !important;
+  block-size: 28px !important;       /* satır yüksekliği */
   line-height: 26px !important;
+  min-block-size: 28px !important;
 }
 
 .dx-datagrid-rowsview .dx-row > td {
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
+  font-size: var(--dx-datagrid-font-size) !important;
+  padding-block: 0 !important;
 }

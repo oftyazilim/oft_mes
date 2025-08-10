@@ -1,15 +1,10 @@
-import { useAbility } from '@casl/vue'
-import { normalizeAbilityRules } from '@/utils/ability-normalizer'
+import { normalizeAbilityRules } from "@/utils/ability-normalizer";
+import { useAbility } from "@casl/vue";
 
 export function bootAbilityFromCookies() {
-  const ability = useAbility()
-  const raw = useCookie('userAbilityRules').value
-  let parsed: any = null
-  try {
-    parsed = raw ? JSON.parse(raw) : null
-  } catch {
-    parsed = null
-  }
-  const rules = normalizeAbilityRules(parsed)
-  if (rules.length) ability.update(rules)
+  const ability = useAbility();
+  // Our useCookie already decodes JSON into object/array via destr
+  const raw = useCookie("userAbilityRules").value as any;
+  const rules = normalizeAbilityRules(raw);
+  if (rules.length) ability.update(rules as any);
 }

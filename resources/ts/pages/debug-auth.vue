@@ -8,6 +8,7 @@ const userAbilityRules = useCookie('userAbilityRules')
 const ability = useAbility()
 
 const canManageAll = ability.can('manage', 'all')
+const canReadMontaj = ability.can('read', 'montaj')
 </script>
 
 <template>
@@ -26,6 +27,9 @@ const canManageAll = ability.can('manage', 'all')
         
         <VCol cols="12">
           <h3>Can Manage All: {{ canManageAll }}</h3>
+          <h3>Can Read Montaj: {{ canReadMontaj }}</h3>
+          <h4>Current Rules:</h4>
+          <pre>{{ JSON.stringify(ability.rules, null, 2) }}</pre>
         </VCol>
       </VRow>
     </VCardText>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { emailValidator, requiredValidator } from '@core/utils/validators'
-import { VForm } from 'vuetify/components/VForm'
+import { emailValidator, requiredValidator } from '@core/utils/validators';
+import { VForm } from 'vuetify/components/VForm';
 
 definePage({
   meta: { action: ['manage', 'read'], subject: ['montaj', 'all'] }

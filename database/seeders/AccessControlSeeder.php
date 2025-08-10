@@ -20,12 +20,27 @@ class AccessControlSeeder extends Seeder
         // ---- Örnek permission’lar ----
         // İstersen buraya kendi permission’larını ekle.
         $permissions = [
-            'view_users', 'create_users', 'edit_users', 'delete_users',
+            'view_users',
+            'create_users',
+            'edit_users',
+            'delete_users',
             'manage_users',
-            'view_roles', 'create_roles', 'edit_roles', 'delete_roles',
+            'view_roles',
+            'create_roles',
+            'edit_roles',
+            'delete_roles',
             'manage_roles',
-            'view_orders', 'create_orders', 'edit_orders', 'delete_orders',
+            'view_orders',
+            'create_orders',
+            'edit_orders',
+            'delete_orders',
             'manage_orders',
+            // Domain-specific: montaj
+            'view_montaj',
+            'create_montaj',
+            'edit_montaj',
+            'delete_montaj',
+            'manage_montaj',
             'manage', // Analytics sayfası için gerekli
         ];
 

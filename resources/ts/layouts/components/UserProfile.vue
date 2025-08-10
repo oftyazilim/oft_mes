@@ -7,6 +7,14 @@ const ability = useAbility()
 // TODO: Get type from backend
 const userData = useCookie<any>('userData')
 
+const displayName = computed(() => {
+  const u = userData.value
+  if (!u) return ''
+  if (typeof u === 'string') return u
+  // Prefer name, fall back to fullName/username/email
+  return (u.name || u.fullName || u.username || u.email || '') as string
+})
+
 const logout = async () => {
   // Remove "accessToken" from cookie
   useCookie('accessToken').value = null
@@ -27,31 +35,32 @@ const logout = async () => {
 
 const userProfileList = [
   { type: 'divider' },
-  { type: 'navItem', icon: 'tabler-user', title: 'Profile', to: { name: 'apps-user-view-id', params: { id: 21 } } },
-  { type: 'navItem', icon: 'tabler-settings', title: 'Settings', to: { name: 'pages-account-settings-tab', params: { tab: 'account' } } },
-  { type: 'navItem', icon: 'tabler-file-dollar', title: 'Billing Plan', to: { name: 'pages-account-settings-tab', params: { tab: 'billing-plans' } }, badgeProps: { color: 'error', content: '4' } },
+  { type: 'navItem', icon: 'tabler-user', title: 'Kullanıcı Profili', to: { name: 'apps-user-view-id', params: { id: 21 } } },
+  { type: 'navItem', icon: 'tabler-settings', title: 'Ayarlar', to: { name: 'pages-account-settings-tab', params: { tab: 'account' } } },
+  { type: 'navItem', icon: 'tabler-file-dollar', title: 'Faturalama Planı', to: { name: 'pages-account-settings-tab', params: { tab: 'billing-plans' } }, badgeProps: { color: 'error', content: '4' } },
   { type: 'divider' },
-  { type: 'navItem', icon: 'tabler-currency-dollar', title: 'Pricing', to: { name: 'pages-pricing' } },
-  { type: 'navItem', icon: 'tabler-question-mark', title: 'FAQ', to: { name: 'pages-faq' } },
+  { type: 'navItem', icon: 'tabler-currency-dollar', title: 'Fiyatlandırma', to: { name: 'pages-pricing' } },
+  { type: 'navItem', icon: 'tabler-question-mark', title: 'SSS', to: { name: 'pages-faq' } },
 ]
 </script>
 
 <template>
-  <VBadge
-    v-if="userData"
-    dot
-    bordered
-    location="bottom right"
-    offset-x="1"
-    offset-y="2"
-    color="success"
-  >
-    <VAvatar
-      size="38"
-      class="cursor-pointer"
-      :color="!(userData && userData.avatar) ? 'primary' : undefined"
-      :variant="!(userData && userData.avatar) ? 'tonal' : undefined"
+  <div class="d-flex align-center gap-2">
+    <VBadge
+      v-if="userData"
+      dot
+      bordered
+      location="bottom right"
+      offset-x="1"
+      offset-y="2"
+      color="success"
     >
+      <VAvatar
+        size="38"
+        class="cursor-pointer"
+        :color="!(userData && userData.avatar) ? 'primary' : undefined"
+        :variant="!(userData && userData.avatar) ? 'tonal' : undefined"
+      >
       <VImg
         v-if="userData && userData.avatar"
         :src="userData.avatar"
@@ -71,8 +80,8 @@ const userProfileList = [
         <VList>
           <VListItem>
             <div class="d-flex gap-2 align-center">
-              <VListItemAction>
-                <VBadge
+               <!--   <VListItemAction>
+             <VBadge
                   dot
                   location="bottom right"
                   offset-x="3"
@@ -93,8 +102,8 @@ const userProfileList = [
                       icon="tabler-user"
                     />
                   </VAvatar>
-                </VBadge>
-              </VListItemAction>
+                </VBadge> 
+              </VListItemAction>-->
 
               <div>
                 <h6 class="text-h6 font-weight-medium">
@@ -108,7 +117,7 @@ const userProfileList = [
           </VListItem>
 
           <PerfectScrollbar :options="{ wheelPropagation: false }">
-            <template
+            <!-- <template
               v-for="item in userProfileList"
               :key="item.title"
             >
@@ -141,7 +150,7 @@ const userProfileList = [
                 v-else
                 class="my-2"
               />
-            </template>
+            </template> -->
 
             <div class="px-4 py-2">
               <VBtn
@@ -151,13 +160,17 @@ const userProfileList = [
                 append-icon="tabler-logout"
                 @click="logout"
               >
-                Logout
+                Çıkış Yap
               </VBtn>
             </div>
           </PerfectScrollbar>
         </VList>
       </VMenu>
       <!-- !SECTION -->
-    </VAvatar>
-  </VBadge>
+      </VAvatar>
+    </VBadge>
+
+    <!-- User name next to avatar (hidden on xs for space) -->
+    <span class="d-none d-sm-inline text-body-1 font-weight-medium">{{ displayName }}</span>
+  </div>
 </template>
