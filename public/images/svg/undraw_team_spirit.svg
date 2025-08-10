@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="640" height="480" viewBox="0 0 640 480" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Team spirit</title>
+  <desc id="desc">Abstract illustration of teamwork and motivation</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#EEF2FF"/>
+      <stop offset="100%" stop-color="#DBEAFE"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="secondary" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#A7F3D0"/>
+      <stop offset="100%" stop-color="#34D399"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="640" height="480" fill="url(#bg)"/>
+
+  <!-- Circles representing people -->
+  <g transform="translate(320,220)">
+    <circle r="70" fill="#ffffff" opacity="0.8"/>
+    <circle cx="-110" cy="-40" r="32" fill="url(#accent)"/>
+    <circle cx="110" cy="-40" r="32" fill="url(#accent)"/>
+    <circle cx="0" cy="90" r="32" fill="url(#secondary)"/>
+    <path d="M-110 -8 C -80 0, -40 10, 0 10 C 40 10, 80 0, 110 -8" stroke="#2563EB" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M-80 70 C -40 50, 40 50, 80 70" stroke="#10B981" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Abstract leaves / motivation shapes -->
+  <g opacity="0.6">
+    <path d="M560 340 C 540 300, 600 260, 620 280 C 600 300, 600 360, 560 340 Z" fill="url(#secondary)"/>
+    <path d="M80 360 C 40 320, 20 280, 50 260 C 70 280, 90 320, 80 360 Z" fill="url(#accent)"/>
+  </g>
+
+  <!-- Title banner -->
+  <g transform="translate(0, 30)">
+    <rect x="120" y="0" rx="12" ry="12" width="400" height="56" fill="#ffffff" opacity="0.9"/>
+    <text x="320" y="36" text-anchor="middle" font-family="Inter, Segoe UI, Roboto, sans-serif" font-size="20" fill="#1F2937">Birlikte Daha Güçlü: OFT MES</text>
+  </g>
+
+  <!-- Sub caption -->
+  <text x="320" y="420" text-anchor="middle" font-family="Inter, Segoe UI, Roboto, sans-serif" font-size="14" fill="#374151" opacity="0.9">
+    Başarı, küçük adımların toplamıdır.
+  </text>
+</svg>
