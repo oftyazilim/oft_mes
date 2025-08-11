@@ -1,15 +1,17 @@
-declare module '*.vue' {
-  import type { DefineComponent } from 'vue'
-  
-  const component: DefineComponent<{}, {}, any>
-  export default component
+declare module "*.vue" {
+  import type { DefineComponent } from "vue";
+
+  const component: DefineComponent<{}, {}, any>;
+  export default component;
 }
 
-
-declare module 'vue-prism-component' {
-  import { ComponentOptions } from 'vue'
-  const component: ComponentOptions
-  export default component
+declare module "vue-prism-component" {
+  import { ComponentOptions } from "vue";
+  const component: ComponentOptions;
+  export default component;
 }
-declare module 'vue-shepherd';
-declare module '@videojs-player/vue';
+declare module "vue-shepherd";
+declare module "@videojs-player/vue";
+declare module "exceljs";
+declare module "file-saver-es";
+declare module "sweetalert2";

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -21,7 +22,7 @@ class RolesController extends Controller
             $role->users_count = $role->users()->count();
             return $role;
         });
-        
+
         return response()->json([
             'roles' => $rolesWithCount,
             'totalRoles' => $roles->count(),

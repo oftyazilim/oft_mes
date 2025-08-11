@@ -66,17 +66,17 @@ export const canNavigate = (to: RouteLocationNormalized) => {
   // Get the most specific route (last one in the matched array)
   const targetRoute = to.matched[to.matched.length - 1];
 
-  console.log("Target route meta:", targetRoute?.meta);
-  console.log("Ability rules:", ability.rules);
+  // console.log("Target route meta:", targetRoute?.meta);  //oft_not
+  // console.log("Ability rules:", ability.rules); //oft_not
 
   // If no route in the matched chain defines ACL meta (action & subject), allow by default
   const hasAclMeta = to.matched.some(
     (route) => (route.meta as any)?.action && (route.meta as any)?.subject
   );
   if (!hasAclMeta) {
-    console.log(
-      "No ACL meta found on route chain. Allowing navigation by default."
-    );
+    // console.log(
+    //   "No ACL meta found on route chain. Allowing navigation by default."
+    // ); //oft_not
     return true;
   }
 

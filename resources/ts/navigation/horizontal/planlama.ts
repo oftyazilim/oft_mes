@@ -1,0 +1,80 @@
+export default [
+  // {
+  //   heading: "PLANLAMA / ÜRETİM",
+  //   action: "read",
+  //   subject: ["Montaj", "Planlama"],
+  // },
+  {
+    title: "Planlama",
+    icon: { icon: "tabler-calendar-time" },
+    action: "read",
+    subject: ["Montaj", "Planlama", "Mekanik"],
+    children: [
+      {
+        title: "İş Emirleri - Detay",
+        to: "planlama-is-emirleri-montaj",
+        icon: { icon: "tabler-list" },
+        action: "read",
+        subject: ["Montaj", "Planlama"],
+        target: '_blank',
+      },
+      // {
+      //   title: "Mekanik İş Emirleri",
+      //   to: "planlama-isemirleri-mekanik",
+      //   action: "read",
+      //   subject: ["Mekanik"],
+      //   target: '_blank',
+      // },
+      // {
+      //   title: "Montaj İş Emirleri",
+      //   to: "planlama-isemirleri-montaj",
+      //   action: "read",
+      //   subject: ["Montaj"],
+      //   target: '_blank',
+      // },
+      // {
+      //   title: "İş Emirleri - Master",
+      //   to: "planlama-isemirleri-master",
+      //   action: "read",
+      //   subject: ["Planlama", "Montaj"],
+      //   target: '_blank',
+      // },
+      // {
+      //   title: "İş Emirleri - Kapanmışlar",
+      //   to: "planlama-isemirleri-kapali",
+      //   action: "read",
+      //   subject: ["Montaj", "Planlama"],
+      //   target: '_blank',
+      // },
+      // {
+      //   title: "Malzeme İhtiyaç Listesi",
+      //   to: "planlama-ihtiyac-listesi",
+      //   action: "read",
+      //   subject: ["Montaj", "Planlama"],
+      //   target: '_blank',
+      // },
+      // {
+      //   title: "İş Emirleri Özet Tablo",
+      //   to: "planlama-isemirleri-ozettablo",
+      //   action: "read",
+      //   subject: ["Montaj", "Planlama"],
+      //   target: '_blank',
+      // },
+      // {
+      //   title: "Kapasite Hesapla",
+      //   to: "planlama-kapasite-hesapla",
+      //   action: "read",
+      //   subject: ["Planlama"],
+      //   target: '_blank',
+      // },
+      // {
+      //   title: "Kapasite Pivot",
+      //   to: "planlama-kapasite-pivot",
+      //   action: "read",
+      //   subject: ["Planlama"],
+      //   target: '_blank',
+      // },
+    ],
+  },
+]
+  

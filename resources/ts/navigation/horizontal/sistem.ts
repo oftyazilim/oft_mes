@@ -8,11 +8,18 @@ export default [
         icon: { icon: "tabler-users" },
         children: [
           {
-            title: "Kullanıcı Listesi",
-            to: { path: "/users" },
+            title: "Kullanıcılar",
+            to: "personel-kullanicilar",
+            action: "manage",
+            subject: "all",
+            target: "_blank",
           },
-          { title: "Roller", to: "apps-roles" },
-          { title: "İzinler", to: "apps-permissions" },
+          // {
+          //   title: "Kullanıcı Listesi",
+          //   to: { path: "/users" },
+          // },
+          // { title: "Roller", to: "apps-roles" },
+          // { title: "İzinler", to: "apps-permissions" },
         ],
       },
     ],

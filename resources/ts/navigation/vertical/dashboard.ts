@@ -36,13 +36,13 @@ export default [
         action: ["manage", "read"],
         subject: ["genel", "Montaj", "all"],
       },
-      {
-        title: "Ana Sayfa",
-        to: "home-page",
-        icon: { icon: "tabler-home" },
-        action: ["manage", "read"],
-        subject: ["genel", "Montaj", "all"],
-      },
+      // {
+      //   title: "Ana Sayfa",
+      //   to: "home-page",
+      //   icon: { icon: "tabler-home" },
+      //   action: ["manage", "read"],
+      //   subject: ["genel", "Montaj", "all"],
+      // },
     ],
   },
 ];

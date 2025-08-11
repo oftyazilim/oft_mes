@@ -1,5 +1,6 @@
 // import apps from './apps'
 import sistem from './sistem'
+import planlama from './planlama'
 import dashboard from './dashboard'
 import forms from './forms'
 import misc from './misc'
@@ -8,4 +9,4 @@ import tables from './tables'
 import uiElements from './ui-elements'
 import type { HorizontalNavItems } from '@layouts/types'
 
-export default [...dashboard, ...pages, ...uiElements, ...forms, ...tables, ...sistem] as HorizontalNavItems
+export default [...dashboard, ...planlama, ...sistem] as HorizontalNavItems;

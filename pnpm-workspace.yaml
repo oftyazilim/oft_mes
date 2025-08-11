@@ -1,0 +1,7 @@
+onlyBuiltDependencies:
+  - '@scarf/scarf'
+  - core-js
+  - esbuild
+  - inferno
+  - unrs-resolver
+  - vue-demi

@@ -10,6 +10,7 @@ import "@core-scss/template/index.scss";
 import "@styles/styles.scss";
 
 import "animate.css";
+import axios from "axios";
 import config from "devextreme/core/config";
 import { loadMessages, locale } from "devextreme/localization";
 import trMessages from "devextreme/localization/messages/tr.json";
@@ -31,7 +32,7 @@ app.mount("#app");
 
 // Set UI zoom to 90% on startup
 (() => {
-  const DEFAULT_ZOOM = 0.85;
+  const DEFAULT_ZOOM = 0.9;
   const zoomStr = localStorage.getItem("app-zoom");
   const zoom =
     Number.isFinite(Number(zoomStr)) && Number(zoomStr) > 0
@@ -53,3 +54,19 @@ app.mount("#app");
     appEl.style.width = `${(100 / zoom).toFixed(3)}%`;
   }
 })();
+
+// Axios: attach Authorization header from cookie for all requests
+axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
+axios.interceptors.request.use((config) => {
+  try {
+    const token = useCookie<string | null>("accessToken").value;
+    if (token) {
+      config.headers = config.headers ?? {};
+      (config.headers as any)["Authorization"] = `Bearer ${token}`;
+      (config.headers as any)["Accept"] = "application/json";
+    }
+  } catch (e) {
+    // ignore
+  }
+  return config;
+});

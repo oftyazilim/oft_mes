@@ -150,7 +150,7 @@ watch([searchQuery, selectedRole], () => {
           class="dx-theme-material mt-0"
         >
           <DxLoadPanel :enabled="true" />
-          <DxSearchPanel :visible="true" />
+          <DxSearchPanel :visible="false" />
           <DxSorting mode="single" />
           <DxScrolling mode="virtual" />
 
