@@ -838,10 +838,10 @@ class Emirler extends Controller
     }
   }
 
-  public function updatePlanlananBaslangic(Request $request, LogService $logService)
+  public function updatePlanlananBaslangic(Request $request)
   {
 
-    // Log::info($request->all());
+    Log::info($request->all());
 
     try {
       // Gelen parametreleri al
@@ -913,7 +913,7 @@ class Emirler extends Controller
         }
       }
 
-      $logService->LogKaydet("İş Emirleri", "Plan güncelleme", $request->userID, $request->ip());
+      // $logService->LogKaydet("İş Emirleri", "Plan güncelleme", $request->userID, $request->ip());
 
       DB::commit();
 
@@ -924,7 +924,7 @@ class Emirler extends Controller
     }
   }
 
-  public function istasyonKaydet(Request $request, LogService $logService)
+  public function istasyonKaydet(Request $request)
   {
     try {
       $updateData = $request->input('updateData');
@@ -1005,7 +1005,7 @@ class Emirler extends Controller
         }
       }
 
-      $logService->LogKaydet("İş Emirleri", "İstasyon Atama", $request->userID, $request->ip());
+      // $logService->LogKaydet("İş Emirleri", "İstasyon Atama", $request->userID, $request->ip());
 
       DB::commit();
       return response()->json(['success' => 'Veriler başarıyla güncellendi.']);
@@ -1070,12 +1070,12 @@ class Emirler extends Controller
     return response()->json(['message' => 'Güncelleme tamamlandı', 'updated_records' => count($records)]);
   }
 
-  public function AksesuarKaydet(Request $request, LogService $logService)
+  public function AksesuarKaydet(Request $request)
   {
     try {
       // Gelen parametreleri al
       $updateData = $request->input('updateData');
-
+Log::info($updateData);
       if (empty($updateData) || !is_array($updateData)) {
         return response()->json(['error' => 'Geçersiz veri!'], 400);
       }
@@ -1093,11 +1093,12 @@ class Emirler extends Controller
                 ->limit(1);
             })
             ->update(['zz_aksesuar_secim_d' => $data['aksesuar']]);
+          Log::info("Aksesuar güncellendi: " . $data['aksesuar']);
         } else {
           Log::error('isemriNo bulunamadı!', $data);
         }
       }
-      $logService->LogKaydet("İş Emirleri", "Aksesuar Değişikliği", $request->userID, $request->ip());
+      // $logService->LogKaydet("İş Emirleri", "Aksesuar Değişikliği", $request->userID, $request->ip());
       DB::commit();
 
       return response()->json(['success' => 'Veriler başarıyla güncellendi.']);

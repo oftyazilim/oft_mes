@@ -87,7 +87,7 @@ return [
             'url' => env('UDB_URL'),
             'host' => env('UDB_HOST', '192.6.2.10'),
             'port' => env('UDB_PORT', '5432'),
-            'database' => env('UDB_DATABASE', 'uyumsoft'),
+            'database' => env('UDB_DATABASE', 'uyumtest'),
             'username' => env('UDB_USERNAME', 'uyum'),
             'password' => env('UDB_PASSWORD', 'Cnvt*Bk571'),
             'charset' => env('UDB_CHARSET', 'utf8'),

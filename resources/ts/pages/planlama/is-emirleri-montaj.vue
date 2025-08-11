@@ -1329,10 +1329,11 @@ const AksesuarKaydet = async () => {
     return {
       isemriNo: row.isemri_no,
       aksesuar: aksesuar.value === true ? 1 : 0,
+      orderDId: row.sip_detay_id,
     }
   })
   const userID = userData.value.id
-
+  console.log('Aksesuar güncelleme verisi:', updateData);
   try {
     const response = await axios.post('/api/aksesuarKaydet', { updateData, userID })
     getData()
@@ -1391,7 +1392,6 @@ const TarihAksesuarKaydet = async (tur: string) => {
             .padStart(2, '0')}`,
     }
   })
-
   const userID = userData.value.id
   try {
     const response = await axios.post('/api/updatePlanBaslangic', { updateData, userID })
@@ -1850,63 +1850,6 @@ const getBakiyeler = async (itemID: number) => {
   }
 }
 
-const grupla = async () => {
-  loadingVisible.value = true
-
-  const filteredData = gridData.value.filter(item => item.hafta === selectedRow.value.hafta && item.IS_ISTASYONU_KODU === selectedRow.value.IS_ISTASYONU_KODU)
-  if (filteredData.length === 0) {
-    console.warn('Seçilen haftada veri bulunamadı.')
-    loadingVisible.value = false
-
-    return
-  }
-
-  await generateGroupIds(filteredData)
-  refreshGrid()
-
-  try {
-    for (const item of filteredData) {
-      const payload = {
-        satirId: item.satir_id,
-        grupId: String(item.grup_id),
-      }
-
-      await axios.post('/api/saveGrup', payload)
-    }
-
-    console.log('Seçili haftadaki veriler başarıyla kaydedildi.')
-  }
-  catch (error) {
-    console.error('Kayıt sırasında hata oluştu:', error)
-  }
-
-  loadingVisible.value = false
-}
-
-const generateGroupIds = async data => {
-  await new Promise(resolve => setTimeout(resolve, 1000))
-
-  const createGroupKey = item => {
-    return `${item.hafta}-${item.operasyon}-${item.stok_id}`
-  }
-
-  const groupTracker = {}
-  let groupCounter = 1
-
-  data.forEach(item => {
-    const hafta = item.hafta.replace('-', '')
-    const groupKey = createGroupKey(item)
-    const operasyonNo = item.Operasyon_no ? item.Operasyon_no.toString() : '000'
-
-    if (!groupTracker[groupKey])
-      groupTracker[groupKey] = groupCounter++
-
-    const groupId = `${hafta}${operasyonNo}${groupTracker[groupKey].toString().padStart(4, '0')}`
-
-    item.grup_id = Number.parseInt(groupId)
-  })
-}
-
 const refreshGrid = () => {
   const gridInstance = dataGridRef.value?.instance // DataGrid bileşeninin referansı
   if (gridInstance)
@@ -1961,17 +1904,7 @@ const menuItems = [
   { text: 'Yenile' },
   { text: 'Haftaya Göre Grupla' },
   { text: 'Detay Göster' },
-  {
-    text: 'İstasyona Gönder', visible: olusturmaIzni,
-
-    // items: [
-    //   { text: 'Sayılmayanlar' },
-    //   { text: 'Sayılanlar' },
-    //   { text: 'Sayım Yap' },
-    //   { text: 'Sayım Sıfırla' },
-    //   { text: 'Sayılmayanları Sil' }],
-  },
-  { text: 'Grupla', visible: olusturmaIzni },
+  { text: 'İstasyona Gönder', visible: olusturmaIzni },
   { text: 'Üretim Tarihini Değiştir', visible: olusturmaIzni },
   { text: 'Teslim Tarihini Değiştir', visible: olusturmaIzni },
   { text: 'Aksesuar', visible: olusturmaIzni },
@@ -1979,7 +1912,6 @@ const menuItems = [
   { text: 'Düzen Yükle' },
   { text: 'Düzen Kaydet' },
   { text: 'Düzen Sıfırla' },
-  // { text: 'İş Emri Yazdır' },
 ]
 
 function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
@@ -1996,9 +1928,6 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
         break;
       case 'İstasyona Gönder':
         IstasyonaGonder()
-        break;
-      case 'Grupla':
-        grupla()
         break;
       case 'Üretim Tarihini Değiştir':
         notBaslik.value = 'Üretim tarihini seçiniz'
@@ -2025,9 +1954,6 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
         break;
       case 'RAL Kodlarını Güncelle':
         RalKodlariGuncelle()
-        break;
-      case 'İş Emri Yazdır':
-        printPDF()
         break;
       default:
         break;
