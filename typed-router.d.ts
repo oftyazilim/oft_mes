@@ -136,6 +136,7 @@ declare module 'vue-router/auto-routes' {
     'personel-kullanicilar': RouteRecordInfo<'personel-kullanicilar', '/personel/kullanicilar', Record<never, never>, Record<never, never>>,
     'personel-loglar': RouteRecordInfo<'personel-loglar', '/personel/loglar', Record<never, never>, Record<never, never>>,
     'personel-roller': RouteRecordInfo<'personel-roller', '/personel/roller', Record<never, never>, Record<never, never>>,
+    'planlama-ihtiyac-listesi': RouteRecordInfo<'planlama-ihtiyac-listesi', '/planlama/ihtiyac-listesi', Record<never, never>, Record<never, never>>,
     'planlama-is-emirleri-montaj': RouteRecordInfo<'planlama-is-emirleri-montaj', '/planlama/is-emirleri-montaj', Record<never, never>, Record<never, never>>,
     'planlama-surec-cell': RouteRecordInfo<'planlama-surec-cell', '/planlama/SurecCell', Record<never, never>, Record<never, never>>,
     'register': RouteRecordInfo<'register', '/register', Record<never, never>, Record<never, never>>,

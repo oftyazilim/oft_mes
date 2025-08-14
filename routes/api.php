@@ -85,3 +85,14 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/saveGrup', [Emirler::class, 'saveGrup']);
   Route::post('/ralguncelle', [Emirler::class, 'RalGuncelle']);
 });
+
+// Planning endpoints (protected) used by is-emirleri-ihtiyaclar.vue
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/istasyon-ihtiyaclar', [Emirler::class, 'IhtiyacHesapla']);
+  Route::get('/merkezal', [Emirler::class, 'getMerkezler']);
+  Route::get('/istasyonal', [Emirler::class, 'getIstasyon']);
+  Route::get('/isEmriAcilmislar', [Emirler::class, 'getAcilmisIsEmirleri']);
+  Route::get('/satinalmasorgu', [Emirler::class, 'getSatinalmaSorgu']);
+  Route::get('/taleplersorgu', [Emirler::class, 'getTaleplerSorgu']);
+  Route::get('/digerdepobakiyeleri', [Emirler::class, 'getDepoBakiyeleri']);
+});

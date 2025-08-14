@@ -1075,7 +1075,7 @@ class Emirler extends Controller
     try {
       // Gelen parametreleri al
       $updateData = $request->input('updateData');
-Log::info($updateData);
+      Log::info($updateData);
       if (empty($updateData) || !is_array($updateData)) {
         return response()->json(['error' => 'Geçersiz veri!'], 400);
       }

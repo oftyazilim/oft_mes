@@ -6,8 +6,16 @@ export default [
     subject: ["users"],
     children: [
       {
-        title: "İş Emirleri - Detay",
+        title: "İş Emirleri - Montaj",
         to: "planlama-is-emirleri-montaj",
+        icon: { icon: "tabler-list" },
+        action: "create",
+        subject: ["users"],
+        // target: '_blank',
+      },
+      {
+        title: "Malzeme İhtiyaç Listesi",
+        to: "planlama-ihtiyac-listesi",
         icon: { icon: "tabler-list" },
         action: "create",
         subject: ["users"],
