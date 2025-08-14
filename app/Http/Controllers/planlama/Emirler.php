@@ -104,7 +104,7 @@ class Emirler extends Controller
             $endTimeBreak   = $durus->DURUM_BIT_TARIHI ? Carbon::parse($durus->DURUM_BIT_TARIHI) : Carbon::now();
             // Log::info($request->guid . ' Tarihler: ' . $startTimeBreak . ' - ' . $endTimeBreak);
 
-            $personeller = DB::connection('sqlsrv')
+            $personeller = DB::connection('pgsql_oft')
               ->table('oftt_aktif_ekipler')
               ->where('guid', $request->guid)
               ->whereRaw("CAST(start_work_time AS DATETIME) <= ?", [$startTimeBreak->format('Y-m-d H:i:s')])
@@ -553,7 +553,7 @@ class Emirler extends Controller
     $tarih = Carbon::today()->toDateString();
     // Log::info('Tarih: ' . $tarih);
     // 1. URUN_ID listesini al
-    $urunIDs = DB::connection('sqlsrv')
+    $urunIDs = DB::connection('pgsql_oft')
       ->table('OFTT_CALISMA_SURELERI_MONTAJ')
       ->whereDate('DURUM_BAS_TARIHI', '=', $tarih)
       ->distinct()
@@ -568,7 +568,7 @@ class Emirler extends Controller
       ]);
     }
 
-    $meco = DB::connection('sqlsrv')
+    $meco = DB::connection('pgsql_oft')
       ->table('OFTT_CALISMA_SURELERI_MONTAJ')
       ->selectRaw('
             ISNULL(SUM(
@@ -628,7 +628,7 @@ class Emirler extends Controller
       $bitis = Carbon::now()->endOfWeek()->toDateString();
     }
 
-    $urunIDs = DB::connection('sqlsrv')
+    $urunIDs = DB::connection('pgsql_oft')
       ->table('OFTT_CALISMA_SURELERI_MONTAJ')
       ->whereBetween(DB::raw('CAST(DURUM_BAS_TARIHI AS DATE)'), [$baslangic, $bitis])
       ->distinct()
@@ -771,8 +771,8 @@ class Emirler extends Controller
       }
     }
 
-    $notlar = DB::connection('sqlsrv')
-      ->table('PARAM_NOTLAR')
+    $notlar = DB::connection('pgsql_oft')
+      ->table('oftt_param_notlar')
       ->get();
 
     return response()->json([
@@ -1016,11 +1016,11 @@ class Emirler extends Controller
     }
   }
 
-  public function RalGuncelle(Request $request, LogService $logService)
+  public function RalGuncelle(Request $request)
   {
     ini_set('max_execution_time', 1500); // 5 dakika
 
-    $logService->LogKaydet("İş Emirleri", "RAL Kodları güncellendi", $request->userID, $request->ip());
+    // $logService->LogKaydet("İş Emirleri", "RAL Kodları güncellendi", $request->userID, $request->ip());
 
     $records = DB::connection('pgsql')->select("
             SELECT 
@@ -1153,14 +1153,14 @@ Log::info($updateData);
         ])->validate();
 
         // Var mı kontrol et
-        $isemri = DB::connection('sqlsrv')
+        $isemri = DB::connection('pgsql_oft')
           ->table('OFTT_CALISMA_BILGILERI_MONTAJ')
           ->where('IS_EMRI_ID', $validated['isemriID'])
           ->where('ISTASYON', $validated['istasyonKodu'])
           ->first();
 
         if ($isemri) {
-          DB::connection('sqlsrv')
+          DB::connection('pgsql_oft')
             ->table('OFTT_CALISMA_BILGILERI_MONTAJ')
             ->where('IS_EMRI_ID', $validated['isemriID'])
             ->where('ISTASYON', $validated['istasyonKodu'])
@@ -1172,7 +1172,7 @@ Log::info($updateData);
               'IS_EMRI_MIKTARI' => $validated['isemriMiktari'],
             ]);
         } else {
-          DB::connection('sqlsrv')
+          DB::connection('pgsql_oft')
             ->table('OFTT_CALISMA_BILGILERI_MONTAJ')
             ->insert([
               'IS_EMRI_NO' => $validated['isemriNo'],
@@ -1186,7 +1186,7 @@ Log::info($updateData);
             ]);
         }
       } else {
-        DB::connection('sqlsrv')
+        DB::connection('pgsql_oft')
           ->table('OFTT_CALISMA_BILGILERI_MONTAJ')
           ->where('IS_EMRI_ID', $data['isemriID'])
           ->where('ISTASYON', $data['istasyonKodu'])
@@ -1204,7 +1204,7 @@ Log::info($updateData);
     $saat1800 = Carbon::today()->setTime(23, 59);
 
     // Geçmişe ait açık kayıtları kapat
-    $kayitlar = DB::connection('sqlsrv')
+    $kayitlar = DB::connection('pgsql_oft')
       ->table('OFTT_CALISMA_SURELERI_MONTAJ')
       ->whereNull('DURUM_BIT_TARIHI')
       ->where(function ($query) use ($simdi, $saat1800) {
@@ -1223,7 +1223,7 @@ Log::info($updateData);
       $bitTarihi = Carbon::parse($kayit->DURUM_BAS_TARIHI)->setTime(23, 59, 59);
       if ($bitTarihi > $simdi) $bitTarihi = $simdi;
 
-      DB::connection('sqlsrv')
+      DB::connection('pgsql_oft')
         ->table('OFTT_CALISMA_SURELERI_MONTAJ')
         ->where('ID', $kayit->ID)
         ->update([
@@ -1235,7 +1235,7 @@ Log::info($updateData);
     $data = [];
     $istasyonArray = explode(',', $request->istasyon);
     Log::info($istasyonArray);
-    $aktifler = DB::connection('sqlsrv')
+    $aktifler = DB::connection('pgsql_oft')
       ->table('OFTT_CALISMA_SURELERI_MONTAJ')
       ->select(
         'IS_EMRI_ID',
@@ -1257,7 +1257,7 @@ Log::info($updateData);
       ->orderBy('IS_EMRI_NO', 'asc')
       ->get();
 
-    $bugun_sureler = DB::connection('sqlsrv')
+    $bugun_sureler = DB::connection('pgsql_oft')
       ->table('OFTT_CALISMA_SURELERI_MONTAJ')
       ->select(
         'IS_EMRI_ID',
@@ -1274,7 +1274,7 @@ Log::info($updateData);
       $cal_sure = $sure->CAL_SURE ?? 0;
       $dur_sure = $sure->DUR_SURE ?? 0;
 
-      $tpl_sure = DB::connection('sqlsrv')
+      $tpl_sure = DB::connection('pgsql_oft')
         ->table('OFTT_CALISMA_SURELERI_MONTAJ')
         ->where('IS_EMRI_ID', $aktif->IS_EMRI_ID)
         ->selectRaw("ISNULL(SUM(DURUM_SURESI), 0) AS SURE")
@@ -1286,7 +1286,7 @@ Log::info($updateData);
         ->selectRaw("COALESCE(operasyon_hazirlik_suresi + operasyon_suresi, 0) * 60 AS SURE, teknik_not1, teknik_not2")
         ->first();
 
-      $kontrol = DB::connection('sqlsrv')
+      $kontrol = DB::connection('pgsql_oft')
         ->table('oftt_kontrol_isemri')
         ->select('is_use_quality', 'is_check_quality_opr')
         ->where('isemri_id', $aktif->IS_EMRI_ID)
@@ -1327,7 +1327,7 @@ Log::info($updateData);
 
   public function getAktifCalismalar()
   {
-    $aktifler = DB::connection('sqlsrv')
+    $aktifler = DB::connection('pgsql_oft')
       ->table('oftt_kontrol_isemri')
       ->join('PARAM_ISTASYON', 'PARAM_ISTASYON.wstation_id', '=', 'oftt_kontrol_isemri.istasyon_id')
       ->where('oftt_kontrol_isemri.is_open', 1)
@@ -1351,14 +1351,14 @@ Log::info($updateData);
   {
     // Log::info($request->all());
 
-    $durumlar = DB::connection('sqlsrv')
+    $durumlar = DB::connection('pgsql_oft')
       ->table('OFTT_CALISMA_SURELERI_MONTAJ')
       ->select('ISTASYON', 'IS_EMRI_ID', 'IS_EMRI_NO', 'URUN_KODU', 'URUN_ADI', 'DURUM', 'DURUM_BAS_TARIHI')
       ->whereNull('DURUM_BIT_TARIHI')
       ->where('ISTASYON', $request->istasyon)
       ->get();
 
-    $sureler = DB::connection('sqlsrv')
+    $sureler = DB::connection('pgsql_oft')
       ->table('OFTV_GNLK_SURELERI_AL')
       ->get();
 
@@ -1370,7 +1370,7 @@ Log::info($updateData);
 
   public function PersonelSayisiKaydet(Request $request)
   {
-    $islem = DB::connection('sqlsrv')
+    $islem = DB::connection('pgsql_oft')
       ->table('OFTT_CALISMA_SURELERI_MONTAJ')
       ->where('ISTASYON', $request->istasyonKodu)
       ->where('IS_EMRI_ID', $request->isEmriId)
@@ -1380,7 +1380,7 @@ Log::info($updateData);
       ->first();
 
     if ($islem) {
-      DB::connection('sqlsrv')
+      DB::connection('pgsql_oft')
         ->table('OFTT_CALISMA_SURELERI_MONTAJ')
         ->where('Id', $islem->ID)
         ->update([
@@ -1395,7 +1395,7 @@ Log::info($updateData);
   {
     // Log::info($request->all());
 
-    $islem = DB::connection('sqlsrv')
+    $islem = DB::connection('pgsql_oft')
       ->table('OFTT_CALISMA_SURELERI_MONTAJ')
       ->where('ISTASYON', $request->istasyonKodu)
       ->where('IS_EMRI_ID', $request->isEmriId)
@@ -1405,7 +1405,7 @@ Log::info($updateData);
       ->first();
 
     if ($islem) {
-      DB::connection('sqlsrv')
+      DB::connection('pgsql_oft')
         ->table('OFTT_CALISMA_SURELERI_MONTAJ')
         ->where('Id', $islem->ID)
         ->update([
@@ -1421,7 +1421,7 @@ Log::info($updateData);
   {
     //Log::info($request->all());
     $tarih = now();
-    $baglanti = DB::connection('sqlsrv');
+    $baglanti = DB::connection('pgsql_oft');
 
 
     $durum = $request->durum;
@@ -1430,7 +1430,7 @@ Log::info($updateData);
 
 
     // if ($request->durum === 'SON DURUMA DÖN') {
-    //   $durumAl = DB::connection('sqlsrv')
+    //   $durumAl = DB::connection('pgsql_oft')
     //     ->table('OFTT_CALISMA_SURELERI_MONTAJ')
     //     ->select('DURUM', 'DURUS_SEBEBI', 'DURUS_SEBEBI_KODU')
     //     ->where('GUID', $request->guid)
@@ -1516,7 +1516,7 @@ Log::info($updateData);
   {
     $istasyonArray = explode(',', $request->istasyon);
 
-    $duruslar = DB::connection('sqlsrv')
+    $duruslar = DB::connection('pgsql_oft')
       ->table('OFTV_DURUSLAR_ISTASYON')
       ->whereIn('ISTASYON', $istasyonArray)
       ->whereDate('DURUM_BAS_TARIHI', '>=', $request->filterValue)
@@ -1533,7 +1533,7 @@ Log::info($updateData);
   {
     // Log::info($request->all());
 
-    $duruslar = DB::connection('sqlsrv')
+    $duruslar = DB::connection('pgsql_oft')
       ->table('OFTV_DURUSLAR_AKTIF')
       ->where('ISTASYON', $request->istasyon)
       ->whereDate('DURUM_BAS_TARIHI', now()->toDateString())
@@ -1955,7 +1955,7 @@ Log::info($updateData);
 
   public function getTakvim()
   {
-    $veri = DB::connection('sqlsrv')
+    $veri = DB::connection('pgsql_oft')
       ->table('PARAM_CALISMA_SAATLERI_KAP')
       ->where('ACIKLAMA', 'çalışma')
       ->select(
@@ -2126,7 +2126,7 @@ Log::info($updateData);
     $now = Carbon::now();
     try {
       foreach ($personeller as $p) {
-        DB::connection('sqlsrv')->table('oftt_aktif_ekipler')->insert([
+        DB::connection('pgsql_oft')->table('oftt_aktif_ekipler')->insert([
           'istasyon_id' => $p['istasyon_id'],
           'worder_m_id' => $p['worder_m_id'],
           'register_id' => $p['register_id'],
@@ -2149,7 +2149,7 @@ Log::info($updateData);
   public function EkipleriAl(Request $request)
   {
     // Log::info($request->all());
-    $veriler = DB::connection('sqlsrv')
+    $veriler = DB::connection('pgsql_oft')
       ->table('oftt_aktif_ekipler')
       // ->where('worder_m_id', $request->isemriID)
       ->where('guid', $request->guid)
@@ -2171,7 +2171,7 @@ Log::info($updateData);
       return response()->json(['message' => 'Eksik parametre'], 400);
     }
 
-    DB::connection('sqlsrv')
+    DB::connection('pgsql_oft')
       ->table('oftt_aktif_ekipler')
       ->where('guid', $guid)
       ->whereNull('end_work_time')
@@ -2247,7 +2247,7 @@ Log::info($updateData);
 
     // Log::info('İstasyon ID:', ['istasyonId' => $istasyonId]);
 
-    $calismalar = DB::connection('sqlsrv')
+    $calismalar = DB::connection('pgsql_oft')
       ->table('OFTT_CALISMA_SURELERI_MONTAJ as calisma')
       ->join('users', 'calisma.PERSONEL_ID', '=', 'users.id')
       ->join('oftt_kontrol_isemri', 'calisma.IS_EMRI_ID', '=', 'oftt_kontrol_isemri.isemri_id')
@@ -2276,7 +2276,7 @@ Log::info($updateData);
     $guidList = $calismalar->flatten()->pluck('GUID')->unique()->values()->toArray();
 
 
-    $parcalar = DB::connection('sqlsrv')
+    $parcalar = DB::connection('pgsql_oft')
       ->table('OFTT_CALISMA_SURELERI_MONTAJ')
       ->select('URUN_ID')
       ->whereDate('DURUM_BAS_TARIHI', '=', Carbon::now()->toDateString())
@@ -2308,7 +2308,7 @@ Log::info($updateData);
 
     // Log::info('İş Emirleri:', $isEmirleri->toArray());
 
-    $sureler = DB::connection('sqlsrv')
+    $sureler = DB::connection('pgsql_oft')
       ->table('OFTT_CALISMA_SURELERI_MONTAJ')
       ->select('IS_EMRI_ID', 'DURUM', 'DURUS_SEBEBI', 'DURUM_SURESI', 'DURUM_BAS_TARIHI')
       // ->whereIn('IS_EMRI_ID', $isemriIDs)
@@ -2493,7 +2493,7 @@ Log::info($updateData);
   //     ->limit(1000)
   //     ->get();
 
-  //   $calismaSaatleri = DB::connection('sqlsrv')->table('PARAM_CALISMA_SAATLERI_KAP')
+  //   $calismaSaatleri = DB::connection('pgsql_oft')->table('PARAM_CALISMA_SAATLERI_KAP')
   //     ->where('ACIKLAMA', 'çalışma')
   //     ->get();
 

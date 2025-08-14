@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -48,6 +49,8 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
+        Log::info('User login attempt', ['email' => $request->email]);
+
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required',

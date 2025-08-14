@@ -31,15 +31,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'unvan',
-        'proses',
-        'tip',
-        'email_verified_at',
-        'AKTIF',
-        'DURUMTARIH',
-        'DURUMYAPANID',
-        'ismerkezi_id',
-        'istasyon_id',
+        'email_verified_at'
     ];
 
     /**

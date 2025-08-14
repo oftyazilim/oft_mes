@@ -62,7 +62,7 @@ class UsersController extends Controller
     {
         // $users = User::get(['id', 'name', 'email']); // Sadece kullanıcı verilerini çek
 
-        $data = DB::table('OFTV_01_KULLANICILAR')
+        $data = DB::table('oftv_kullanicilar')
             ->get();
 
         // return response()->json(['users' => $users]);
@@ -308,7 +308,7 @@ class UsersController extends Controller
 
     public function getLoglar()
     {
-        $data = DB::connection('sqlsrv')
+        $data = DB::connection('pgsql_oft')
             ->table('oftv_users_logs')
             ->orderBy('id', 'desc')
             ->get();
@@ -441,7 +441,7 @@ class UsersController extends Controller
         // Log::info('Client IP Address: ' . $ipAddress);
 
         try {
-            $log = DB::connection('sqlsrv')
+            $log = DB::connection('pgsql_oft')
                 ->table('users_logs')
                 ->insert([
                     'user_id' => $userId,
@@ -494,71 +494,4 @@ class UsersController extends Controller
 
         return response()->json(['message' => 'Şifre başarıyla değiştirildi.']);
     }
-
-    // /**
-    //  * Return distinct work centers (iş merkezleri)
-    //  * Response: { merkezler: [{ is_merkezi_id: number, mrk_adi: string }] }
-    //  */
-    // public function getWorkCenters(Request $request)
-    // {
-    //     $rows = DB::table('OFTV_01_KULLANICILAR')
-    //         ->select('ismerkezi_id')
-    //         ->whereNotNull('ismerkezi_id')
-    //         ->where('ismerkezi_id', '!=', '')
-    //         ->distinct()
-    //         ->orderBy('ismerkezi_id')
-    //         ->get();
-
-    //     $merkezler = $rows->map(function ($row) {
-    //         $id = is_numeric($row->ismerkezi_id) ? (int) $row->ismerkezi_id : (string) $row->ismerkezi_id;
-    //         return [
-    //             'is_merkezi_id' => $id,
-    //             'mrk_adi' => (string) $row->ismerkezi_id,
-    //         ];
-    //     });
-
-    //     return response()->json([
-    //         'merkezler' => $merkezler,
-    //     ]);
-    // }
-
-    // /**
-    //  * Return distinct stations (iş istasyonları)
-    //  * Query param: ismerkezi=1,2,3 (optional)
-    //  * Response: { istasyonlar: [{ istasyon_id: number, ist_adi: string }] }
-    //  */
-    // public function getStations(Request $request)
-    // {
-    //     $idsParam = (string) $request->get('ismerkezi', '');
-    //     $ids = collect(explode(',', $idsParam))
-    //         ->map(fn($v) => trim($v))
-    //         ->filter(fn($v) => $v !== '')
-    //         ->map(fn($v) => is_numeric($v) ? (int) $v : $v)
-    //         ->values();
-
-    //     $query = DB::table('OFTV_01_KULLANICILAR')
-    //         ->select('istasyon_id')
-    //         ->whereNotNull('istasyon_id')
-    //         ->where('istasyon_id', '!=', '')
-    //         ->distinct();
-
-    //     // Apply filter by work center if provided
-    //     if ($ids->isNotEmpty()) {
-    //         $query->whereIn('ismerkezi_id', $ids->all());
-    //     }
-
-    //     $rows = $query->orderBy('istasyon_id')->get();
-
-    //     $istasyonlar = $rows->map(function ($row) {
-    //         $id = is_numeric($row->istasyon_id) ? (int) $row->istasyon_id : (string) $row->istasyon_id;
-    //         return [
-    //             'istasyon_id' => $id,
-    //             'ist_adi' => (string) $row->istasyon_id,
-    //         ];
-    //     });
-
-    //     return response()->json([
-    //         'istasyonlar' => $istasyonlar,
-    //     ]);
-    // }
 }

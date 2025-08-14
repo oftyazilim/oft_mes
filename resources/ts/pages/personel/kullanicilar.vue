@@ -560,7 +560,7 @@ const aktifYap = async (id: any) => {
       userID: userData.value.id,
     });
     // console.log("Veri başarıyla silindi", response);
-    getData();
+    await getData();
   }
   catch (error) {
     console.error("Veri silinirken hata oluştu: ", error);

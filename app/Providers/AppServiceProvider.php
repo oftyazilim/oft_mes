@@ -117,7 +117,7 @@ class AppServiceProvider extends ServiceProvider
                     }
 
                     // write to MSSQL users_logs via configured connection
-                    $logConn = (string) config('dbquerylog.log_connection', 'sqlsrv');
+                    $logConn = (string) config('dbquerylog.log_connection', 'pgsql_oft');
                     DB::connection($logConn)->table('users_logs')->insert([
                         'user_id' => $userId,
                         'tarih'   => now(),
@@ -158,7 +158,7 @@ class AppServiceProvider extends ServiceProvider
                     Cache::forget($key);
                 }
 
-                $logConn = (string) config('dbquerylog.log_connection', 'sqlsrv');
+                $logConn = (string) config('dbquerylog.log_connection', 'pgsql_oft');
                 DB::connection($logConn)->table('users_logs')->insert([
                     'user_id' => $userId,
                     'tarih'   => now(),
@@ -198,7 +198,7 @@ class AppServiceProvider extends ServiceProvider
                 }
                 $attempts = (int) Cache::increment($key);
 
-                $logConn = (string) config('dbquerylog.log_connection', 'sqlsrv');
+                $logConn = (string) config('dbquerylog.log_connection', 'pgsql_oft');
                 DB::connection($logConn)->table('users_logs')->insert([
                     'user_id' => $userId,
                     'tarih'   => now(),
@@ -229,7 +229,7 @@ class AppServiceProvider extends ServiceProvider
                 $userAgent = request()->header('User-Agent');
                 $reqId = (string) Str::uuid();
 
-                $logConn = (string) config('dbquerylog.log_connection', 'sqlsrv');
+                $logConn = (string) config('dbquerylog.log_connection', 'pgsql_oft');
                 DB::connection($logConn)->table('users_logs')->insert([
                     'user_id' => $userId,
                     'tarih'   => now(),

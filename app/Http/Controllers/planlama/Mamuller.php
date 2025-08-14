@@ -16,7 +16,7 @@ class Mamuller extends Controller
   {
     $filterValue = $request->filterValue;
 
-    $conn = $request->fabrika == "a" ? DB::connection('sqlsrva') : DB::connection('sqlsrvs');
+    $conn = $request->fabrika == "a" ? DB::connection('pgsql_ofta') : DB::connection('pgsql_ofts');
 
     $mamuller = $conn
       ->table('mamuller')
@@ -49,7 +49,7 @@ class Mamuller extends Controller
 
   public function MamulNevi(Request $request)
   {
-    $conn = $request->fabrika == "a" ? DB::connection('sqlsrva') : DB::connection('sqlsrvs');
+    $conn = $request->fabrika == "a" ? DB::connection('pgsql_ofta') : DB::connection('pgsql_ofts');
     $mamuller = $conn
     ->table('oftv_mmlstokgrp')
     ->where('nevi', $request->nevi)

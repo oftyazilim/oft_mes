@@ -5,10 +5,10 @@ return [
     'enabled' => env('DB_QUERYLOG_ENABLED', true),
 
     // Which connections' queries to listen to (null = all)
-    'connections' => null, // e.g. ['pgsql', 'sqlsrv']
+    'connections' => null, // e.g. ['pgsql', 'pgsql_oft']
 
     // Where to write logs (MSSQL)
-    'log_connection' => env('DB_QUERYLOG_CONNECTION', 'sqlsrv'),
+    'log_connection' => env('DB_QUERYLOG_CONNECTION', 'pgsql_oft'),
 
     // Skip logging queries that match any of these substrings (case-insensitive)
     'ignore_contains' => [

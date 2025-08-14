@@ -780,6 +780,10 @@ import SurecCell from './SurecCell.vue';
 
 const userAbilityRules = useCookie<Rule[]>("userAbilityRules").value || [];
 
+definePage({
+  meta: { action: ['read'], subject: ['roles', 'montaj', 'users'] }
+})
+
 let okumaIzni = false;
 let olusturmaIzni = false;
 let guncellemeIzni = false;
@@ -1745,15 +1749,15 @@ const getData = async () => {
     gridData.value = response.data.emirler
     gridDataS.value = response.data.siparisler
     notlar.value = response.data.notlar
-    await fetchMontajVerileri();
-    gridData.value.forEach(grid => { grid.aktif = 0; });
-    montajVerileri.value.forEach(montaj => {
-      gridData.value.forEach(grid => {
-        if (grid.isemri_id === Number(montaj.isEmriId)) {
-          grid.aktif = 1;
-        }
-      });
-    });
+    // await fetchMontajVerileri();
+    // gridData.value.forEach(grid => { grid.aktif = 0; });
+    // montajVerileri.value.forEach(montaj => {
+    //   gridData.value.forEach(grid => {
+    //     if (grid.isemri_id === Number(montaj.isEmriId)) {
+    //       grid.aktif = 1;
+    //     }
+    //   });
+    // });
   }
   catch (error) {
     console.error('Veri çekilirken hata oluştu: ', error)

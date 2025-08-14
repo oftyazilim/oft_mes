@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', 'pgsql_oft'),
 
     /*
     |--------------------------------------------------------------------------
@@ -100,22 +100,40 @@ return [
                 PDO::ATTR_TIMEOUT => 300,
             ],
         ],
-
-        'sqlsrv' => [
-            'driver' => 'sqlsrv',
+        'pgsql_oft' => [
+            'driver' => 'pgsql',
             'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '192.6.2.110'),
-            'port' => env('DB_PORT', '1433'),
-            'database' => env('DB_DATABASE', 'OFT_CANOVATE'),
-            'username' => env('DB_USERNAME', 'sa'),
-            'password' => env('DB_PASSWORD', 'Cnv23@6Elk*'),
-            // 'password' => env('DB_PASSWORD', '?Ot2021!Om*'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '5432'),
+            'database' => env('DB_DATABASE', 'oft_mes'),
+            'username' => env('DB_USERNAME', 'postgres'),
+            'password' => env('DB_PASSWORD', '145353'),
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            // 'encrypt' => env('ADB_ENCRYPT', 'yes'),
-            'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
+            // 'search_path' => 'public',
+            // 'sslmode' => 'prefer',
+            // 'schema' => 'postgres',
+            'options'   => [
+                PDO::ATTR_TIMEOUT => 300,
+            ],
         ],
+
+        // 'pgsql_oft' => [
+        //     'driver' => 'pgsql_oft',
+        //     'url' => env('DB_URL'),
+        //     'host' => env('DB_HOST', '192.6.2.110'),
+        //     'port' => env('DB_PORT', '1433'),
+        //     'database' => env('DB_DATABASE', 'OFT_CANOVATE'),
+        //     'username' => env('DB_USERNAME', 'sa'),
+        //     'password' => env('DB_PASSWORD', 'Cnv23@6Elk*'),
+        //     // 'password' => env('DB_PASSWORD', '?Ot2021!Om*'),
+        //     'charset' => env('DB_CHARSET', 'utf8'),
+        //     'prefix' => '',
+        //     'prefix_indexes' => true,
+        //     // 'encrypt' => env('ADB_ENCRYPT', 'yes'),
+        //     'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
+        // ],
 
     ],
 
