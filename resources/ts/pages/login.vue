@@ -48,7 +48,7 @@ const rememberMe = ref(false)
 const login = async () => {
   try {
     console.log('Login attempt with:', credentials.value)
-    
+
     const res = await $api('/auth/login', {
       method: 'POST',
       body: {
@@ -61,42 +61,35 @@ const login = async () => {
       },
     })
 
-  const { accessToken, userData, userAbilityRules } = res
+    const { accessToken, userData, userAbilityRules } = res
 
     console.log('Raw userAbilityRules:', userAbilityRules)
-    
+
     // Normalize ability rules
     const normalizedRules = normalizeAbilityRules(userAbilityRules)
     console.log('Normalized rules:', normalizedRules)
-    
+
     // Cookie ömrünü Remember Me'ye göre ayarla
     const cookieOpts = rememberMe.value
       ? { maxAge: 60 * 60 * 24 * 30 } // 30 gün kalıcı
       : { session: true } // oturum (tarayıcı kapanınca silinsin)
 
     // Ability rules'u cookie'ye kaydet ve ability'yi güncelle
-  // Save ability rules array directly
-  useCookie('userAbilityRules', cookieOpts as any).value = userAbilityRules
+    // Save ability rules array directly
+    useCookie('userAbilityRules', cookieOpts as any).value = userAbilityRules
     console.log('Updating ability with rules:', normalizedRules)
     ability.update(normalizedRules as any)
     console.log('Ability updated, rules count:', ability.rules.length)
-    
+
     console.log('Ability updated, testing can("manage", "all"):', ability.can('manage', 'all'))
 
-    // userData'yı sadece gerekli alanları içerecek şekilde filtrele
-    const userDataForCookie = {
-      id: userData.id,
-      name: userData.name,
-      email: userData.email
-    }
-    
-  // userData cookie'sine objeyi yaz (id, name, email)
-  const userDataCookie = useCookie<{ id: string | number; name: string; email: string }>('userData', cookieOpts as any)
-  userDataCookie.value = userDataForCookie as any
+    // Tüm görünür user alanlarını cookie'ye yaz (modelde $hidden gizler)
+    const userDataCookie = useCookie<any>('userData', cookieOpts as any)
+    userDataCookie.value = userData
     useCookie('accessToken', cookieOpts as any).value = accessToken
 
     console.log('Cookies set - userData:', !!useCookie('userData').value, 'accessToken:', !!useCookie('accessToken').value)
-    console.log('UserData for cookie:', userDataForCookie)
+    console.log('UserData stored in cookie (full):', userDataCookie.value)
     console.log(userData)
     // Redirect to `to` query if exist or redirect to index route
     // ❗ nextTick is required to wait for DOM updates and later redirect
@@ -136,46 +129,19 @@ const onSubmit = () => {
     </div>
   </RouterLink>
 
-  <VRow
-    no-gutters
-    class="auth-wrapper bg-surface"
-  >
-    <VCol
-      md="8"
-      class="d-none d-md-flex"
-    >
+  <VRow no-gutters class="auth-wrapper bg-surface">
+    <VCol md="8" class="d-none d-md-flex">
       <div class="position-relative bg-background w-100 me-0">
-        <div
-          class="d-flex align-center justify-center w-100 h-100"
-          style="padding-inline: 6.25rem;"
-        >
-          <VImg
-            max-width="613"
-            :src="authThemeImg"
-            class="auth-illustration mt-16 mb-2"
-          />
+        <div class="d-flex align-center justify-center w-100 h-100" style="padding-inline: 6.25rem;">
+          <VImg max-width="613" :src="authThemeImg" class="auth-illustration mt-16 mb-2" />
         </div>
 
-        <img
-          class="auth-footer-mask"
-          :src="authThemeMask"
-          alt="auth-footer-mask"
-          height="280"
-          width="100"
-        >
+        <img class="auth-footer-mask" :src="authThemeMask" alt="auth-footer-mask" height="280" width="100">
       </div>
     </VCol>
 
-    <VCol
-      cols="12"
-      md="4"
-      class="auth-card-v2 d-flex align-center justify-center"
-    >
-      <VCard
-        flat
-        :max-width="500"
-        class="mt-12 mt-sm-0 pa-4"
-      >
+    <VCol cols="12" md="4" class="auth-card-v2 d-flex align-center justify-center">
+      <VCard flat :max-width="500" class="mt-12 mt-sm-0 pa-4">
         <VCardText>
           <h4 class="text-h4 mb-1">
             <span class="text-capitalize"> {{ themeConfig.app.title }}'e hoşgeldiniz' </span>! 👋🏻
@@ -198,55 +164,30 @@ const onSubmit = () => {
           </VAlert>
         </VCardText> -->
         <VCardText>
-          <VForm
-            ref="refVForm"
-            @submit.prevent="onSubmit"
-          >
+          <VForm ref="refVForm" @submit.prevent="onSubmit">
             <VRow>
               <!-- email -->
               <VCol cols="12">
-                <AppTextField
-                  v-model="credentials.email"
-                  label="E-posta"
-                  placeholder="oft@oft.com"
-                  type="email"
-                  autofocus
-                  :rules="[requiredValidator, emailValidator]"
-                  :error-messages="errors.email"
-                />
+                <AppTextField v-model="credentials.email" label="E-posta" placeholder="oft@oft.com" type="email"
+                  autofocus :rules="[requiredValidator, emailValidator]" :error-messages="errors.email" />
               </VCol>
 
               <!-- password -->
               <VCol cols="12">
-                <AppTextField
-                  v-model="credentials.password"
-                  label="Şifre"
-                  placeholder="············"
-                  :rules="[requiredValidator]"
-                  :type="isPasswordVisible ? 'text' : 'password'"
-                  autocomplete="password"
+                <AppTextField v-model="credentials.password" label="Şifre" placeholder="············"
+                  :rules="[requiredValidator]" :type="isPasswordVisible ? 'text' : 'password'" autocomplete="password"
                   :error-messages="errors.password"
                   :append-inner-icon="isPasswordVisible ? 'tabler-eye-off' : 'tabler-eye'"
-                  @click:append-inner="isPasswordVisible = !isPasswordVisible"
-                />
+                  @click:append-inner="isPasswordVisible = !isPasswordVisible" />
 
                 <div class="d-flex align-center flex-wrap justify-space-between my-6">
-                  <VCheckbox
-                    v-model="rememberMe"
-                    label="Beni Hatırla"
-                  />
-                  <RouterLink
-                    class="text-primary ms-2 mb-1"
-                    :to="{ name: 'forgot-password' }"
-                  >
+                  <VCheckbox v-model="rememberMe" label="Beni Hatırla" />
+                  <RouterLink class="text-primary ms-2 mb-1" :to="{ name: 'forgot-password' }">
                     Şifremi Unuttum?
                   </RouterLink>
                 </div>
 
-                <VBtn
-                  block
-                  type="submit"
-                >
+                <VBtn block type="submit">
                   Giriş Yap
                 </VBtn>
               </VCol>

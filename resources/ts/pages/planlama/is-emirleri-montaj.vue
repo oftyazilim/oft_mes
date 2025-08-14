@@ -1866,6 +1866,7 @@ onMounted(async () => {
   nextTick(() => {
     dataGridRef.value?.instance.clearSelection()
   })
+  console.log('Kullanıcı bilgileri:', userData.value)
 })
 
 const Yenile = async () => {

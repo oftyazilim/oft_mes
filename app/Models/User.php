@@ -13,6 +13,35 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
+    /**
+     * The attributes that should be visible for serialization.
+     * Tüm users tablosu kolonlarını buraya ekle.
+     *
+     * @var list<string>
+     */
+    protected $visible = [
+        'id',
+        'name',
+        'email',
+        'email_verified_at',
+        'profile_photo_path',
+        'role_id',
+        'role',
+        'unvan',
+        'proses',
+        'tip',
+        'aktif',
+        'durum_tarih',
+        'durum_yapan_id',
+        'ismerkezi_id',
+        'istasyon_id',
+        'operasyon_id',
+        'register_id',
+        'co_id',
+        'created_at',
+        'updated_at',
+        // eklemek istediğin başka kolonlar varsa buraya ekle
+    ];
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens, HasRoles;
 
@@ -31,7 +60,24 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'email_verified_at'
+        'email_verified_at',
+        'remember_token',
+        'created_at',
+        'updated_at',
+        'profile_photo_path',
+        'role_id',
+        'role',
+        'unvan',
+        'proses',
+        'tip',
+        'aktif',
+        'durum_tarih',
+        'durum_yapan_id',
+        'ismerkezi_id',
+        'istasyon_id',
+        'operasyon_id',
+        'register_id',
+        'co_id',
     ];
 
     /**
@@ -138,10 +184,10 @@ class User extends Authenticatable
         }
 
         // Special roles (admin no longer implies manage all automatically)
-        if ($roles->contains('dashboard')) {
-            $push('read', 'dashboard');
-            $push('read', 'genel');
-        }
+        // if ($roles->contains('dashboard')) {
+        //     $push('read', 'dashboard');
+        //     $push('read', 'genel');
+        // }
 
         return array_values($unique);
     }
