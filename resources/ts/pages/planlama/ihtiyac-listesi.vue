@@ -459,7 +459,7 @@ import { ref } from 'vue'
 import { Workbook } from 'exceljs'
 import { saveAs } from 'file-saver-es'
 import DxContextMenu, { DxContextMenuTypes } from 'devextreme-vue/context-menu'
-// import { usePageTitleStore } from '@/stores/pageTitle'
+import { usePageTitleStore } from '@/stores/pageTitle'
 import notify from "devextreme/ui/notify";
 import DxDateBox from "devextreme-vue/date-box";
 import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup'
@@ -479,7 +479,7 @@ const formatDate = date => {
   return `${year}-${month}-${day}`
 }
 
-// const pageTitleStore = usePageTitleStore()
+const pageTitleStore = usePageTitleStore()
 const popupDepolarGosterVisible = ref(false)
 const popupIsEmirleriGosterVisible = ref(false)
 const popupAcilmisIsEmirleriGosterVisible = ref(false)
@@ -623,10 +623,11 @@ const getAcilmisEmirler = async (itemID: number) => {
 }
 
 onMounted(async () => {
-  // pageTitleStore.setTitle('Malzeme İhtiyaç Listesi')
+  pageTitleStore.setTitle('Malzeme İhtiyaç Listesi')
   loadGridState()
   getMerkezler()
   const currentWeek = getCurrentWeek()
+
 })
 
 const loadGridState = () => {

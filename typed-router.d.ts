@@ -130,7 +130,6 @@ declare module 'vue-router/auto-routes' {
     'pages-typography': RouteRecordInfo<'pages-typography', '/pages/typography', Record<never, never>, Record<never, never>>,
     'pages-user-profile-tab': RouteRecordInfo<'pages-user-profile-tab', '/pages/user-profile/:tab', { tab: ParamValue<true> }, { tab: ParamValue<false> }>,
     'personel-drag-drop': RouteRecordInfo<'personel-drag-drop', '/personel/drag-drop', Record<never, never>, Record<never, never>>,
-    'personel-drag-drop copy': RouteRecordInfo<'personel-drag-drop copy', '/personel/drag-drop copy', Record<never, never>, Record<never, never>>,
     'personel-izinler': RouteRecordInfo<'personel-izinler', '/personel/izinler', Record<never, never>, Record<never, never>>,
     'personel-kullanici-ekle': RouteRecordInfo<'personel-kullanici-ekle', '/personel/kullanici-ekle', Record<never, never>, Record<never, never>>,
     'personel-kullanicilar': RouteRecordInfo<'personel-kullanicilar', '/personel/kullanicilar', Record<never, never>, Record<never, never>>,

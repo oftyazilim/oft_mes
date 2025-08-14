@@ -17,6 +17,17 @@ import trMessages from "devextreme/localization/messages/tr.json";
 import { licenseKey } from "./devextreme-license";
 // import 'devextreme/dist/css/dx.fluent.saas.light.css'
 
+
+
+// // DevExtreme CSS
+// import 'devextreme/dist/css/dx.common.css'
+// import "devextreme/dist/css/dx.fluent.saas.light.css";   // veya kullandığın tema
+
+// // Global override (scoped değil!)
+// import '../styles/devextreme-overrides.css'
+
+
+
 loadMessages(trMessages); // Türkçe mesajları yükle
 locale("tr"); // Lokalizasyonu Türkçe'ye ayarla
 config({ licenseKey });
@@ -32,7 +43,7 @@ app.mount("#app");
 
 // Set UI zoom to 90% on startup
 (() => {
-  const DEFAULT_ZOOM = 0.9;
+  const DEFAULT_ZOOM = 0.85;
   const zoomStr = localStorage.getItem("app-zoom");
   const zoom =
     Number.isFinite(Number(zoomStr)) && Number(zoomStr) > 0

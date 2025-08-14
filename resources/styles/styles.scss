@@ -1,9 +1,17 @@
-/* Global SCSS dosyanda */
-.dx-widget,
-.dx-datagrid,
-.dx-datagrid * {
-  font-family: var(--v-font-family, "Inter", sans-serif);     // !important;
-}
+/* Yazı fontu */
+// .dx-widget,
+// .dx-datagrid,
+// .dx-datagrid *:not(.dx-icon):not(.dx-icon:before) {
+//   font-family: var(--v-font-family, "Inter", sans-serif) !important;
+// }
+
+// /* İkon fontu mutlaka DXIcons kalsın */
+// .dx-icon,
+// .dx-icon:before {
+//   font-family: DXIcons !important; /* önemli */
+//   font-style: normal;               /* olası mirasları sıfırla */
+//   font-weight: normal;
+// }
 
 /* DevExtreme DataGrid: Vars for font sizes */
 :root {
@@ -46,7 +54,7 @@
   min-block-size: 32px !important;
 }
 
-.dx-datagrid-rowsview .dx-row > td {
-  font-size: var(--dx-datagrid-font-size) !important;
-  padding-block: 0 !important;
-}
+// .dx-datagrid-rowsview .dx-row > td {
+//   font-size: var(--dx-datagrid-font-size) !important;
+//   padding-block: 0 !important;
+// }
