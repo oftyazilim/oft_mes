@@ -5,7 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\personel\UsersController;
-use App\Http\Controllers\planlama\Emirler;
+use App\Http\Controllers\planlama\EmirlerController;
+use App\Http\Controllers\planlama\KapasiteController;
+use App\Http\Controllers\planlama\IhtiyacController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -53,17 +55,14 @@ Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () 
   Route::post('/', [UsersController::class, 'store']);
   Route::put('/{id}', [UsersController::class, 'update']);
   Route::delete('/{id}', [UsersController::class, 'destroy']);
-  // Toggle user active/passive state
   Route::put('/durumdegistir/{id}', [UsersController::class, 'durumDegistir']);
 });
 
 // Work centers and stations (protected)
 Route::middleware('auth:sanctum')->group(function () {
-  // Route::get('/merkezal', [UsersController::class, 'getWorkCenters']);
-  // Route::get('/istasyonal', [UsersController::class, 'getStations']);
-  Route::get('/istasyonlaral', [Emirler::class, 'getIstasyonlar']);
-  Route::get('/istasyonal', [Emirler::class, 'getIstasyon']);
-  Route::get('/merkezal', [Emirler::class, 'getMerkezler']);
+  Route::get('/istasyonlaral', [EmirlerController::class, 'getIstasyonlar']);
+  Route::get('/istasyonal', [EmirlerController::class, 'getIstasyon']);
+  Route::get('/merkezal', [EmirlerController::class, 'getMerkezler']);
   // Password reset and activate helpers used by UI
   Route::put('/sifresifirla/{id}', [UsersController::class, 'sifreSifirla']);
   Route::put('/userpasif/{id}', [UsersController::class, 'durumDegistir']);
@@ -71,28 +70,37 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Planning endpoints (protected) used by is-emirleri-montaj.vue
 Route::middleware('auth:sanctum')->group(function () {
-  // Data grids and details
-  Route::get('/data', [Emirler::class, 'getData']);
-  Route::get('/aktifleri-al', [Emirler::class, 'AktifleriAl']);
-  Route::get('/isEmriDetay', [Emirler::class, 'getIsEmriDetay']);
-  Route::get('/digerdepobakiyeleri', [Emirler::class, 'getDepoBakiyeleri']);
+  Route::get('/data', [EmirlerController::class, 'getData']);
+  Route::get('/aktifleri-al', [EmirlerController::class, 'AktifleriAl']);
+  Route::get('/isEmriDetay', [EmirlerController::class, 'getIsEmriDetay']);
+  Route::get('/digerdepobakiyeleri', [EmirlerController::class, 'getDepoBakiyeleri']);
 
   // Updates
-  Route::post('/istasyonKaydet', [Emirler::class, 'istasyonKaydet']);
-  Route::post('/aksesuarKaydet', [Emirler::class, 'AksesuarKaydet']);
-  Route::post('/updatePlanBaslangic', [Emirler::class, 'updatePlanlananBaslangic']);
-  Route::post('/planNotKaydet', [Emirler::class, 'notKaydet']);
-  Route::post('/saveGrup', [Emirler::class, 'saveGrup']);
-  Route::post('/ralguncelle', [Emirler::class, 'RalGuncelle']);
+  Route::post('/istasyonKaydet', [EmirlerController::class, 'istasyonKaydet']);
+  Route::post('/aksesuarKaydet', [EmirlerController::class, 'AksesuarKaydet']);
+  Route::post('/updatePlanBaslangic', [EmirlerController::class, 'updatePlanlananBaslangic']);
+  Route::post('/planNotKaydet', [EmirlerController::class, 'notKaydet']);
+  Route::post('/saveGrup', [EmirlerController::class, 'saveGrup']);
+  Route::post('/ralguncelle', [EmirlerController::class, 'RalGuncelle']);
 });
 
-// Planning endpoints (protected) used by is-emirleri-ihtiyaclar.vue
+// Planning endpoints (protected) used by ihtiyac-listesi.vue
 Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/istasyon-ihtiyaclar', [Emirler::class, 'IhtiyacHesapla']);
-  Route::get('/merkezal', [Emirler::class, 'getMerkezler']);
-  Route::get('/istasyonal', [Emirler::class, 'getIstasyon']);
-  Route::get('/isEmriAcilmislar', [Emirler::class, 'getAcilmisIsEmirleri']);
-  Route::get('/satinalmasorgu', [Emirler::class, 'getSatinalmaSorgu']);
-  Route::get('/taleplersorgu', [Emirler::class, 'getTaleplerSorgu']);
-  Route::get('/digerdepobakiyeleri', [Emirler::class, 'getDepoBakiyeleri']);
+  Route::get('/istasyon-ihtiyaclar', [IhtiyacController::class, 'IhtiyacHesapla']);
+  Route::get('/merkezal', [IhtiyacController::class, 'getMerkezler']);
+  Route::get('/istasyonal', [IhtiyacController::class, 'getIstasyon']);
+  Route::get('/isEmriAcilmislar', [IhtiyacController::class, 'getAcilmisIsEmirleri']);
+  Route::get('/satinalmasorgu', [IhtiyacController::class, 'getSatinalmaSorgu']);
+  Route::get('/taleplersorgu', [IhtiyacController::class, 'getTaleplerSorgu']);
+  Route::get('/digerdepobakiyeleri', [IhtiyacController::class, 'getDepoBakiyeleri']);
+});
+
+// Planning endpoints (protected) used by kapasite-hesapla.vue
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/kapasite-param', [KapasiteController::class, 'getKapasiteParam']);
+  Route::get('/get-kapasite-data', [KapasiteController::class, 'getKapasiteData']);
+  Route::get('/kapasite-planlama', [KapasiteController::class, 'kapasitePlanla']);
+  Route::get('/kapasite-takvim', [KapasiteController::class, 'getTakvim']);
+  Route::get('/kapasite-hafta', [KapasiteController::class, 'getKapasiteHaftalar']);
+  Route::post('/kapasite-guncelle', [KapasiteController::class, 'kapasiteGuncelle']);
 });
