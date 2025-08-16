@@ -1,4 +1,5 @@
 <template>
+  <!-- template starts above -->
   <div class="carousel-scroll pa-2 mb-2 mt-0" ref="carouselScroll" @mouseenter="pauseAutoScroll"
     @mouseleave="resumeAutoScroll">
     <div v-for="(item, index) in items" :key="index" class="carousel-card" @click="detaylariGoster(item)">
@@ -170,7 +171,7 @@
               <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" :allow-sorting="false" />
               <DxColumn data-field="teslim_tarihi" caption="TESLİM TARİHİ" data-type="date" :width="140"
                 :visible="false" :format="{
-                  formatter: (date) => {
+                  formatter: (date: any) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -181,7 +182,7 @@
                 }" :allow-sorting="false" />
               <DxColumn data-field="planlanan_baslangic" caption="PLN BŞL" data-type="date" :width="130" :visible="true"
                 :format="{
-                  formatter: (date) => {
+                  formatter: (date: any) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -195,7 +196,7 @@
                 }" />
               <DxColumn data-field="planlanan_bitis_tarihi" caption="PLN BTŞ" data-type="date" :width="110"
                 :visible="true" :format="{
-                  formatter: (date) => {
+                  formatter: (date: any) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -249,7 +250,7 @@
               <DxColumn data-field="sip_not4" caption="SİP NOT 4" :min-width="120" :allow-sorting="false" />
               <DxColumn data-field="CIKIS_DEPO" caption="ÇIKIŞ DEPO" :min-width="80" :allow-sorting="false" />
 
-              <DxLoadPanel :key="loadingVisible" v-model:visible="loadingVisible" :show-indicator="true"
+              <DxLoadPanel key="grid-main-load" v-model:visible="loadingVisible" :show-indicator="true"
                 :show-pane="true" :shading="true" />
               <DxHeaderFilter :visible="true" />
               <DxFilterPanel :visible="true" />
@@ -394,7 +395,7 @@
 
               <DxGroupPanel :visible="false" />
               <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
-              <DxLoadPanel :key="loadingVisible" v-model:visible="loadingVisible" :show-indicator="true"
+              <DxLoadPanel key="grid-malzeme-load" v-model:visible="loadingVisible" :show-indicator="true"
                 :show-pane="true" :shading="true" />
             </DxDataGrid>
           </VCardText>
@@ -441,7 +442,7 @@
                 thousandsSeparator: ',',
               }" />
 
-              <DxLoadPanel :key="loadingVisible" v-model:visible="loadingVisible" :show-indicator="true"
+              <DxLoadPanel key="grid-durus-load" v-model:visible="loadingVisible" :show-indicator="true"
                 :show-pane="true" :shading="true" />
               <DxHeaderFilter :visible="true" />
               <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
@@ -623,7 +624,7 @@
 
           <DxGroupPanel :visible="false" />
           <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
-          <DxLoadPanel :key="loadingVisible" v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true"
+          <DxLoadPanel key="grid-bakiye-load" v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true"
             :shading="true" />
         </DxDataGrid>
       </VCol>
@@ -664,7 +665,7 @@ import { DxItem } from "devextreme-vue/tabs";
 import DxTextArea from "devextreme-vue/text-area";
 import notify from "devextreme/ui/notify";
 import { v4 as uuidv4 } from "uuid";
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import VueSpeedometer from "vue-speedometer";
 import { VSelect } from "vuetify/components";
 import Grafik from "./Grafik.vue";
@@ -673,7 +674,7 @@ import PersonelSecDialog from "./PersonelSecDialog.vue";
 import ProductionCard from "./ProductionCard.vue";
 
 const carouselScroll = ref<HTMLElement | null>(null);
-let autoScrollInterval: number | undefined;
+let autoScrollInterval: ReturnType<typeof setInterval> | null = null;
 interface SeciliType {
   isEmriId: number;
   isEmriNo: string;
@@ -799,6 +800,29 @@ const onShowDetails = (detail: any) => {
     // console.log('Detay:', detail);
   }
 };
+
+// --- Yardımcı & grid event handlerları ---
+const onExporting = (_e: any) => { /* export ayarları gerekirse */ };
+const onSelectionChanged = (_e: any) => { /* seçim değişti */ };
+// Filtre satırı görünürlüğü
+const goster = ref<boolean>(false);
+const FiltreTemizle = () => {
+  const inst = dataGridRef.value?.instance;
+  inst?.clearFilter();
+};
+const toggleGoster = () => { goster.value = !goster.value; };
+// Özet metin formatlayıcı
+function formatSummaryText(itemInfo: { value: string | number | Date; valueText: string }) {
+  if (itemInfo.value instanceof Date) return itemInfo.valueText;
+  return itemInfo.value?.toString();
+}
+const right: 'right' = 'right';
+// Hafta hücresi not popup state
+const planlamaNotu = ref('');
+const notBaslik = ref('');
+const popupMesajGosterVisible = ref(false);
+// Placeholder ikon şablonu kullanılan kolon için
+const getIconType = (cellElement: HTMLElement, cellInfo: any) => { cellElement.innerText = cellInfo.text; };
 const selectedRow = ref({
   hafta: "",
   istasyon: "",
@@ -883,11 +907,8 @@ const updateTime = () => {
 
 };
 
-function vardiyadaKacinciDakika(now = new Date()) {
-  const pad = (n) => (n < 10 ? "0" + n : n);
-
-  // Yardımcı: Saat oluşturucu
-  function createTime(hour, minute) {
+function vardiyadaKacinciDakika(now: Date = new Date()): number {
+  function createTime(hour: number, minute: number) {
     const d = new Date(now);
     d.setHours(hour, minute, 0, 0);
     return d;
@@ -908,7 +929,7 @@ function vardiyadaKacinciDakika(now = new Date()) {
   ];
 
   // Geçen süre (dakika)
-  const gecenDakika = Math.floor((now - baslangic) / 60000);
+  const gecenDakika = Math.floor((now.getTime() - baslangic.getTime()) / 60000);
 
   // Mola süresi toplamı
   let MolaDakika = 0;
@@ -923,11 +944,7 @@ function vardiyadaKacinciDakika(now = new Date()) {
 
   return gecenDakika - MolaDakika;
 }
-function formatSummaryText(e) {
-  return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(
-    e.value
-  );
-}
+
 const formatTarih = (tarihStr?: string) => {
   if (!tarihStr) return "-";
   return dayjs(tarihStr).format("DD MMMM YYYY dddd HH:mm");
@@ -1373,7 +1390,7 @@ const tipCellTemplate = (cellElement: HTMLElement, cellInfo: any): void => {
     return icon;
   };
 
-  let renk;
+  let renk: string | undefined;
 
   switch (tip) {
     case "Hammadde":
@@ -1389,7 +1406,7 @@ const tipCellTemplate = (cellElement: HTMLElement, cellInfo: any): void => {
       renk = "gray";
       break;
   }
-  const plnIcon = createIcon(renk, true);
+  const plnIcon = createIcon(renk || 'gray', true);
   cellElement.insertBefore(plnIcon, cellElement.firstChild);
 };
 
@@ -1601,7 +1618,7 @@ const startAutoScroll = () => {
 };
 
 const stopAutoScroll = () => {
-  if (autoScrollInterval) clearInterval(autoScrollInterval);
+  if (autoScrollInterval) clearInterval(autoScrollInterval as any);
 };
 
 const pauseAutoScroll = () => stopAutoScroll();
@@ -1616,7 +1633,8 @@ const verileriAl = async () => {
   //await veriHaftalikUretimler();
 };
 
-const haftalikVeri = ref({});
+// Haftalık veri ürün ID -> miktar eşleşmeleri içerir; her gün için dinamik alanlar olabilir.
+const haftalikVeri = ref<Record<string, Record<string, number>>>({});
 const tarihAraligi = ref([]);
 const seciliHafta = ref("bu");
 const grafikVerisi = ref([]);
@@ -1663,29 +1681,30 @@ const veriHaftalikUretimler = async () => {
   tarihAraligi.value = data.hafta;
 };
 
-const tabloVerisi = computed(() => {
-  const sonuc = [];
-  for (const [gun, items] of Object.entries(haftalikVeri.value)) {
-    sonuc.push({
-      tarih: gun,
-      ...items,
-    });
+interface TabloSatir {
+  tarih: string;
+  [key: string]: string | number;
+}
+const tabloVerisi = computed<TabloSatir[]>(() => {
+  const sonuc: TabloSatir[] = [];
+  for (const gun of Object.keys(haftalikVeri.value)) {
+    const items = haftalikVeri.value[gun] || {};
+    sonuc.push({ tarih: gun, ...items });
   }
   return sonuc;
 });
 
-const tableHeaders = computed(() => {
-  const itemIds = new Set();
+interface TableHeader { title: string; key: string }
+const tableHeaders = computed<TableHeader[]>(() => {
+  const itemIds = new Set<string>();
   Object.values(haftalikVeri.value).forEach((gunVerisi) => {
-    Object.keys(gunVerisi).forEach((id) => itemIds.add(id));
+    if (gunVerisi && typeof gunVerisi === 'object') {
+      Object.keys(gunVerisi).forEach((id) => itemIds.add(id));
+    }
   });
-
   return [
-    { title: "Tarih", key: "tarih" },
-    ...Array.from(itemIds).map((id) => ({
-      title: `Ürün ${id}`,
-      key: id,
-    })),
+    { title: 'Tarih', key: 'tarih' },
+    ...Array.from(itemIds).map((id) => ({ title: `Ürün ${id}`, key: id })),
   ];
 });
 
@@ -1718,8 +1737,9 @@ const fetchKartlar = async () => {
     // console.log("Cal:", cal.value);
     // console.log("Dur:", dur.value);
 
-    anlikUretim.value = paketler.reduce((toplam, item) => {
-      return toplam + parseFloat(item.paket_miktari ?? 0);
+    anlikUretim.value = (paketler as any[]).reduce((toplam: number, item: any) => {
+      const val = parseFloat(item?.paket_miktari ?? 0);
+      return toplam + (isNaN(val) ? 0 : val);
     }, 0);
   } catch (error) {
     console.error("Performans verisi çekilirken hata oluştu: ", error);
@@ -1901,6 +1921,8 @@ const onCellPrepared = (e: any) => {
     e.cellElement.style.fontWeight = "bold";
   }
 };
+
+// (getIconType tanımı yukarıda mevcut)
 
 const onCellPreparedM = (e: any) => {
   if (
