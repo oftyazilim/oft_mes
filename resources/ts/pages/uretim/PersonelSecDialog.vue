@@ -1,6 +1,10 @@
 <template>
   <VDialog v-model="dialog" max-width="800" @update:model-value="onDialogChange">
-    <VCard>
+    <VCard class="personel-dialog-card">
+      <div v-if="loading" class="dialog-loading-overlay d-flex flex-column align-center justify-center">
+        <v-progress-circular indeterminate color="primary" size="48" class="mb-3" />
+        <span style="font-weight: 600;">Kayıt yapılıyor...</span>
+      </div>
       <VCardTitle class="text-h6 d-flex justify-space-between align-center">
         Personel Seçimi
         <div class="text-caption text-end">
@@ -8,7 +12,7 @@
         </div>
       </VCardTitle>
       <div class="ps-6">
-        <VBtn variant="outlined" @click="EkipAktar()">
+        <VBtn variant="outlined" @click="EkipAktar()" :disabled="loading">
           <VIcon start icon="tabler-users" />
           Ekip Aktar
         </VBtn>
@@ -45,8 +49,8 @@
 
       <VCardActions>
         <VSpacer />
-        <VBtn variant="outlined" color="warning" @click="iptal">Vazgeç</VBtn>
-        <VBtn @click="kaydet" variant="outlined" color="success">Kaydet</VBtn>
+        <VBtn variant="outlined" color="warning" @click="iptal" :disabled="loading">Vazgeç</VBtn>
+        <VBtn @click="kaydet" variant="outlined" color="success" :disabled="loading">Kaydet</VBtn>
       </VCardActions>
     </VCard>
   </VDialog>
@@ -208,5 +212,17 @@ const EkipAktar = () => {
 <style scoped>
 .cursor-pointer {
   cursor: pointer;
+}
+
+.personel-dialog-card {
+  position: relative;
+}
+
+.dialog-loading-overlay {
+  position: absolute;
+  z-index: 50;
+  backdrop-filter: blur(2px);
+  background: rgba(255, 255, 255, 80%);
+  inset: 0;
 }
 </style>

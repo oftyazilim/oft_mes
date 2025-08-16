@@ -1,5 +1,11 @@
 <template>
-  <VCard class="pa-3" elevation="3" rounded="lg" @click="emitDetails" :class="{ 'selected-card': isSelected }">
+  <VCard class="pa-3 production-card" elevation="3" rounded="lg" @click="emitDetails"
+    :class="{ 'selected-card': isSelected }">
+    <!-- İşlem Süreci Overlay -->
+    <div v-if="actionLoading" class="loading-overlay d-flex flex-column align-center justify-center">
+      <v-progress-circular indeterminate color="primary" size="40" class="mb-3" />
+      <span style="font-weight: 600;">İşlem yapılıyor...</span>
+    </div>
     <!-- Üst Bar -->
     <VRow align="center" justify="space-between" class="mb-0" :style="{
       backgroundColor: getHeaderColor,
@@ -304,7 +310,26 @@ const selectedSebep = ref<{
 } | null>(null);
 
 const emitDetails = () => {
-  emit("show-details", props.isemriNo);
+  // Kartın detay bilgilerini üst bileşene gönder
+  const detail = {
+    isemriNo: props.isemriNo,
+    isemriId: props.isemriId,
+    partId: props.partId,
+    partCode: props.partCode,
+    partName: props.partName,
+    guid: props.guid,
+    status: status.value,
+    sebep: props.sebep,
+    baslangicZamani: props.baslangicZamani,
+    personelId: props.personelId,
+    personelName: props.personelName,
+    kontrolGerekli: props.kontrolGerekli,
+    kontrolcuCagrildi: props.kontrolcuCagrildi,
+    plnNote: props.plnNote,
+    prdNote: props.prdNote,
+    ekipSayisi: props.ekipSayisi,
+  };
+  emit("show-details", detail);
 };
 
 const props = defineProps<{
@@ -693,5 +718,21 @@ const chartOptions = computed(() => {
   color: white;
   font-size: 20px;
   font-weight: bold;
+}
+
+.production-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-overlay {
+  position: absolute;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 85%);
+  inset: 0;
 }
 </style>

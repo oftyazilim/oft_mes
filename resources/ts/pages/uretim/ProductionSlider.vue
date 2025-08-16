@@ -7,7 +7,7 @@
         :target="item.target" :actual="item.actual" :efficiency="item.efficiency" :quality="item.quality"
         :partId="item.partId" :partCode="item.partCode" :partName="item.partName" :sebep="item.sebep"
         :baslikArkarenk="item.baslikArkarenk" :barData="item.barData" :barTotal="item.barTotal" :guid="item.guid"
-        :isSelected="selectedIsemriNo === item.isemriNo" v-bind="item" @show-details="selectedIsemriNo = $event"
+        :isSelected="selectedIsemriNo === item.isemriNo" v-bind="item" @show-details="onShowDetails"
         :kontrolGerekli="item.is_use_quality" :kontrolcuCagrildi="item.is_check_quality_opr" :plnNote="item.plnNote"
         :prdNote="item.prdNote" :personelName="item.personelName" :personelId="item.personelId"
         :aksesuarli="item.aksesuarli" @ekipGuncellendi="onCardAction" @panelKapatildi="panelKapat(item)"
@@ -791,6 +791,14 @@ interface MontajVeri {
   isEmriTipi: string;
   durumBasTarih: string; // Added property to fix the error
 }
+
+const onShowDetails = (detail: any) => {
+  if (detail && detail.isemriNo) {
+    selectedIsemriNo.value = detail.isemriNo;
+    // İleride detay paneli doldurmak istersen burada state ataması yapabilirsin.
+    // console.log('Detay:', detail);
+  }
+};
 const selectedRow = ref({
   hafta: "",
   istasyon: "",
@@ -1798,6 +1806,8 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
         break;
       case "Aktif Yap":
         guid.value = uuidv4();
+        // Slider kart seçim bilgisi güncelle
+        selectedIsemriNo.value = selectedRow.value.isemri_no;
         const selectedItemIndex = montajVerileri.value.findIndex(
           (item: { personelID: number; isEmriNo: string }) =>
             item.isEmriNo === selectedRow.value.isemri_no &&
@@ -1977,13 +1987,14 @@ const onContextMenuPreparing = (e: any) => {
   box-sizing: border-box;
   border: 2px solid gray;
   border-radius: 10px;
-  height: 318px;
+
   /* background-color: rgb(var(--v-theme-secondary)); */
 
   /* background-image: url("https://www.transparenttextures.com/patterns/dark-mosaic.png"); */
 
   background-repeat: repeat;
   background-size: auto;
+  block-size: 318px;
   gap: 16px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
