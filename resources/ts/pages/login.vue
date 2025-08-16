@@ -47,7 +47,7 @@ const rememberMe = ref(false)
 
 const login = async () => {
   try {
-    console.log('Login attempt with:', credentials.value)
+    // console.log('Login attempt with:', credentials.value)
 
     const res = await $api('/auth/login', {
       method: 'POST',
@@ -63,11 +63,11 @@ const login = async () => {
 
     const { accessToken, userData, userAbilityRules } = res
 
-    console.log('Raw userAbilityRules:', userAbilityRules)
+    // console.log('Raw userAbilityRules:', userAbilityRules)
 
     // Normalize ability rules
     const normalizedRules = normalizeAbilityRules(userAbilityRules)
-    console.log('Normalized rules:', normalizedRules)
+    // console.log('Normalized rules:', normalizedRules)
 
     // Cookie ömrünü Remember Me'ye göre ayarla
     const cookieOpts = rememberMe.value
@@ -77,25 +77,25 @@ const login = async () => {
     // Ability rules'u cookie'ye kaydet ve ability'yi güncelle
     // Save ability rules array directly
     useCookie('userAbilityRules', cookieOpts as any).value = userAbilityRules
-    console.log('Updating ability with rules:', normalizedRules)
+   // console.log('Updating ability with rules:', normalizedRules)
     ability.update(normalizedRules as any)
-    console.log('Ability updated, rules count:', ability.rules.length)
+    // console.log('Ability updated, rules count:', ability.rules.length)
 
-    console.log('Ability updated, testing can("manage", "all"):', ability.can('manage', 'all'))
+    // console.log('Ability updated, testing can("manage", "all"):', ability.can('manage', 'all'))
 
     // Tüm görünür user alanlarını cookie'ye yaz (modelde $hidden gizler)
     const userDataCookie = useCookie<any>('userData', cookieOpts as any)
     userDataCookie.value = userData
     useCookie('accessToken', cookieOpts as any).value = accessToken
 
-    console.log('Cookies set - userData:', !!useCookie('userData').value, 'accessToken:', !!useCookie('accessToken').value)
-    console.log('UserData stored in cookie (full):', userDataCookie.value)
-    console.log(userData)
+    // console.log('Cookies set - userData:', !!useCookie('userData').value, 'accessToken:', !!useCookie('accessToken').value)
+    // console.log('UserData stored in cookie (full):', userDataCookie.value)
+    // console.log(userData)
     // Redirect to `to` query if exist or redirect to index route
     // ❗ nextTick is required to wait for DOM updates and later redirect
     await nextTick(() => {
       const targetPath = route.query.to ? String(route.query.to) : '/home-page'
-      console.log('Redirecting to:', targetPath)
+      // console.log('Redirecting to:', targetPath)
       router.push(targetPath)
     })
   }

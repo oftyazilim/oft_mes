@@ -1977,7 +1977,7 @@ const onContextMenuPreparing = (e: any) => {
   box-sizing: border-box;
   border: 2px solid gray;
   border-radius: 10px;
-
+  height: 318px;
   /* background-color: rgb(var(--v-theme-secondary)); */
 
   /* background-image: url("https://www.transparenttextures.com/patterns/dark-mosaic.png"); */

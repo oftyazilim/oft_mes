@@ -11,7 +11,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["roles"],
-        // target: '_blank',
+        target: '_blank',
       },
     ],
   },

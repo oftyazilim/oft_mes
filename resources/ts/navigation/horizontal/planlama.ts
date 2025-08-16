@@ -11,7 +11,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "create",
         subject: ["users"],
-        // target: '_blank',
+        target: '_blank',
       },
       {
         title: "Malzeme İhtiyaç Listesi",
@@ -19,7 +19,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "create",
         subject: ["users"],
-        // target: '_blank',
+        target: '_blank',
       },
       {
         title: "Kapasite Hesapla",
@@ -27,7 +27,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "create",
         subject: ["users"],
-        // target: '_blank',
+        target: '_blank',
       },
     ],
   },

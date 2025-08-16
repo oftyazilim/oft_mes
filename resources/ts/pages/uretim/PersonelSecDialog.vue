@@ -33,7 +33,7 @@
           <!-- Sağ Liste -->
           <VCol cols="6">
             <h5 class="text-subtitle-2 mt-9 mb-2">Ekip Listesi</h5>
-            <VList class="border rounded" style="max-block-size: 300px; overflow-y: auto;">
+            <VList class="border rounded" style="max-block-size: 535px; overflow-y: auto;">
               <VListItem v-for="(p, index) in secilenPersoneller" :key="p.sicil_no" @click="kaldir(index)"
                 class="cursor-pointer">
                 <VListItemTitle>{{ p.ad_soyad }}</VListItemTitle>

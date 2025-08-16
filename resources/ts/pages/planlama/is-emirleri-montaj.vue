@@ -589,55 +589,59 @@
                       <VCol cols="12" class="mt-2 pa-0 ps-2 pe-3 text-center">
                         <h4>Malzeme Listesi ({{ gridDataMalzemeler.length }} parça) (Depo ID: {{ selectedRow.CIKIS_DEPO
                           }})</h4>
-                        <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataMalzemeler"
-                          key-expr="item_id" :show-borders="true" :min-width="400" :column-auto-width="false"
-                          :allow-column-resizing="true" column-resizing-mode="widget" @cell-prepared="onCellPreparedM"
-                          height="750" :row-alternation-enabled="true" @row-click="onRowClick">
+                        <div style="height: 613px;">
+                          <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataMalzemeler"
+                            key-expr="item_id" :show-borders="true" :min-width="400" :column-auto-width="false"
+                            :allow-column-resizing="true" column-resizing-mode="widget" @cell-prepared="onCellPreparedM"
+                            height="100%" :row-alternation-enabled="true" @row-click="onRowClick">
 
-                          <DxColumn data-field="tipi" caption="TİPİ" data-type="string" :visible="true" :width="65"
-                            :cell-template="tipCellTemplate" />
-                          <DxColumn data-field="user_line_no" caption="LINE NO" :width="60" :visible="false" />
-                          <DxColumn data-field="item_id" caption="ITEM ID" :width="180" :visible="false" />
-                          <DxColumn data-field="stok_kodu" caption="STOK KODU" :min-width="120" />
-                          <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="180" />
-                          <DxColumn data-field="worder_m_id" caption="İŞ EMRİ ID" :width="150" :visible="false" />
-                          <DxColumn data-field="qty_base_bom" caption="BOM" :width="80" data-type=number :format="{
-                            type: 'fixedPoint',
-                            precision: 2,
-                            thousandsSeparator: ',',
-                          }" />
-                          <DxColumn data-field="qty_net" caption="İHTİYAÇ" :width="80" data-type="number" :format="{
-                            type: 'fixedPoint',
-                            precision: 2,
-                            thousandsSeparator: ',',
-                          }" />
-                          <DxColumn data-field="qty_prm" caption="STOK" :width="80" data-type="number" :format="{
-                            type: 'fixedPoint',
-                            precision: 2,
-                            thousandsSeparator: ',',
-                          }" />
-                          <DxColumn data-field="bakiye" caption="BAKİYE" :width="100" data-type="number"
-                            sort-order="asc" :format="{
+                            <DxColumn data-field="tipi" caption="TİPİ" data-type="string" :visible="true" :width="65"
+                              :cell-template="tipCellTemplate" />
+                            <DxColumn data-field="user_line_no" caption="LINE NO" :width="60" :visible="false" />
+                            <DxColumn data-field="item_id" caption="ITEM ID" :width="180" :visible="false" />
+                            <DxColumn data-field="stok_kodu" caption="STOK KODU" :min-width="120" />
+                            <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="180" />
+                            <DxColumn data-field="worder_m_id" caption="İŞ EMRİ ID" :width="150" :visible="false" />
+                            <DxColumn data-field="qty_base_bom" caption="BOM" :width="80" data-type=number :format="{
                               type: 'fixedPoint',
                               precision: 2,
                               thousandsSeparator: ',',
                             }" />
-                          <DxColumn data-field="qty_min_inv" caption="MİN STOK" :width="80" data-type="number" :format="{
-                            type: 'fixedPoint',
-                            precision: 2,
-                            thousandsSeparator: ',',
-                          }" />
-                          <DxColumn data-field="qty_max_inv" caption="MAX STOK" :width="80" data-type="number" :format="{
-                            type: 'fixedPoint',
-                            precision: 2,
-                            thousandsSeparator: ',',
-                          }" />
+                            <DxColumn data-field="qty_net" caption="İHTİYAÇ" :width="80" data-type="number" :format="{
+                              type: 'fixedPoint',
+                              precision: 2,
+                              thousandsSeparator: ',',
+                            }" />
+                            <DxColumn data-field="qty_prm" caption="STOK" :width="80" data-type="number" :format="{
+                              type: 'fixedPoint',
+                              precision: 2,
+                              thousandsSeparator: ',',
+                            }" />
+                            <DxColumn data-field="bakiye" caption="BAKİYE" :width="100" data-type="number"
+                              sort-order="asc" :format="{
+                                type: 'fixedPoint',
+                                precision: 2,
+                                thousandsSeparator: ',',
+                              }" />
+                            <DxColumn data-field="qty_min_inv" :visible="false" caption="MİN STOK" :width="80"
+                              data-type="number" :format="{
+                                type: 'fixedPoint',
+                                precision: 2,
+                                thousandsSeparator: ',',
+                              }" />
+                            <DxColumn data-field="qty_max_inv" :visible="false" caption="MAX STOK" :width="80"
+                              data-type="number" :format="{
+                                type: 'fixedPoint',
+                                precision: 2,
+                                thousandsSeparator: ',',
+                              }" />
 
-                          <DxGroupPanel :visible="false" />
-                          <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
+                            <DxGroupPanel :visible="false" />
+                            <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
 
 
-                        </DxDataGrid>
+                          </DxDataGrid>
+                        </div>
                       </VCol>
                     </VRow>
                   </VCol>
