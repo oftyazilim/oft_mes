@@ -1,12 +1,13 @@
 // import apps from './apps'
-import sistem from './sistem'
-import planlama from './planlama'
-import dashboard from './dashboard'
-import forms from './forms'
-import misc from './misc'
-import pages from './pages'
-import tables from './tables'
-import uiElements from './ui-elements'
-import type { HorizontalNavItems } from '@layouts/types'
+import type { HorizontalNavItems } from "@layouts/types";
+import dashboard from "./dashboard";
+import planlama from "./planlama";
+import sistem from "./sistem";
+import uretim from "./uretim";
 
-export default [...dashboard, ...planlama, ...sistem] as HorizontalNavItems;
+export default [
+  ...dashboard,
+  ...planlama,
+  ...uretim,
+  ...sistem,
+] as HorizontalNavItems;

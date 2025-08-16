@@ -8,6 +8,7 @@ use App\Http\Controllers\personel\UsersController;
 use App\Http\Controllers\planlama\EmirlerController;
 use App\Http\Controllers\planlama\KapasiteController;
 use App\Http\Controllers\planlama\IhtiyacController;
+use App\Http\Controllers\planlama\UretimMontajController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -103,4 +104,31 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/kapasite-takvim', [KapasiteController::class, 'getTakvim']);
   Route::get('/kapasite-hafta', [KapasiteController::class, 'getKapasiteHaftalar']);
   Route::post('/kapasite-guncelle', [KapasiteController::class, 'kapasiteGuncelle']);
+});
+
+// Planning endpoints (protected) used by uretim-montaj.vue
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/personeller', [UretimMontajController::class, 'PersonelListesi']);
+  Route::get('/aktif-ekipler', [UretimMontajController::class, 'EkipleriAl']);
+  Route::post('/aktif-ekipler', [UretimMontajController::class, 'EkipKaydet']);
+  Route::put('/aktif-ekipler/kapat', [UretimMontajController::class, 'EkipleriKapat']);
+  // Route::post('/ekip-bitir', [UretimMontajController::class, 'bitir']);
+  Route::post('/ekip-bitir-toplu', [UretimMontajController::class, 'bitirToplu']);
+  Route::post('/insert-workorder', [UretimMontajController::class, 'insertWorkOrder']);
+  Route::get('/uretim-kartlari', [UretimMontajController::class, 'getKartlar']);
+  Route::get('/uretim-haftalik', [UretimMontajController::class, 'haftalikPivot']);
+  Route::post('/mola-baslat', [UretimMontajController::class, 'baslat']);
+  Route::post('/durumKaydet', [UretimMontajController::class, 'DurumKaydet']);
+  Route::post('/durusKaydet', [UretimMontajController::class, 'DurusKaydet']);
+  Route::post('/kontrolcu-cagir-guncelle', [UretimMontajController::class, 'guncelleIsCheckQualityOpr']);
+  Route::get('/duruslar-istasyon', [UretimMontajController::class, 'IstasyonDuruslariniAl']);
+  Route::get('/duruslar-aktif', [UretimMontajController::class, 'AktifDuruslariAl']);
+  Route::post('/kontrolGerekKaydet', [UretimMontajController::class, 'KontrolGerekKaydet']);
+  Route::get('/dataUretimEmirler', [UretimMontajController::class, 'getUretimData']);
+  Route::get('/eksik-kontrolu', [UretimMontajController::class, 'EksikKontrolu']);
+  Route::get('/isEmriDetay', [UretimMontajController::class, 'getIsEmriDetay']);
+  Route::get('/haftalik-gunluk-paket-toplam', [UretimMontajController::class, 'getHaftalikGunlukToplamPaketMiktarlari']);
+  // Route::get('/haftalik-paket-miktarlari', [UretimMontajController::class, 'getHaftalikPaketMiktarlari']);
+  Route::get('/dataUretimPerformans', [UretimMontajController::class, 'getUretimPerformans']);
+  Route::get('/durus-sebepleri-al', [UretimMontajController::class, 'DurusSebepleriAl']);
 });

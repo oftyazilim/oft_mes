@@ -2006,7 +2006,7 @@ const RalKodlariGuncelle = async () => {
 #grid {
   display: flex;
   flex-direction: column;
-  block-size: 80vh;
+  block-size: 90vh;
   margin-block: -20px 20px;
 }
 
