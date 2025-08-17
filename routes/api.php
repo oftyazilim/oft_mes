@@ -9,16 +9,8 @@ use App\Http\Controllers\planlama\EmirlerController;
 use App\Http\Controllers\planlama\KapasiteController;
 use App\Http\Controllers\planlama\IhtiyacController;
 use App\Http\Controllers\planlama\UretimMontajController;
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
+use App\Http\Controllers\satis\SatisController;
+use App\Http\Controllers\satinalma\SatinalmaController;
 
 Route::group(['prefix' => 'auth'], function () {
   Route::post('login', [AuthController::class, 'login']);
@@ -51,32 +43,26 @@ Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () 
   Route::get('/', [UsersController::class, 'index']);
   Route::get('/{id}', [UsersController::class, 'show']);
   Route::get('/{id}/permissions', [UsersController::class, 'getUserPermissions']);
-  Route::post('/{id}/permissions/{permissionId}', [UsersController::class, 'assignUserPermission']);
-  Route::delete('/{id}/permissions/{permissionId}', [UsersController::class, 'removeUserPermission']);
-  Route::post('/', [UsersController::class, 'store']);
-  Route::put('/{id}', [UsersController::class, 'update']);
-  Route::delete('/{id}', [UsersController::class, 'destroy']);
-  Route::put('/durumdegistir/{id}', [UsersController::class, 'durumDegistir']);
-});
 
-// Work centers and stations (protected)
-Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/istasyonlaral', [EmirlerController::class, 'getIstasyonlar']);
-  Route::get('/istasyonal', [EmirlerController::class, 'getIstasyon']);
-  Route::get('/merkezal', [EmirlerController::class, 'getMerkezler']);
-  // Password reset and activate helpers used by UI
+  Route::post('/{id}/permissions/{permissionId}', [UsersController::class, 'assignUserPermission']);
+  Route::post('/', [UsersController::class, 'store']);
+
+  Route::put('/{id}', [UsersController::class, 'update']);
+  Route::put('/durumdegistir/{id}', [UsersController::class, 'durumDegistir']);
   Route::put('/sifresifirla/{id}', [UsersController::class, 'sifreSifirla']);
   Route::put('/userpasif/{id}', [UsersController::class, 'durumDegistir']);
+
+  Route::delete('/{id}', [UsersController::class, 'destroy']);
+  Route::delete('/{id}/permissions/{permissionId}', [UsersController::class, 'removeUserPermission']);
 });
 
-// Planning endpoints (protected) used by is-emirleri-montaj.vue
+// is-emirleri-montaj.vue
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/data', [EmirlerController::class, 'getData']);
   Route::get('/aktifleri-al', [EmirlerController::class, 'AktifleriAl']);
   Route::get('/isEmriDetay', [EmirlerController::class, 'getIsEmriDetay']);
   Route::get('/digerdepobakiyeleri', [EmirlerController::class, 'getDepoBakiyeleri']);
 
-  // Updates
   Route::post('/istasyonKaydet', [EmirlerController::class, 'istasyonKaydet']);
   Route::post('/aksesuarKaydet', [EmirlerController::class, 'AksesuarKaydet']);
   Route::post('/updatePlanBaslangic', [EmirlerController::class, 'updatePlanlananBaslangic']);
@@ -85,7 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/ralguncelle', [EmirlerController::class, 'RalGuncelle']);
 });
 
-// Planning endpoints (protected) used by ihtiyac-listesi.vue
+// ihtiyac-listesi.vue
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/istasyon-ihtiyaclar', [IhtiyacController::class, 'IhtiyacHesapla']);
   Route::get('/merkezal', [IhtiyacController::class, 'getMerkezler']);
@@ -96,39 +82,56 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/digerdepobakiyeleri', [IhtiyacController::class, 'getDepoBakiyeleri']);
 });
 
-// Planning endpoints (protected) used by kapasite-hesapla.vue
+// kapasite-hesapla.vue
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/kapasite-param', [KapasiteController::class, 'getKapasiteParam']);
   Route::get('/get-kapasite-data', [KapasiteController::class, 'getKapasiteData']);
   Route::get('/kapasite-planlama', [KapasiteController::class, 'kapasitePlanla']);
   Route::get('/kapasite-takvim', [KapasiteController::class, 'getTakvim']);
   Route::get('/kapasite-hafta', [KapasiteController::class, 'getKapasiteHaftalar']);
+
   Route::post('/kapasite-guncelle', [KapasiteController::class, 'kapasiteGuncelle']);
 });
 
-// Planning endpoints (protected) used by uretim-montaj.vue
+// uretim-montaj.vue
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/personeller', [UretimMontajController::class, 'PersonelListesi']);
   Route::get('/aktif-ekipler', [UretimMontajController::class, 'EkipleriAl']);
-  Route::post('/aktif-ekipler', [UretimMontajController::class, 'EkipKaydet']);
-  Route::put('/aktif-ekipler/kapat', [UretimMontajController::class, 'EkipleriKapat']);
-  // Route::post('/ekip-bitir', [UretimMontajController::class, 'bitir']);
-  Route::post('/ekip-bitir-toplu', [UretimMontajController::class, 'bitirToplu']);
-  Route::post('/insert-workorder', [UretimMontajController::class, 'insertWorkOrder']);
   Route::get('/uretim-kartlari', [UretimMontajController::class, 'getKartlar']);
   Route::get('/uretim-haftalik', [UretimMontajController::class, 'haftalikPivot']);
-  Route::post('/mola-baslat', [UretimMontajController::class, 'baslat']);
-  Route::post('/durumKaydet', [UretimMontajController::class, 'DurumKaydet']);
-  Route::post('/durusKaydet', [UretimMontajController::class, 'DurusKaydet']);
-  Route::post('/kontrolcu-cagir-guncelle', [UretimMontajController::class, 'guncelleIsCheckQualityOpr']);
   Route::get('/duruslar-istasyon', [UretimMontajController::class, 'IstasyonDuruslariniAl']);
   Route::get('/duruslar-aktif', [UretimMontajController::class, 'AktifDuruslariAl']);
-  Route::post('/kontrolGerekKaydet', [UretimMontajController::class, 'KontrolGerekKaydet']);
   Route::get('/dataUretimEmirler', [UretimMontajController::class, 'getUretimData']);
   Route::get('/eksik-kontrolu', [UretimMontajController::class, 'EksikKontrolu']);
   Route::get('/isEmriDetay', [UretimMontajController::class, 'getIsEmriDetay']);
   Route::get('/haftalik-gunluk-paket-toplam', [UretimMontajController::class, 'getHaftalikGunlukToplamPaketMiktarlari']);
-  // Route::get('/haftalik-paket-miktarlari', [UretimMontajController::class, 'getHaftalikPaketMiktarlari']);
   Route::get('/dataUretimPerformans', [UretimMontajController::class, 'getUretimPerformans']);
   Route::get('/durus-sebepleri-al', [UretimMontajController::class, 'DurusSebepleriAl']);
+
+  Route::post('/insert-workorder', [UretimMontajController::class, 'insertWorkOrder']);
+  Route::post('/ekip-bitir-toplu', [UretimMontajController::class, 'bitirToplu']);
+  Route::post('/aktif-ekipler', [UretimMontajController::class, 'EkipKaydet']);
+  Route::post('/kontrolcu-cagir-guncelle', [UretimMontajController::class, 'guncelleIsCheckQualityOpr']);
+  Route::post('/durumKaydet', [UretimMontajController::class, 'DurumKaydet']);
+  Route::post('/durusKaydet', [UretimMontajController::class, 'DurusKaydet']);
+  Route::post('/mola-baslat', [UretimMontajController::class, 'baslat']);
+  Route::post('/kontrolGerekKaydet', [UretimMontajController::class, 'KontrolGerekKaydet']);
+
+  Route::put('/aktif-ekipler/kapat', [UretimMontajController::class, 'EkipleriKapat']);
+});
+
+// musteri-siparisleri.vue
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/musteri-siparisleri', [SatisController::class, 'getMusteriSiparisleri']);
+  Route::get('/ciro-ozettablo', [SatisController::class, 'getCiro']);
+  Route::get('/siparis-ihtiyaclar', [SatisController::class, 'IhtiyacHesaplaSiparis']);
+
+  Route::post('/teslimtarihidegistirmusteri', [SatisController::class, 'TeslimTarihiDegistirMusteri']);
+});
+
+// satinalma-siparisleri.vue
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/firmalar', [SatinalmaController::class, 'getFirmalar']);
+
+  Route::post('/notgir', [SatinalmaController::class, 'NotKaydet']);
 });

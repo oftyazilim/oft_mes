@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Verim from '@/views/dashboards/dtk/Verim.vue';
 import VueApexCharts from 'vue3-apexcharts';
 import { watch, ref } from 'vue';
 

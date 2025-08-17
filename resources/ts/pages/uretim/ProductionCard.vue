@@ -1,6 +1,6 @@
 <template>
   <VCard class="pa-3 production-card" elevation="3" rounded="lg" @click="emitDetails"
-    :class="{ 'selected-card': isSelected }">
+    :class="{ 'selected-card': isSelected, 'fading-out': isFading }">
     <!-- İşlem Süreci Overlay -->
     <div v-if="actionLoading" class="loading-overlay d-flex flex-column align-center justify-center">
       <v-progress-circular indeterminate color="primary" size="40" class="mb-3" />
@@ -229,12 +229,13 @@ import axios from "axios";
 import { DxPopup, DxToolbarItem } from "devextreme-vue/popup";
 import { DxTooltip } from "devextreme-vue/tooltip";
 import notify from "devextreme/ui/notify";
-import { computed, onMounted, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useTheme } from 'vuetify';
 import PersonelSecDialog from "./PersonelSecDialog.vue";
 
 const emit = defineEmits(['show-details', 'ekipGuncellendi', 'panelKapatildi', 'durusGirildi']);
 const actionLoading = ref(false);
+const isFading = ref(false);
 function afterActionRefresh() {
   emit('ekipGuncellendi');
 }
@@ -269,7 +270,7 @@ const topluBitir = async () => {
 };
 
 const kapat = async () => {
-  if (actionLoading.value) return;
+  if (actionLoading.value || isFading.value) return;
   actionLoading.value = true;
   try {
     await topluBitir();
@@ -278,7 +279,13 @@ const kapat = async () => {
   } finally {
     actionLoading.value = false;
   }
-}
+  isFading.value = true;
+  // Fade süresi (CSS ile senkronize edilmeli). Daha belirgin olması için 1500ms'ye çıkarıldı.
+  const FADE_DURATION_MS = 1500;
+  setTimeout(() => {
+    emit('panelKapatildi', props.isemriNo);
+  }, FADE_DURATION_MS);
+};
 
 const isEmriKapat = async () => {
   // console.log(props.isemriId, props.guid, userData.value.id, props.sebep, uretimMiktari.value)
@@ -290,9 +297,7 @@ const isEmriKapat = async () => {
       selectedDurus: props.sebep,
       uretimMiktari: uretimMiktari.value,
     })
-
     uretimMiktari.value = 0
-    emit('panelKapatildi', props.isemriNo)
     triggerGlobalRefresh();
   } catch (err) {
     console.error(err)
@@ -382,6 +387,7 @@ const vazgecOptions = {
     showUretimMiktariDialog.value = false;
   },
 };
+
 
 status.value = props.status;
 
@@ -723,6 +729,12 @@ const chartOptions = computed(() => {
 .production-card {
   position: relative;
   overflow: hidden;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.production-card.fading-out {
+  opacity: 0;
+  transform: scale(0.97);
 }
 
 .loading-overlay {
