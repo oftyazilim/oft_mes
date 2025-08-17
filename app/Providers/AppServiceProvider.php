@@ -116,6 +116,11 @@ class AppServiceProvider extends ServiceProvider
                         $reqId = (string) Str::uuid();
                     }
 
+                    // user_id = 0 skip rule
+                    if (config('dbquerylog.skip_user_id_zero') && (int)$userId === 0) {
+                        return;
+                    }
+
                     // write to MSSQL users_logs via configured connection
                     $logConn = (string) config('dbquerylog.log_connection', 'pgsql_oft');
                     DB::connection($logConn)->table('users_logs')->insert([
@@ -158,20 +163,22 @@ class AppServiceProvider extends ServiceProvider
                     Cache::forget($key);
                 }
 
-                $logConn = (string) config('dbquerylog.log_connection', 'pgsql_oft');
-                DB::connection($logConn)->table('users_logs')->insert([
-                    'user_id' => $userId,
-                    'tarih'   => now(),
-                    'sayfa'   => Str::limit((string) ($fullUrl ?: $path), 255, ''),
-                    'eylem'   => 'LOGIN SUCCESS',
-                    'ip'      => $ip,
-                    'komut'   => '-',
-                    'request_id' => $reqId,
-                    'method'     => $method,
-                    'route'      => Str::limit((string) $path, 255, ''),
-                    'user_agent' => Str::limit((string) ($userAgent ?: '-'), 255, ''),
-                    'connection' => '-',
-                ]);
+                if (!(config('dbquerylog.skip_user_id_zero') && (int)$userId === 0)) {
+                    $logConn = (string) config('dbquerylog.log_connection', 'pgsql_oft');
+                    DB::connection($logConn)->table('users_logs')->insert([
+                        'user_id' => $userId,
+                        'tarih'   => now(),
+                        'sayfa'   => Str::limit((string) ($fullUrl ?: $path), 255, ''),
+                        'eylem'   => 'LOGIN SUCCESS',
+                        'ip'      => $ip,
+                        'komut'   => '-',
+                        'request_id' => $reqId,
+                        'method'     => $method,
+                        'route'      => Str::limit((string) $path, 255, ''),
+                        'user_agent' => Str::limit((string) ($userAgent ?: '-'), 255, ''),
+                        'connection' => '-',
+                    ]);
+                }
             } catch (\Throwable $e) {
                 Log::debug('Login log skipped: ' . $e->getMessage());
             }
@@ -198,20 +205,22 @@ class AppServiceProvider extends ServiceProvider
                 }
                 $attempts = (int) Cache::increment($key);
 
-                $logConn = (string) config('dbquerylog.log_connection', 'pgsql_oft');
-                DB::connection($logConn)->table('users_logs')->insert([
-                    'user_id' => $userId,
-                    'tarih'   => now(),
-                    'sayfa'   => Str::limit((string) ($fullUrl ?: $path), 255, ''),
-                    'eylem'   => 'LOGIN FAILED (attempt: ' . $attempts . ')',
-                    'ip'      => $ip,
-                    'komut'   => '-',
-                    'request_id' => $reqId,
-                    'method'     => $method,
-                    'route'      => Str::limit((string) $path, 255, ''),
-                    'user_agent' => Str::limit((string) ($userAgent ?: '-'), 255, ''),
-                    'connection' => '-',
-                ]);
+                if (!(config('dbquerylog.skip_user_id_zero') && (int)$userId === 0)) {
+                    $logConn = (string) config('dbquerylog.log_connection', 'pgsql_oft');
+                    DB::connection($logConn)->table('users_logs')->insert([
+                        'user_id' => $userId,
+                        'tarih'   => now(),
+                        'sayfa'   => Str::limit((string) ($fullUrl ?: $path), 255, ''),
+                        'eylem'   => 'LOGIN FAILED (attempt: ' . $attempts . ')',
+                        'ip'      => $ip,
+                        'komut'   => '-',
+                        'request_id' => $reqId,
+                        'method'     => $method,
+                        'route'      => Str::limit((string) $path, 255, ''),
+                        'user_agent' => Str::limit((string) ($userAgent ?: '-'), 255, ''),
+                        'connection' => '-',
+                    ]);
+                }
             } catch (\Throwable $e) {
                 Log::debug('Failed login log skipped: ' . $e->getMessage());
             }
@@ -229,20 +238,22 @@ class AppServiceProvider extends ServiceProvider
                 $userAgent = request()->header('User-Agent');
                 $reqId = (string) Str::uuid();
 
-                $logConn = (string) config('dbquerylog.log_connection', 'pgsql_oft');
-                DB::connection($logConn)->table('users_logs')->insert([
-                    'user_id' => $userId,
-                    'tarih'   => now(),
-                    'sayfa'   => Str::limit((string) ($fullUrl ?: $path), 255, ''),
-                    'eylem'   => 'LOGOUT',
-                    'ip'      => $ip,
-                    'komut'   => '-',
-                    'request_id' => $reqId,
-                    'method'     => $method,
-                    'route'      => Str::limit((string) $path, 255, ''),
-                    'user_agent' => Str::limit((string) ($userAgent ?: '-'), 255, ''),
-                    'connection' => '-',
-                ]);
+                if (!(config('dbquerylog.skip_user_id_zero') && (int)$userId === 0)) {
+                    $logConn = (string) config('dbquerylog.log_connection', 'pgsql_oft');
+                    DB::connection($logConn)->table('users_logs')->insert([
+                        'user_id' => $userId,
+                        'tarih'   => now(),
+                        'sayfa'   => Str::limit((string) ($fullUrl ?: $path), 255, ''),
+                        'eylem'   => 'LOGOUT',
+                        'ip'      => $ip,
+                        'komut'   => '-',
+                        'request_id' => $reqId,
+                        'method'     => $method,
+                        'route'      => Str::limit((string) $path, 255, ''),
+                        'user_agent' => Str::limit((string) ($userAgent ?: '-'), 255, ''),
+                        'connection' => '-',
+                    ]);
+                }
             } catch (\Throwable $e) {
                 Log::debug('Logout log skipped: ' . $e->getMessage());
             }

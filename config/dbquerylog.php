@@ -13,7 +13,11 @@ return [
     // Skip logging queries that match any of these substrings (case-insensitive)
     'ignore_contains' => [
         'users_logs', // prevent recursion
+        'personal_access_tokens', // Sanctum token CRUD gürültüsünü engelle
     ],
+
+    // user_id = 0 (anon / tespit edilemeyen) kayıtlarını tamamen atla
+    'skip_user_id_zero' => true,
 
     // Max SQL length to store (users_logs.komut is varchar(1000))
     'max_sql_length' => 1000,

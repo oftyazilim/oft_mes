@@ -2,12 +2,12 @@
   <VCard class="mt-0 pa-0">
     <VCardText class="mt-0 pa-2 ">
       <VCol cols="12" class="mt-2 pa-1 pe-2 pt-0">
-        <div id="liste" style="margin-block-end: 10px; margin-top: -10px">
+        <div id="liste" style="margin-block-end: 10px; margin-block-start: -10px;">
           <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" />
 
           <DxDataGrid id="grid" ref="dataGridRef" :key="gridKey" class="grid" :data-source="gridData"
-            key-expr="order_d_id" :show-borders="true" focused-row-enabled="true" row-alternation-enabled="true"
-            :min-width="200" allow-column-reordering="true" column-auto-width="true" allow-column-resizing="true"
+            key-expr="order_d_id" :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true"
+            :min-width="200" :allow-column-reordering="true" :column-auto-width="true" :allow-column-resizing="true"
             @contextMenuPreparing="onContextMenuPreparing" column-resizing-mode="widget"
             @selection-changed="onSelectionChanged" :auto-navigate-to-focused-row="true" width="100%"
             @exporting="onExporting" :selected-rows-keys="selectedRows">

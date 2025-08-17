@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\kalite\KaliteController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\personel\UsersController;
 use App\Http\Controllers\planlama\EmirlerController;
@@ -11,6 +12,8 @@ use App\Http\Controllers\planlama\IhtiyacController;
 use App\Http\Controllers\planlama\UretimMontajController;
 use App\Http\Controllers\satis\SatisController;
 use App\Http\Controllers\satinalma\SatinalmaController;
+use App\Http\Controllers\PhotoController;
+use Illuminate\Support\Facades\DB;
 
 Route::group(['prefix' => 'auth'], function () {
   Route::post('login', [AuthController::class, 'login']);
@@ -56,7 +59,7 @@ Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () 
   Route::delete('/{id}/permissions/{permissionId}', [UsersController::class, 'removeUserPermission']);
 });
 
-// is-emirleri-montaj.vue
+// planlama-montaj
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/data', [EmirlerController::class, 'getData']);
   Route::get('/aktifleri-al', [EmirlerController::class, 'AktifleriAl']);
@@ -71,18 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/ralguncelle', [EmirlerController::class, 'RalGuncelle']);
 });
 
-// ihtiyac-listesi.vue
-Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/istasyon-ihtiyaclar', [IhtiyacController::class, 'IhtiyacHesapla']);
-  Route::get('/merkezal', [IhtiyacController::class, 'getMerkezler']);
-  Route::get('/istasyonal', [IhtiyacController::class, 'getIstasyon']);
-  Route::get('/isEmriAcilmislar', [IhtiyacController::class, 'getAcilmisIsEmirleri']);
-  Route::get('/satinalmasorgu', [IhtiyacController::class, 'getSatinalmaSorgu']);
-  Route::get('/taleplersorgu', [IhtiyacController::class, 'getTaleplerSorgu']);
-  Route::get('/digerdepobakiyeleri', [IhtiyacController::class, 'getDepoBakiyeleri']);
-});
-
-// kapasite-hesapla.vue
+// kapasite-hesapla
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/kapasite-param', [KapasiteController::class, 'getKapasiteParam']);
   Route::get('/get-kapasite-data', [KapasiteController::class, 'getKapasiteData']);
@@ -93,7 +85,18 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/kapasite-guncelle', [KapasiteController::class, 'kapasiteGuncelle']);
 });
 
-// uretim-montaj.vue
+// ihtiyac-listesi
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/istasyon-ihtiyaclar', [IhtiyacController::class, 'IhtiyacHesapla']);
+  Route::get('/merkezal', [IhtiyacController::class, 'getMerkezler']);
+  Route::get('/istasyonal', [IhtiyacController::class, 'getIstasyon']);
+  Route::get('/isEmriAcilmislar', [IhtiyacController::class, 'getAcilmisIsEmirleri']);
+  Route::get('/satinalmasorgu', [IhtiyacController::class, 'getSatinalmaSorgu']);
+  Route::get('/taleplersorgu', [IhtiyacController::class, 'getTaleplerSorgu']);
+  Route::get('/digerdepobakiyeleri', [IhtiyacController::class, 'getDepoBakiyeleri']);
+});
+
+// uretim-montaj
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/personeller', [UretimMontajController::class, 'PersonelListesi']);
   Route::get('/aktif-ekipler', [UretimMontajController::class, 'EkipleriAl']);
@@ -120,7 +123,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::put('/aktif-ekipler/kapat', [UretimMontajController::class, 'EkipleriKapat']);
 });
 
-// musteri-siparisleri.vue
+// satis
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/musteri-siparisleri', [SatisController::class, 'getMusteriSiparisleri']);
   Route::get('/ciro-ozettablo', [SatisController::class, 'getCiro']);
@@ -129,12 +132,32 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/teslimtarihidegistirmusteri', [SatisController::class, 'TeslimTarihiDegistirMusteri']);
 });
 
-// satinalma-siparisleri.vue
+// satinalma
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/firmalar', [SatinalmaController::class, 'getFirmalar']);
   Route::get('/satinalma-siparisleri', [SatinalmaController::class, 'getSatinalmaSiparisleri']);
   Route::get('/satinalma-talepleri', [SatinalmaController::class, 'getSatinalmaTalepleri']);
-  
+
   Route::post('/teslimtarihidegistir', [SatinalmaController::class, 'TeslimTarihiDegistir']);
   Route::post('/notgir', [SatinalmaController::class, 'NotKaydet']);
+});
+
+// kalite
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/isEmri', [KaliteController::class, 'getIsEmri']);
+  Route::get('/aktiflerial', [KaliteController::class, 'getAktifCalismalar']);
+  Route::get('/kontrolleri-al', [KaliteController::class, 'KontrolleriAl']);
+  Route::get('/urun-agaci-secim/yukle', [KaliteController::class, 'UrunAgaciYukle']);
+  Route::get('/kontrolAktifAl', [KaliteController::class, 'KontrolAktifAl']);
+  Route::get('/gerekceler', fn() => DB::table('oftt_param_gerekceler')->get());
+  Route::get('/hata-goster-resim', [PhotoController::class, 'getFotolar']);
+
+  Route::post('/kontrolAktifKaydet', [KaliteController::class, 'KontrolAktifKaydet']);
+  Route::post('/kontroller/toplu-kaydet', [KaliteController::class, 'topluKaydet']);
+  Route::post('/kontrol-kaydet', [KaliteController::class, 'kaydetKontroller']);
+  Route::post('/urun-agaci-secim/kaydet', [KaliteController::class, 'UrunAgaciKaydet']);
+  Route::post('/hata-kaydet', [KaliteController::class, 'HataKaydet']);
+  Route::post('/hata-kaydet-resim', [KaliteController::class, 'HataKaydetResim']);
+  
+  Route::delete('/hata-sil-resim', [PhotoController::class, 'deleteFoto']);
 });

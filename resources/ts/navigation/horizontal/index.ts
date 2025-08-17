@@ -5,6 +5,7 @@ import satis from "./satis";
 import satinalma from "./satinalma";
 import sistem from "./sistem";
 import uretim from "./uretim";
+import kalite from "./kalite";
 
 export default [
   ...dashboard,
@@ -12,5 +13,6 @@ export default [
   ...satis,
   ...satinalma,
   ...uretim,
+  ...kalite,
   ...sistem,
 ] as HorizontalNavItems;

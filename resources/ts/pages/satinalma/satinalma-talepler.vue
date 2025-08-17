@@ -264,8 +264,9 @@ const YenileTarih = async () => {
 const getTalepler = async () => {
   selectedDateRange.value = [filterValue.value, filterValue1.value]
 
-  filterValue.value = formatDate(selectedDateRange.value[0])
-  filterValue1.value = formatDate(selectedDateRange.value[1])
+  // Ensure filterValue and filterValue1 are always Date objects
+  if (selectedDateRange.value[0]) filterValue.value = new Date(selectedDateRange.value[0])
+  if (selectedDateRange.value[1]) filterValue1.value = new Date(selectedDateRange.value[1])
 
   loadingVisible.value = true
   try {
@@ -290,12 +291,6 @@ onMounted(async () => {
   pageTitleStore.setTitle('Satınalma Talepleri')
   loadGridState()
   const currentWeek = getCurrentWeek()
-  axios
-    .post("/api/log-kayit", {
-      userId: userData.value.id,
-      sayfa: 'Satınalma Talepleri',
-      eylem: 'Yükleme',
-    });
 })
 
 const loadGridState = () => {
@@ -374,19 +369,19 @@ const formatNumber = number => {
 }
 
 const menuItems = [
-  { text: 'Yenile' },
+  // { text: 'Yenile' },
   { text: 'Düzen Yükle' },
   { text: 'Düzen Kaydet' },
   { text: 'Düzen Sıfırla' },
-  { text: 'Çıktı Al' },
+  // { text: 'Çıktı Al' },
 ]
 
 function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
   if (!itemData?.items) {
     switch (itemData?.text) {
-      case 'Yenile':
-        YenileMalzemeler()
-        break;
+      // case 'Yenile':
+      //   YenileMalzemeler()
+      //   break;
       case 'Düzen Yükle':
         loadGridState()
         break;
@@ -396,9 +391,9 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
       case 'Düzen Sıfırla':
         onStateResetClick()
         break;
-      case 'Çıktı Al':
-        CiktiAl()
-        break;
+      // case 'Çıktı Al':
+      //   CiktiAl()
+      //   break;
       default:
         break;
     }
