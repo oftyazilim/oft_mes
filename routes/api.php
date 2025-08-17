@@ -132,6 +132,9 @@ Route::middleware('auth:sanctum')->group(function () {
 // satinalma-siparisleri.vue
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/firmalar', [SatinalmaController::class, 'getFirmalar']);
-
+  Route::get('/satinalma-siparisleri', [SatinalmaController::class, 'getSatinalmaSiparisleri']);
+  Route::get('/satinalma-talepleri', [SatinalmaController::class, 'getSatinalmaTalepleri']);
+  
+  Route::post('/teslimtarihidegistir', [SatinalmaController::class, 'TeslimTarihiDegistir']);
   Route::post('/notgir', [SatinalmaController::class, 'NotKaydet']);
 });

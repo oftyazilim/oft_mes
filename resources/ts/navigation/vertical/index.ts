@@ -4,4 +4,4 @@ import uiElements from './ui-elements'
 import sistem from './sistems' 
 import type { HorizontalNavItems, VerticalNavItems } from '@layouts/types'
 
-export default [...dashboard, ...planlama, ...sistem] as VerticalNavItems;
+export default [...dashboard] as VerticalNavItems;

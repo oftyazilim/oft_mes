@@ -12,7 +12,7 @@ export default [
             to: "personel-kullanicilar",
             action: "manage",
             subject: "all",
-            target: "_blank",
+            // target: "_blank",
           },
           // {
           //   title: "Kullanıcı Listesi",

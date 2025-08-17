@@ -1794,7 +1794,7 @@ onMounted(async () => {
   await fetchKartlar();
   // await duruslariAl();
   startAutoScroll();
-  interval = setInterval(verileriAl, 5000);
+  interval = setInterval(verileriAl, 60000);
   // MolaTimer = setInterval(MolaKontrol, 10000);
 });
 
