@@ -1,29 +1,29 @@
 <template>
- <VRow class="match-height pa-0">
-  <VCol cols="6" md="3" class="pa-2">
-    <VBtn class="text-center mb-2" block @click="popupIsemriSecVisible = true">
-      İş Emri Seç
-    </VBtn>
-  </VCol>
+  <VRow class="match-height pa-0">
+    <VCol cols="6" md="3" class="pa-2">
+      <VBtn class="text-center mb-2" block @click="popupIsemriSecVisible = true">
+        İş Emri Seç
+      </VBtn>
+    </VCol>
 
-  <VCol cols="6" md="3" class="pa-2">
-    <VBtn :disabled="isEmriNo.length === 0" class="text-center mb-2" block @click="pdfGoster">
-      Teknik Resim
-    </VBtn>
-  </VCol>
+    <VCol cols="6" md="3" class="pa-2">
+      <VBtn :disabled="isEmriNo.length === 0" class="text-center mb-2" block @click="pdfGoster">
+        Teknik Resim
+      </VBtn>
+    </VCol>
 
-  <VCol cols="6" md="3" class="pa-2">
-    <VBtn :disabled="isEmriNo.length === 0" class="text-center mb-2" block @click="KontrolKapat">
-      Kontrol Sonu
-    </VBtn>
-  </VCol>
+    <VCol cols="6" md="3" class="pa-2">
+      <VBtn :disabled="isEmriNo.length === 0" class="text-center mb-2" block @click="KontrolKapat">
+        Kontrol Sonu
+      </VBtn>
+    </VCol>
 
-  <VCol cols="6" md="3" class="pa-2">
-    <VBtn :disabled="isEmriNo.length === 0" class="text-center mb-2" block @click="hataAc">
-      Mail Gönder
-    </VBtn>
-  </VCol>
-</VRow>
+    <VCol cols="6" md="3" class="pa-2">
+      <VBtn :disabled="isEmriNo.length === 0" class="text-center mb-2" block @click="hataAc">
+        Mail Gönder
+      </VBtn>
+    </VCol>
+  </VRow>
 
   <VRow class="match-height mt-0 gap-0">
 
@@ -200,13 +200,16 @@
 
               <template #sonucTemplate="{ data }">
                 <template v-if="data.value === 'Onaylandı'">
-                  <i :class="['dx-icon', 'dx-icon-isnotblank']" :style="{ fontSize: '16px', color: 'green' }"></i>
+                  <i>✔️</i>
+                  <!-- <i :class="['dx-icon', 'dx-icon-isnotblank']" :style="{ fontSize: '16px', color: 'green' }">✔️</i> -->
                 </template>
                 <template v-else-if="data.value === 'Şartlı Onay'">
-                  <i :class="['dx-icon', 'dx-icon-isnotblank']" :style="{ fontSize: '16px', color: 'gold' }"></i>
+                  <i>⚠️</i>
+                  <!-- <i :class="['dx-icon', 'dx-icon-isnotblank']" :style="{ fontSize: '16px', color: 'gold' }"></i> -->
                 </template>
                 <template v-else-if="data.value === 'Red'">
-                  <i :class="['dx-icon', 'dx-icon-isnotblank']" :style="{ fontSize: '16px', color: 'red' }"></i>
+                  <i>❌</i>
+                  <!-- <i :class="['dx-icon', 'dx-icon-isnotblank']" :style="{ fontSize: '16px', color: 'red' }"></i> -->
                 </template>
                 <template v-else>
                   <i :class="['dx-icon', 'dx-icon-isblank']" :style="{ fontSize: '16px', color: 'yellow' }"></i>
@@ -337,8 +340,9 @@
               <i :class="['dx-icon', 'dx-icon-isblank']" :style="{ fontSize: '20px', color: 'yellow' }"></i>
             </template>
           </template>
+
           <template #hataTemplate="{ data }">
-            <template v-if="data.value === '0' || data.value === 0">
+            <template v-if="data.value === 'f' || data.value === false">
               <i :class="['dx-icon', '']" :style="{ fontSize: '16px', color: 'green' }"></i>
             </template>
             <template v-else>
@@ -348,7 +352,7 @@
 
 
           <template #fotoTemplate="{ data }">
-            <template v-if="data.value === '1' || data.value === 1">
+            <template v-if="data.value === 't' || data.value === true">
               <i @click="fotoGoster()" :class="['dx-icon', 'dx-icon-image']"
                 :style="{ fontSize: '16px', color: 'green' }"></i>
             </template>
@@ -365,9 +369,10 @@
   <VRow class="match-height mt-0">
 
     <VCol cols="12" class="d-flex py-4 gap-4">
-      
-      <VCombobox v-model="aciklama" :items="hazirGerekceler" label="Gerekçe" variant="outlined" item-title="tanim" item-value="id"
-        :disabled="isEmriNo.length === 0 || secilenSatirlar.length === 0" auto-grow clearable rows="1" />
+
+      <VCombobox v-model="aciklama" :items="hazirGerekceler" label="Gerekçe" variant="outlined" item-title="tanim"
+        item-value="id" :disabled="isEmriNo.length === 0 || secilenSatirlar.length === 0" auto-grow clearable
+        rows="1" />
       <VBtn :disabled="isEmriNo.length === 0 || secilenSatirlar.length === 0" color="warning" :height="37"
         @click="GerekceGir">
         Gerekçe Gir
@@ -414,7 +419,7 @@
 
       <DxColumn data-field="id" caption="ID" :visible="false" width="40" cell-template="secimTemplate" />
       <DxColumn data-field="isemri_id" caption=" " data-type="number" :width="30" :visible="false" />
-      <DxColumn data-field="TANIM" caption="İSTASYON" :min-width="130" />
+      <DxColumn data-field="tanim" caption="İSTASYON" :min-width="130" />
       <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :min-width="120" :allow-sorting="false" />
       <DxColumn data-field="item_name" caption="STOK ADI" :allow-sorting="false" />
       <DxColumn data-field="item_code" caption="STOK KODU" :visible="true" :min-width="120" :allow-sorting="false" />
@@ -558,8 +563,10 @@
       </v-col>
     </v-row>
 
-    <DxToolbarItem :disabled="serino.length === 0 || sonuc.length === 0" widget="dxButton" toolbar="bottom"
-      location="center" :options="kaydetOptions" @click="KontrolKaydet" />
+    <DxToolbarItem :disabled="serino.length === 0 || sonuc.length === 0 || isSavingKontrol" widget="dxButton"
+      toolbar="bottom" location="center"
+      :options="{ ...kaydetOptions, text: isSavingKontrol ? 'Kaydediliyor...' : kaydetOptions.text }"
+      @click="KontrolKaydet" />
     <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="vazgecOptions" />
   </DxPopup>
 
@@ -707,9 +714,12 @@ const dataAgac = ref<any[]>([]);
 const emirlerKey = ref(0);
 const focusedRowKey = ref(null);
 const isEmriID = ref(0);
-const gridDataKontroller = ref<{ seri_no: string }[]>([]);
+interface KontrolGridRow { id?: number; seri_no: string; is_photo?: number | boolean;[key: string]: any }
+const gridDataKontroller = ref<KontrolGridRow[]>([]);
 const emirlerRef = ref<DxDataGrid | null>(null);
 const agacRef = ref<DxDataGrid | null>(null);
+// Ana "Seri Kontroller" grid'i için ref (foto silme sonrası refresh vs.)
+const dataGridRefKontrol = ref<DxDataGrid | null>(null);
 const selectedRowKeys = ref(0);
 const isEmriNo = ref("");
 const isEmriMiktari = ref(0);
@@ -719,6 +729,8 @@ const serino = ref('')
 const sonuc = ref('')
 const secilenSonuc = ref('')
 const hataOzet = ref('')
+// Kayıt butonuna ardışık tıklamaları engellemek için
+const isSavingKontrol = ref(false)
 const seciliHatalar = ref<Record<string, boolean>>({})
 const serinoRef = ref()
 const gridSurec = ref<GridRow[]>([]);
@@ -883,7 +895,6 @@ const EmirSec = async () => {
     seciliIsEmri.value.planTarih = response.data.data[0].plan_tarih_araligi;
     seciliIsEmri.value.aksesuar = response.data.data[0].aksesuar === 'Aksesuarlı' ? true : false;
     isEmriMiktari.value = response.data.data[0].isemri_miktari;
-
     KontrolleriAl()
     KontrolAktifKaydet('aktif')
   } catch (error) {
@@ -937,6 +948,7 @@ watch(fullscreenDialog, (yeniDeger, eskiDeger) => {
 
 watch(popupVisible, (yeniDeger, eskiDeger) => {
   if (eskiDeger === false && yeniDeger === true) {
+    isSavingKontrol.value = false // açıldığında resetle
     focusSerino()
   }
   if (eskiDeger === true && yeniDeger === false) {
@@ -984,7 +996,7 @@ const EmirleriAl = async () => {
     loadingVisible.value = true;
     const response = await axios.get("/api/aktiflerial", {
       params: {
-        istasyon: 0,
+        istasyonId: userData.value.istasyon_id,
       },
     });
     gridEmirler.value = response.data;
@@ -1068,9 +1080,10 @@ const MalzemeleriAl = async () => {
         isemri_id: isEmriID.value,
       },
     })
-
+    console.log('Malzemeler alındı:', response.data.malzemeler)
     dataAgac.value = response.data.malzemeler
     malzemeSayisi.value = response.data.toplamMalzeme
+    console.log('Malzemeler alındı:', dataAgac.value)
   }
   catch (error) {
     console.error('Veri çekilirken hata oluştu: ', error)
@@ -1126,7 +1139,7 @@ const AgacKaydet = async () => {
 }
 
 const AgacYukle = async () => {
-console.log(seciliIsEmri.value.urunKodu)
+  console.log(seciliIsEmri.value.urunKodu)
   const response = await axios.get('/api/urun-agaci-secim/yukle', {
     params: { urunKodu: seciliIsEmri.value.urunKodu },
   })
@@ -1393,6 +1406,15 @@ const focusSerino = () => {
 }
 
 const KontrolKaydet = async () => {
+  if (isSavingKontrol.value) {
+    notify({
+      message: 'Kayıt işlemi devam ediyor...',
+      type: 'warning',
+      displayTime: 1500,
+    })
+    return
+  }
+  isSavingKontrol.value = true
   const base64Resimler: Array<{ base64: string; extension: string }> = []
 
   for (const p of photos.value) {
@@ -1434,6 +1456,8 @@ const KontrolKaydet = async () => {
   } catch (err) {
     console.error('Hata:', err)
     alert('Kayıt sırasında bir hata oluştu.')
+  } finally {
+    isSavingKontrol.value = false
   }
 }
 
@@ -1606,13 +1630,26 @@ const confirmDelete = async (fotoUrl: any) => {
   const result = confirm('Bu fotoğrafı silmek istediğinizden emin misiniz?')
   if (!result) return
   try {
-    await axios.delete('/api/hata-sil-resim', {
+    const resp = await axios.delete('/api/hata-sil-resim', {
       params: {
         url: fotoUrl,
         isEmriNo: seciliIsEmri.value.isEmriNo,
       },
     })
     seciliKayitFotolar.value = seciliKayitFotolar.value.filter(f => f !== fotoUrl)
+    // Backend remaining=0 ise ilgili seri_no satırında is_photo=0 yap
+    const remaining = resp.data?.remaining
+    const seriNo = resp.data?.seri_no
+    if (remaining === 0 && seriNo) {
+      const row = gridDataKontroller.value.find(r => r.seri_no.startsWith(seriNo))
+      if (row) {
+        row.is_photo = 0
+        // DevExtreme grid yenile (ref varsa)
+        if (dataGridRefKontrol?.value?.instance) {
+          dataGridRefKontrol.value.instance.refresh();
+        }
+      }
+    }
   } catch (err) {
     console.error('Silme hatası:', err)
     alert('Silinirken hata oluştu.')
@@ -1684,16 +1721,16 @@ const photoHeaderTemplate = (header, info) => {
 
 
 const hataAc = () => {
-    notify({
-      message: seciliIsEmri.value.isEmriNo,
-      type: "error",
-      displayTime: 3000,
-    });
-    notify({
-      message: seciliIsEmri.value.urunKodu,
-      type: "error",
-      displayTime: 3000,
-    });
+  notify({
+    message: seciliIsEmri.value.isEmriNo,
+    type: "error",
+    displayTime: 3000,
+  });
+  notify({
+    message: seciliIsEmri.value.urunKodu,
+    type: "error",
+    displayTime: 3000,
+  });
   hataDialogRef.value.acDialog({
     isEmriNo: seciliIsEmri.value.isEmriNo,
     urunKodu: seciliIsEmri.value.urunKodu,
@@ -1737,10 +1774,6 @@ td {
   min-block-size: 30px;
 }
 
-.dx-dropdowneditor-input-wrapper .custom-item > img {
-  padding-inline-start: 8px;
-}
-
 .custom-item .product-name {
   display: inline-block;
   font-size: 15px;
@@ -1750,11 +1783,15 @@ td {
   text-indent: 0;
 }
 
-.custom-item > img {
+.custom-item>img {
   position: absolute;
   inset-block-start: 50%;
   inset-inline-start: 1px;
   margin-block-start: -15px;
+}
+
+.dx-dropdowneditor-input-wrapper .custom-item>img {
+  padding-inline-start: 8px;
 }
 
 .dx-theme-material #custom-templates .dx-texteditor-buttons-container {
@@ -1766,7 +1803,7 @@ td {
   padding-inline: 0;
 }
 
-.current-value > span {
+.current-value>span {
   font-weight: bold;
 }
 

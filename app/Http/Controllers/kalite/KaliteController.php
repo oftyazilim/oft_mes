@@ -69,12 +69,13 @@ class KaliteController extends Controller
         ], 200);
     }
 
-    public function getAktifCalismalar()
+    public function getAktifCalismalar(Request $request)
     {
         $aktifler = DB::connection('pgsql_oft')
             ->table('oftt_kontrol_isemri')
             ->join('oftt_param_istasyon', 'oftt_param_istasyon.wstation_id', '=', 'oftt_kontrol_isemri.istasyon_id')
             ->where('oftt_kontrol_isemri.is_open', 1)
+            ->where('oftt_kontrol_isemri.istasyon_id', $request->istasyonId)
             ->select(
                 'oftt_kontrol_isemri.id',
                 'oftt_kontrol_isemri.isemri_no',
@@ -155,7 +156,7 @@ class KaliteController extends Controller
             'sonuc'             => $request->sonuc,
             'kontrol_tarihi'    => now(),
             'olusturan_id'      =>  $request->user_id ?? 0,
-            'not'               =>  $request->hataOzet ?? null,
+            'note'               =>  $request->hataOzet ?? null,
             'is_photo'          => $isPhoto,
         ]);
 
@@ -176,7 +177,9 @@ class KaliteController extends Controller
                 File::makeDirectory($klasorYolu, 0777, true);
             }
 
-            $manager = new ImageManager(new Driver()); // 👈 Önemli
+            // Intervention Image opsiyonel: paket kurulu değilse (class bulunamazsa) orijinal base64 doğrudan yazılır.
+            $interventionAvailable = class_exists(ImageManager::class) && class_exists(Driver::class);
+            $manager = $interventionAvailable ? new ImageManager(new Driver()) : null; // 👈 Opsiyonel
 
             $sira = 1;
             foreach ($request->resimler as $resim) {
@@ -189,23 +192,26 @@ class KaliteController extends Controller
 
                 try {
                     $imageData = base64_decode($resim['base64']);
+                    if ($imageData === false) {
+                        throw new \RuntimeException('Base64 decode başarısız.');
+                    }
 
-                    $image = $manager->read($imageData);
-
-                    $originalWidth = $image->width();
-                    $originalHeight = $image->height();
-
-
-                    $targetWidth = 1024;
-                    $targetHeight = intval($originalHeight * $targetWidth / $originalWidth);
-
-                    $image = $image->resize($targetWidth, $targetHeight, function ($constraint) {
-                        $constraint->aspectRatio();
-                        $constraint->upsize();
-                    })->toJpeg(80);
-
-                    File::put($tamYol, (string) $image);
-
+                    if ($manager) {
+                        // Paket mevcutsa yeniden boyutlandır + kalite düşür
+                        $image = $manager->read($imageData);
+                        $originalWidth = $image->width();
+                        $originalHeight = $image->height();
+                        $targetWidth = 1024;
+                        $targetHeight = $originalWidth > 0 ? intval($originalHeight * $targetWidth / $originalWidth) : $originalHeight;
+                        $image = $image->resize($targetWidth, $targetHeight, function ($constraint) {
+                            $constraint->aspectRatio();
+                            $constraint->upsize();
+                        })->toJpeg(80);
+                        File::put($tamYol, (string) $image);
+                    } else {
+                        // Paket yok: orijinal veriyi olduğu gibi yaz
+                        File::put($tamYol, $imageData);
+                    }
                     $sira++;
                 } catch (\Throwable $e) {
                     Log::error('Resim kaydetme hatası: ' . $e->getMessage());
@@ -541,22 +547,70 @@ class KaliteController extends Controller
 
     public function topluKaydet(Request $request)
     {
-        $veriler = $request->all(); // serino, sonuc, aciklama içerecek
+        $veriler = $request->all(); // JSON array bekleniyor
 
-        // Log::info('Toplu kayıt verisi:', $veriler);
-
-        foreach ($veriler as $veri) {
-            DB::connection('pgsql_oft')->table('oftt_urun_kontrol_d')->insert([
-                'urun_kontrol_m_id' => $veri['urun_kontrol_m_id'],
-                'olusturan_id'      =>  $veri['user_id'],
-                'seri_no' => $veri['serino'],
-                'sonuc' => $veri['sonuc'],
-                'not' => $veri['aciklama'],
-                'kontrol_tarihi' => now(),
-            ]);
+        if (!is_array($veriler)) {
+            return response()->json(['success' => false, 'message' => 'Geçersiz veri formatı. Dizi bekleniyor.'], 422);
         }
 
-        return response()->json(['success' => true, 'message' => 'Toplu kayıt başarıyla eklendi.']);
+        $eklendi = 0;
+        $hatali = [];
+
+        foreach ($veriler as $index => $veri) {
+            if (!is_array($veri)) {
+                $hatali[] = $index;
+                continue;
+            }
+
+            // Zorunlu alanlar kontrolü
+            $gerekli = ['urun_kontrol_m_id', 'user_id', 'serino', 'sonuc'];
+            $eksik = array_diff($gerekli, array_keys($veri));
+            if (!empty($eksik)) {
+                $hatali[] = $index;
+                continue;
+            }
+
+            // Not alanı her zaman string olmalı
+            $rawNote = $veri['aciklama'] ?? null;
+            if (is_array($rawNote)) {
+                // Basitçe virgülle birleştir (iç içe diziler varsa JSON'a çevir)
+                $flat = [];
+                foreach ($rawNote as $k => $v) {
+                    if (is_scalar($v) || $v === null) {
+                        $flat[] = (string) $v;
+                    } else {
+                        $flat[] = json_encode($v, JSON_UNESCAPED_UNICODE);
+                    }
+                }
+                $note = implode(', ', array_filter($flat, fn($x) => $x !== ''));
+            } elseif (is_object($rawNote)) {
+                $note = json_encode($rawNote, JSON_UNESCAPED_UNICODE);
+            } else {
+                $note = $rawNote; // string ya da null
+            }
+
+            try {
+                DB::connection('pgsql_oft')->table('oftt_urun_kontrol_d')->insert([
+                    'urun_kontrol_m_id' => (int) $veri['urun_kontrol_m_id'],
+                    'olusturan_id'      => (int) $veri['user_id'],
+                    'seri_no'           => (string) $veri['serino'],
+                    'sonuc'             => (string) $veri['sonuc'],
+                    'note'              => $note,
+                    'kontrol_tarihi'    => now(),
+                ]);
+                $eklendi++;
+            } catch (\Throwable $e) {
+                Log::error('Toplu kaydet hata: satır=' . $index . ' mesaj=' . $e->getMessage());
+                $hatali[] = $index;
+            }
+        }
+
+        return response()->json([
+            'success' => empty($hatali),
+            'message' => 'Toplu kayıt tamamlandı.',
+            'eklenen' => $eklendi,
+            'hatali_indeksler' => $hatali,
+        ]);
     }
 
     public function KontrolSil($id)
@@ -592,7 +646,7 @@ class KaliteController extends Controller
 
     public function gosterPdf(Request $request)
     {
-             $kaynak = '\\\\192.6.2.4\\canovate_elektronik\\12_DOKUMANTASYON\\YAYINLI RESİMLER\\ÜRETİM\\00\\00 0000\\000392P00.PDF';
+        $kaynak = '\\\\192.6.2.4\\canovate_elektronik\\12_DOKUMANTASYON\\YAYINLI RESİMLER\\ÜRETİM\\00\\00 0000\\000392P00.PDF';
         $hedefKlasor = storage_path('app/public/temp');
         $hedef = $hedefKlasor . '/000392P00.PDF';
 
@@ -627,7 +681,7 @@ class KaliteController extends Controller
     {
         $validated = $request->validate([
             'hata_sebebi_id' => 'required|integer',
-            'not' => 'nullable|string',
+            'note' => 'nullable|string',
             'alicilar' => 'required|array|min:1',
             'gonderen_id' => 'required|integer',
             'is_emri_no' => 'required|string',
@@ -648,7 +702,7 @@ class KaliteController extends Controller
         // Bildirimi veritabanına kaydet
         $bildirimId = DB::table('oftt_param_hata_bildirimleri')->insertGetId([
             'hata_sebebi_id' => $validated['hata_sebebi_id'],
-            'not' => $validated['not'],
+            'note' => $validated['note'],
             'is_emri_no' => $validated['is_emri_no'],
             'urun_kodu' => $validated['urun_kodu'],
             'urun_adi' => $validated['urun_adi'],
@@ -659,7 +713,7 @@ class KaliteController extends Controller
         $mailData = [
             'bildirim_id' => $bildirimId,
             'hata_sebebi' => $hataSebebi,
-            'not' => $validated['not'],
+            'note' => $validated['note'],
             'gonderen_adi' => $gonderen->name ?? 'Bilinmiyor',
             'gonderen_email' => $gonderen->email ?? 'bilinmiyor@example.com',
             'is_emri_no' => $validated['is_emri_no'],

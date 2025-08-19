@@ -30,6 +30,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // API / SPA ortamı: Laravel varsayılanı 'login' adlı route'a redirect etmeye çalışır.
+        // Projede named 'login' route yok; bu yüzden RouteNotFoundException oluşuyor.
+        // Sanctum / API isteklerinde redirect yerine JSON 401 dön.
+        \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
+        \Illuminate\Auth\Middleware\Authenticate::redirectUsing(function ($request) {
+            if ($request->expectsJson() || str_starts_with($request->path(), 'api/')) {
+                abort(response()->json(['message' => 'Unauthenticated'], 401));
+            }
+            // Eğer ileride bir login view eklenirse buraya route('login') konabilir.
+            return '/';
+        });
         // Customize reset password URL for SPA frontend
         ResetPassword::createUrlUsing(function ($user, string $token) {
             $base = env('FRONTEND_URL', config('app.url'));

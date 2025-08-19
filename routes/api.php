@@ -158,6 +158,9 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/urun-agaci-secim/kaydet', [KaliteController::class, 'UrunAgaciKaydet']);
   Route::post('/hata-kaydet', [KaliteController::class, 'HataKaydet']);
   Route::post('/hata-kaydet-resim', [KaliteController::class, 'HataKaydetResim']);
-  
+
   Route::delete('/hata-sil-resim', [PhotoController::class, 'deleteFoto']);
 });
+
+// PUBLIC: Tekil fotoğraf dosyasını sun (auth gerektirmez). Güvenlik gerekirse signed URL eklenebilir.
+Route::get('/oft-resimler/{isemri_no}/{filename}', [PhotoController::class, 'serveImage']);

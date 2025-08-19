@@ -104,7 +104,7 @@ class PhotoController extends Controller
             ];
         })->values();
 
-        // Log::info("Bulunan dosyalar: " . json_encode($fotolar));
+        Log::info("Bulunan dosyalar: " . json_encode($fotolar));
 
         return response()->json($fotolar);
     }
@@ -134,11 +134,39 @@ class PhotoController extends Controller
         $klasor = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\kk-fotolari\\$isemri_no";
         $tamYol = $klasor . "\\" . $dosyaAdi;
 
-        if (File::exists($tamYol)) {
-            File::delete($tamYol);
-            return response()->json(['status' => 'ok']);
+        if (!File::exists($tamYol)) {
+            return response()->json(['status' => 'not_found'], 404);
         }
 
-        return response()->json(['status' => 'not_found'], 404);
+        try {
+            File::delete($tamYol);
+
+            // Dosya adından serino'yu çıkar (format: SERINO-XX.jpg)
+            $nameOnly = pathinfo($dosyaAdi, PATHINFO_FILENAME); // SERINO-01
+            $seriNo = $nameOnly;
+            if (preg_match('/^(.*)-(\d{2})$/', $nameOnly, $m)) {
+                $seriNo = $m[1];
+            }
+
+            // Aynı serino'ya bağlı başka foto kaldı mı?
+            $kalan = collect(File::files($klasor))
+                ->filter(function ($f) use ($seriNo) {
+                    return str_starts_with($f->getFilename(), $seriNo . '-');
+                })
+                ->count();
+
+            if ($kalan === 0) {
+                // Tablo: oftt_urun_kontrol_d, kolon: seri_no & is_photo
+                DB::connection('pgsql_oft')
+                    ->table('oftt_urun_kontrol_d')
+                    ->where('seri_no', $seriNo)
+                    ->update(['is_photo' => 0]);
+            }
+
+            return response()->json(['status' => 'ok', 'seri_no' => $seriNo, 'remaining' => $kalan]);
+        } catch (\Throwable $e) {
+            Log::error('Foto silme hatası: ' . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => 'Silinemedi'], 500);
+        }
     }
 }
