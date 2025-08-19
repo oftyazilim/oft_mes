@@ -12,8 +12,11 @@ use App\Http\Controllers\planlama\IhtiyacController;
 use App\Http\Controllers\planlama\UretimMontajController;
 use App\Http\Controllers\satis\SatisController;
 use App\Http\Controllers\satinalma\SatinalmaController;
+use App\Http\Controllers\depo\DepoMamulController;
 use App\Http\Controllers\PhotoController;
 use Illuminate\Support\Facades\DB;
+use App\Services\FileSearchController;
+use App\Services\FileServeController;
 
 Route::group(['prefix' => 'auth'], function () {
   Route::post('login', [AuthController::class, 'login']);
@@ -168,3 +171,21 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // PUBLIC: Tekil fotoğraf dosyasını sun (auth gerektirmez). Güvenlik gerekirse signed URL eklenebilir.
 Route::get('/oft-resimler/{isemri_no}/{filename}', [PhotoController::class, 'serveImage']);
+
+// depo
+Route::middleware('auth:sanctum')->group(function () {
+  Route::post('/find-pdf', [FileSearchController::class, 'findPdf']);
+  Route::post('/photo-upload', [PhotoController::class, 'store']);
+  Route::get('/photos', [PhotoController::class, 'index']);
+  Route::post('/photos', [PhotoController::class, 'store']);
+  Route::delete('/photos/{id}', [PhotoController::class, 'destroy']);
+  Route::get('/photos/pdf', [PhotoController::class, 'generatePdf']);
+  Route::get('/urunsorgula', [DepoMamulController::class, 'UrunSorgula']);
+  Route::get('/stok-listele', [DepoMamulController::class, 'StokListele']);
+  Route::get('/stok-param-al', [DepoMamulController::class, 'StokParamAl']);
+  Route::get('/stok-detay-al', [DepoMamulController::class, 'StokDetayAl']);
+  Route::get('/kategorial', [DepoMamulController::class, 'KategoriAl']);
+  Route::get('/depolarial', [DepoMamulController::class, 'DepolariAl']);
+  Route::post('/rafgir', [DepoMamulController::class, 'RafGir']);
+  Route::post('/kategori-guncelle', [DepoMamulController::class, 'KategoriGuncelle']);
+});
