@@ -1780,14 +1780,14 @@ td {
   text-indent: 0;
 }
 
-.custom-item>img {
+.custom-item > img {
   position: absolute;
   inset-block-start: 50%;
   inset-inline-start: 1px;
   margin-block-start: -15px;
 }
 
-.dx-dropdowneditor-input-wrapper .custom-item>img {
+.dx-dropdowneditor-input-wrapper .custom-item > img {
   padding-inline-start: 8px;
 }
 
@@ -1800,7 +1800,7 @@ td {
   padding-inline: 0;
 }
 
-.current-value>span {
+.current-value > span {
   font-weight: bold;
 }
 

@@ -102,7 +102,7 @@ const moreList = [
                 <p class="text-sm font-weight-medium text-medium-emphasis mb-0">
                   Lester McCarthy (Client)
                 </p>
-                <span class="text-sm">CEO of Pixinvent</span>
+                <span class="text-sm">CEO of OFT Yazılım</span>
               </div>
             </div>
           </div>

@@ -151,6 +151,8 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/kontrolAktifAl', [KaliteController::class, 'KontrolAktifAl']);
   Route::get('/gerekceler', fn() => DB::table('oftt_param_gerekceler')->get());
   Route::get('/hata-goster-resim', [PhotoController::class, 'getFotolar']);
+  Route::get('/kontrolListesiAl', [KaliteController::class, 'KontrolListesiAl']);
+  Route::get('/pdf-goster', [KaliteController::class, 'gosterPdf']);
 
   Route::post('/kontrolAktifKaydet', [KaliteController::class, 'KontrolAktifKaydet']);
   Route::post('/kontroller/toplu-kaydet', [KaliteController::class, 'topluKaydet']);
@@ -158,6 +160,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/urun-agaci-secim/kaydet', [KaliteController::class, 'UrunAgaciKaydet']);
   Route::post('/hata-kaydet', [KaliteController::class, 'HataKaydet']);
   Route::post('/hata-kaydet-resim', [KaliteController::class, 'HataKaydetResim']);
+  Route::post('/kontrolAcKaydet', [KaliteController::class, 'KontrolAcKaydet']);
 
   Route::delete('/hata-sil-resim', [PhotoController::class, 'deleteFoto']);
   Route::delete('/kontrol-sil/{id}', [KaliteController::class, 'KontrolSil']);

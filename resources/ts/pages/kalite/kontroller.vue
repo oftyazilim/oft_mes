@@ -1,4 +1,6 @@
 <template>
+  <DxLoadPanel v-model:visible="fullLoading" :show-indicator="true" :show-pane="true" :shading="true"
+    message="Yükleniyor..." :close-on-outside-click="false" />
   <VRow class="match-height pt-0 gap-0">
     <VCol md="8" cols="12">
       <VCard>
@@ -27,10 +29,14 @@
             v-model:focused-row-key="focusedRowKey" @row-dbl-click="onRowDblClick"
             @selection-changed="onSelectionChanged">
 
-            <DxColumn data-field="is_open" caption="Açık" :width="30" sort-order="desc" :sort-index="1" cell-template="openTemplate"/>
-            <DxColumn data-field="is_active" caption="Kontrol Ediliyor" :width="30" sort-order="desc" :sort-index="0"  cell-template="aktifTemplate"/>
-            <DxColumn data-field="is_use_quality" caption="Kontrol Gerekli" :width="30"  cell-template="gerekliTemplate"/>
-            <DxColumn data-field="is_check_quality_opr" caption="Inspektor Çağrıldı" :width="30"  cell-template="cagirTemplate"/>
+            <DxColumn data-field="is_open" caption="Açık" :width="30" sort-order="desc" :sort-index="1"
+              cell-template="openTemplate" />
+            <DxColumn data-field="is_active" caption="Kontrol Ediliyor" :width="30" sort-order="desc" :sort-index="0"
+              cell-template="aktifTemplate" />
+            <DxColumn data-field="is_use_quality" caption="Kontrol Gerekli" :width="30"
+              cell-template="gerekliTemplate" />
+            <DxColumn data-field="is_check_quality_opr" caption="Inspektor Çağrıldı" :width="30"
+              cell-template="cagirTemplate" />
             <DxColumn data-field="created_at" caption="Tarih" :width="130" data-type="date" sort-order="desc"
               :sort-index="2" :format="{
                 formatter: (date: any) => {
@@ -55,8 +61,7 @@
             <DxColumn data-field="istasyon_id" caption="İSTASYON ID" data-type="number" :width="60" :visible="false" />
 
 
-            <DxLoadPanel :key="loadingVisible" v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true"
-              :shading="true" />
+            <DxLoadPanel v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true" :shading="true" />
             <DxGroupPanel :visible="false" />
             <DxHeaderFilter :visible="true" />
             <DxFilterPanel :visible="false" />
@@ -68,11 +73,11 @@
 
             <DxSummary>
               <DxTotalItem :align-by-column="true" column="TANIM" summary-type="count" display-format="{0} adet"
-                :alignment="right" />
+                alignment="right" />
             </DxSummary>
 
             <template #openTemplate="{ data }">
-              <template v-if="data.value === '1'">
+              <template v-if="data.value === true">
                 <i :class="['dx-icon', 'dx-icon-sun']" :style="{ fontSize: '20px', color: 'green' }"></i>
               </template>
               <template v-else>
@@ -80,17 +85,17 @@
               </template>
             </template>
             <template #aktifTemplate="{ data }">
-              <template v-if="data.value === '1'">
+              <template v-if="data.value === true">
                 <i :class="['dx-icon', 'dx-icon-eyeopen']" :style="{ fontSize: '20px', color: 'green' }"></i>
               </template>
             </template>
             <template #gerekliTemplate="{ data }">
-              <template v-if="data.value === '1'">
+              <template v-if="data.value === true">
                 <i :class="['dx-icon', 'dx-icon-taskcomplete']" :style="{ fontSize: '20px', color: 'green' }"></i>
               </template>
             </template>
             <template #cagirTemplate="{ data }">
-              <template v-if="data.value === '1'">
+              <template v-if="data.value === true">
                 <i :class="['dx-icon', 'dx-icon-runner']" :style="{ fontSize: '20px', color: 'green' }"></i>
               </template>
             </template>
@@ -99,36 +104,38 @@
 
 
           <VCardText class="d-flex justify-center my-0 py-2">
-                <p class="d-flex  align-center">
-                  <i :class="['dx-icon', 'dx-icon-sun']" :style="{ fontSize: '20px', color: 'green' }"></i>
-                  <span class="ms-3">Kontrol Açık</span>
-                </p>
+            <p class="d-flex  align-center">
+              <i :class="['dx-icon', 'dx-icon-sun']" :style="{ fontSize: '20px', color: 'green' }"></i>
+              <span class="ms-3">Kontrol Açık</span>
+            </p>
 
-                <p class="d-flex  align-center ps-4">
-                  <i :class="['dx-icon', 'dx-icon-moon']" :style="{ fontSize: '20px', color: 'lightblue' }"></i>
-                  <span class="ms-3">Kontrol Kapalı</span>
-                </p>
+            <p class="d-flex  align-center ps-4">
+              <i :class="['dx-icon', 'dx-icon-moon']" :style="{ fontSize: '20px', color: 'lightblue' }"></i>
+              <span class="ms-3">Kontrol Kapalı</span>
+            </p>
 
-                <p class="d-flex align-center ps-4">
-                  <i :class="['dx-icon', 'dx-icon-eyeopen']" :style="{ fontSize: '20px', color: 'green' }"></i>
-                  <span class="ms-3">Kontrol Yapılıyor</span>
-                </p>
+            <p class="d-flex align-center ps-4">
+              <i :class="['dx-icon', 'dx-icon-eyeopen']" :style="{ fontSize: '20px', color: 'green' }"></i>
+              <span class="ms-3">Kontrol Yapılıyor</span>
+            </p>
 
-                <p class="d-flex align-center ps-4">
-                <i :class="['dx-icon', 'dx-icon-taskcomplete']" :style="{ fontSize: '20px', color: 'green' }"></i>
-                  <span class="ms-3">Kontrol Gerekli</span>
-                </p>
+            <p class="d-flex align-center ps-4">
+              <i :class="['dx-icon', 'dx-icon-taskcomplete']" :style="{ fontSize: '20px', color: 'green' }"></i>
+              <span class="ms-3">Kontrol Gerekli</span>
+            </p>
 
-                <p class="d-flex align-center ps-4">
-                  <i :class="['dx-icon', 'dx-icon-runner']" :style="{ fontSize: '20px', color: 'green' }"></i>
-                  <span class="ms-3">İnspektör Çağırıldı</span>
-                </p>
+            <p class="d-flex align-center ps-4">
+              <i :class="['dx-icon', 'dx-icon-runner']" :style="{ fontSize: '20px', color: 'green' }"></i>
+              <span class="ms-3">İnspektör Çağırıldı</span>
+            </p>
 
-                <p class="d-flex align-center ps-8">
-                  <i :class="['dx-icon', 'dx-icon-info']" :style="{ fontSize: '20px', color: 'green' }"></i>
-                  <span class="ms-3">Detay bilgi için satıra tıklayınız</span>
-                </p>
-            </VCardText>
+            <p class="d-flex align-center ps-8">
+              <i :class="['dx-icon', 'dx-icon-info']" :style="{ fontSize: '20px', color: 'green' }"></i>
+              <span class="ms-3" :style="{ fontStyle: 'italic', fontWeight: 'bold' }"> Detay bilgi için satıra çift
+                tıklayınız
+              </span>
+            </p>
+          </VCardText>
 
         </VCardText>
       </VCard>
@@ -323,7 +330,7 @@
             <DxColumn data-field="id" caption="ID" width="70" :visible="false" />
             <DxColumn data-field="urun_kontrol_m_id" caption="Master ID" width="70" :visible="false" />
             <DxColumn data-field="kontrol_tarihi" caption="Kontrol Tarihi" data-type="date" :width="130" :format="{
-              formatter: (date) => {
+              formatter: (date: string | number | Date) => {
                 const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                   year: 'numeric',
                   month: '2-digit',
@@ -414,7 +421,7 @@
             </template>
 
             <template #fotoTemplate="{ data }">
-              <template v-if="data.value === '1' || data.value === 1">
+              <template v-if="data.value === true">
                 <i @click="fotoGoster()" :class="['dx-icon', 'dx-icon-image']"
                   :style="{ fontSize: '16px', color: 'green' }"></i>
               </template>
@@ -454,7 +461,7 @@
 
   <VRow class="match-height pt-0 gap-0">
 
-    <VCol cols="12" >
+    <VCol cols="12">
       <VAlert type="error" border="start" colored-border elevation="2" variant="tonal">
 
         <strong>CC:</strong> Camda Çizik &nbsp;
@@ -522,7 +529,7 @@
       <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
       <DxSummary>
         <DxTotalItem :align-by-column="true" column="stok_kodu" summary-type="count" display-format="Satır sayısı: {0}"
-          :alignment="right" />
+          alignment="right" />
       </DxSummary>
 
     </DxDataGrid>
@@ -580,7 +587,7 @@
 
 
         <!-- Resim -->
-        <div style="overflow: auto; max-height: 80vh;" @wheel="onWheel" @mousedown="startPan" @mousemove="onPan"
+        <div style="overflow: auto; max-block-size: 80vh;" @wheel="onWheel" @mousedown="startPan" @mousemove="onPan"
           @mouseup="endPan" @mouseleave="endPan">
 
           <VImg :src="fullscreenFoto" class="w-100 h-auto" :style="{
@@ -605,8 +612,6 @@
 
 import axios from "axios";
 import {
-  DxButton,
-  DxEditing,
   DxColumn,
   DxDataGrid,
   DxFilterPanel,
@@ -626,7 +631,7 @@ import DxSelectBox from 'devextreme-vue/select-box';
 import ArrayStore from 'devextreme/data/array_store';
 import notify from "devextreme/ui/notify";
 import Swal from "sweetalert2";
-import { onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { VBtn } from "vuetify/components";
 
 // const pdfUrl = ref('/api/pdf-goster')
@@ -634,6 +639,8 @@ const popupIsemriSecVisible = ref(false);
 const popupUrunAgaciVisible = ref(false);
 const userData = useCookie<any>("userData");
 const loadingVisible = ref<boolean>(false);
+// Satır çift tıklama tam süreç yükleme göstergesi
+const fullLoading = ref(false);
 const gridEmirler = ref<any[]>([]);
 const dataAgac = ref<any[]>([]);
 const emirlerKey = ref(0);
@@ -642,6 +649,8 @@ const isEmriID = ref(0);
 const gridDataKontroller = ref<{ seri_no: string }[]>([]);
 const emirlerRef = ref<DxDataGrid | null>(null);
 const agacRef = ref<DxDataGrid | null>(null);
+// Seri kontroller grid'i (foto silme sonrası refresh için)
+const dataGridRefKontrol = ref<DxDataGrid | null>(null);
 const selectedRowKeys = ref(0);
 const isEmriNo = ref("");
 const isEmriMiktari = ref(0);
@@ -1007,54 +1016,6 @@ const MalzemeleriAl = async () => {
   }
 }
 
-// const kaydetKontroller = async () => {
-
-//   if (kontroller.value.urunAgaciText === '' && kontroller.value.gorunumText === '' && kontroller.value.olcuselText === '' &&
-//     kontroller.value.paketlemeText === '' && kontroller.value.etiketText === '' && kontroller.value.dokumanText === '' &&
-//     kontroller.value.gorunumCheck === '' && kontroller.value.olcuselCheck === '' && kontroller.value.paketlemeCheck === '' &&
-//     kontroller.value.etiketCheck === '' && kontroller.value.dokumanCheck === '' && kontroller.value.urunAgaciCheck === '') {
-//     notify({
-//       message: 'Lütfen en az bir kontrol alanını doldurun.',
-//       type: "error",
-//       displayTime: 2000,
-//     });
-//     return
-//   }
-
-//   try {
-
-//     const kayitResponse = await axios.post('/api/kontrol-kaydet', {
-//       ...kontroller.value,
-//       user_id: userData.value.id,
-//     })
-
-//     const mID = kayitResponse.data.mID // <-- BURADA mID'yi alıyoruz
-//     kontroller.value.masterId = mID // Kontrol verilerini güncelle
-
-//     notify({
-//       message: 'Kayıt başarılı...',
-//       type: "success",
-//       displayTime: 2000,
-//     });
-
-//     KontrolleriAl() // Kayıt sonrası kontrolleri tekrar al
-//   } catch (err) {
-//     console.error(err)
-//     alert('Hata oluştu.')
-//   }
-// }
-
-// const AgacKaydet = async () => {
-//   const selectedRowKeys = agacRef.value?.instance ? agacRef.value.instance.getSelectedRowKeys() : []
-
-//   await axios.post('/api/urun-agaci-secim/kaydet', {
-//     urunKodu: seciliIsEmri.value.urunKodu,
-//     selected_ids: selectedRowKeys,
-//     userId: userData.value.id,
-//   })
-//   popupUrunAgaciVisible.value = false
-// }
-
 const AgacYukle = async () => {
   const response = await axios.get('/api/urun-agaci-secim/yukle', {
     params: { urunKodu: seciliIsEmri.value.urunKodu },
@@ -1084,18 +1045,6 @@ const AgacYukle = async () => {
   }
 }
 
-// const KontrolAktifAl = async () => {
-//   const response = await axios.get('/api/kontrolAktifAl', {
-//     params: { userID: userData.value.id },
-//   })
-
-//   isEmriID.value = response.data.aktif?.isemri_id ?? 0
-//   isEmriNo.value = response.data.aktif?.isemri_no ?? ''
-//   selectedRowKeys.value = response.data.aktif?.isemri_id ?? 0
-
-//   EmirSec()
-// }
-
 const KontrolAcikKaydet = async () => {
 
   await axios.post('/api/kontrolAcKaydet', {
@@ -1113,29 +1062,47 @@ const onFocusedRowChangedK = (e: any) => {
 };
 
 const onSelectionChanged = (e: any) => {
-  if (e.selectedRowsData.length > 0) {
-    temizle();
-    bosalt();
-    isEmriID.value = e.selectedRowsData[0].isemri_id;
-    selectedRowKeys.value = e.selectedRowsData[0].id;
-    isEmriNo.value = e.selectedRowsData[0].isemri_no;
-  }
-  else isEmriID.value = 0
-  EmirSec();
+  // if (e.selectedRowsData.length > 0) {
+  //   temizle();
+  //   bosalt();
+  //   isEmriID.value = e.selectedRowsData[0].isemri_id;
+  //   selectedRowKeys.value = e.selectedRowsData[0].id;
+  //   isEmriNo.value = e.selectedRowsData[0].isemri_no;
+  // }
+  // else isEmriID.value = 0
+  // EmirSec();
 };
 
 onMounted(async () => {
   document.title = "OFT-Kalite Kontrolleri Listesi";
   EmirleriAl();
-  axios.post("/api/log-kayit", {
-    userId: userData.value.id,
-    sayfa: 'Kalite Kontrol Listesi',
-    eylem: 'Yükleme',
-  });
+
 });
 
-const onRowDblClick = (e: any) => {
-  EmirSec();
+const onRowDblClick = async (e: any) => {
+  // DevExtreme row-dbl-click event payload: e.data (clicked row), e.component (grid instance)
+  const grid = e?.component;
+  let rowData = e?.data;
+  if (!rowData && grid && typeof grid.getSelectedRowsData === 'function') {
+    const sel = grid.getSelectedRowsData();
+    if (sel && sel.length) rowData = sel[0];
+  }
+  if (!rowData) {
+    console.warn('Çift tıklanan satır verisi alınamadı.');
+    return;
+  }
+  fullLoading.value = true;
+  temizle();
+  bosalt();
+  isEmriID.value = rowData.isemri_id || 0;
+  selectedRowKeys.value = rowData.id || 0;
+  isEmriNo.value = rowData.isemri_no || '';
+  try {
+    await EmirSec();
+  } finally {
+    // EmirSec içinde async alt çağrılar (KontrolleriAl vs) da çalıştıktan sonra kapanır
+    fullLoading.value = false;
+  }
 };
 
 function onSelectionChangedUA(e: any) {
@@ -1156,49 +1123,7 @@ interface PhotoItem {
   file?: File
 }
 
-// const hataGruplari = [
-//   {
-//     baslik: 'İş Emri Hataları', hatalar: [
-//       { kod: 'IEH', aciklama: 'İş Emri Hatası' },
-//       { kod: 'SPH', aciklama: 'Sipariş Hatası' },
-//       { kod: 'TH', aciklama: 'Taşeron Hatası' },
-//       { kod: 'EH', aciklama: 'Etiket Hatası' },
-//     ],
-//   },
-//   {
-//     baslik: 'Malzeme Hataları', hatalar: [
-//       { kod: 'CM', aciklama: 'Çapaklı Malzeme' },
-//       { kod: 'SMH', aciklama: 'Saç Malzeme Hatası' },
-//       { kod: 'KH', aciklama: 'Kilit Hatası' },
-//       { kod: 'FB', aciklama: 'Formda Bozukluk' },
-//       { kod: 'CC', aciklama: 'Camda Çizik' },
-//       { kod: 'OH', aciklama: 'Ölçüsel Hata' },
-//       { kod: "19''H", aciklama: "19'' Ölçü Hatası" },
-//       { kod: 'AH', aciklama: 'Aksesuar Hatası' },
-//       { kod: 'KPL', aciklama: 'Kaplama Hatası' },
-//     ],
-//   },
-//   {
-//     baslik: 'Montaj Hataları', hatalar: [
-//       { kod: 'MH', aciklama: 'Montaj Hatası' },
-//       { kod: 'TKH', aciklama: 'Topraklama Hatası' },
-//       { kod: 'KAH', aciklama: 'Kaynak Hatası' },
-//       { kod: 'BKE', aciklama: 'Bağlantı Kalemi Eksik' },
-//       { kod: 'BKS', aciklama: 'Bağlantı Kalemi Sıkılmamış' },
-//       { kod: 'ELK', aciklama: 'Elektrik Hatası' },
-//       { kod: 'STH', aciklama: 'Su Testi Hatası' },
-//     ],
-//   },
-//   {
-//     baslik: 'Yüzey / Boya Hataları', hatalar: [
-//       { kod: 'BC', aciklama: 'Boyada Çizik' },
-//       { kod: 'BH', aciklama: 'Boya Hatası' },
-//       { kod: 'SH', aciklama: 'Serigrafi Hatası' },
-//     ],
-//   },
-// ]
-
-const sharedHeaderWithTooltip = (container, options) => {
+const sharedHeaderWithTooltip = (container: HTMLElement, options: any) => {
   const span = document.createElement('span');
   span.textContent = options.column.caption;
 
@@ -1272,50 +1197,6 @@ const bosalt = () => {
   serinoListesi.value = [];
 }
 
-// const fileToBase64 = (file: File): Promise<string> => {
-//   return new Promise((resolve, reject) => {
-//     const reader = new FileReader()
-//     reader.readAsDataURL(file)
-//     reader.onload = () => resolve(reader.result as string)
-//     reader.onerror = error => reject(error)
-//   })
-// }
-
-// const dosyaYukle = () => {
-//   fileInput.value?.$el?.querySelector('input[type=file]')?.click()
-// }
-
-// const deletePhoto = (id: number) => {
-//   photos.value = photos.value.filter(p => p.id !== id)
-// }
-
-// const previewPhoto = (url: string) => {
-//   selectedPhoto.value = url
-//   previewDialog.value = true
-// }
-
-// const onFilesSelected = () => {
-//   if (!selectedPhotos.value || selectedPhotos.value.length === 0) return
-
-//   for (const file of selectedPhotos.value) {
-//     const reader = new FileReader()
-//     reader.onload = (e) => {
-//       const url = e.target?.result
-//       if (typeof url === 'string') {
-//         photos.value.push({
-//           id: photoIdCounter++,
-//           url: URL.createObjectURL(file),
-//           file,
-//         })
-//       }
-//     }
-//     reader.readAsDataURL(file)
-//   }
-
-//   // Aynı dosyalar tekrar seçilebilsin diye sıfırla
-//   selectedPhotos.value = []
-// }
-
 const KontrolEdilmeyenleriAl = () => {
   const kullanilmislar = new Set(gridDataKontroller.value.map(x => x.seri_no));
   const kalanlar = serinoListesi.value.filter(s => !kullanilmislar.has(s.serino));
@@ -1343,9 +1224,9 @@ const KontrolAcKaydet = () => {
       confirmButtonText: "Evet, aktif yapalım!",
       cancelButtonText: "Hayır, vazcgeçtim!",
     })
-    .then(async (result) => {
+    .then(async (result: Awaited<ReturnType<typeof Swal.fire>>) => {
       if (result.isConfirmed) {
-        await nextTick(); 
+        await nextTick();
         temizle();
         KontrolAcikKaydet();
         bosalt();
@@ -1397,13 +1278,28 @@ const confirmDelete = async (fotoUrl: any) => {
   const result = confirm('Bu fotoğrafı silmek istediğinizden emin misiniz?')
   if (!result) return
   try {
-    await axios.delete('/api/hata-sil-resim', {
+    const resp = await axios.delete('/api/hata-sil-resim', {
       params: {
         url: fotoUrl,
         isEmriNo: seciliIsEmri.value.isEmriNo,
       },
     })
     seciliKayitFotolar.value = seciliKayitFotolar.value.filter(f => f !== fotoUrl)
+
+    const remaining = resp.data?.remaining
+    const seriNo = resp.data?.seri_no
+    if (remaining === 0 && seriNo) {
+      const row = gridDataKontroller.value.find(r => r.seri_no.startsWith(seriNo))
+      if (row) {
+        // @ts-ignore add dynamic field
+        row.is_photo = 0
+        if (dataGridRefKontrol?.value?.instance) {
+          dataGridRefKontrol.value.instance.refresh()
+        }
+      }
+    }
+    // İş emri listesini de güncelle (statüler değişmiş olabilir)
+    EmirleriAl()
   } catch (err) {
     console.error('Silme hatası:', err)
     alert('Silinirken hata oluştu.')
@@ -1460,7 +1356,7 @@ const pdfGoster = () => {
   window.open(url, '_blank')
 }
 
-const photoHeaderTemplate = (header, info) => {
+const photoHeaderTemplate = (header: HTMLElement, info: any) => {
   const container = document.createElement('div')
   const icon = document.createElement('i')
 
@@ -1470,6 +1366,11 @@ const photoHeaderTemplate = (header, info) => {
 
   container.appendChild(icon)
   header.appendChild(container)
+}
+
+// Geçici odak fonksiyonu (ileride serino input'una odak eklenebilir)
+function focusSerino(): void {
+  // Placeholder
 }
 </script>
 
@@ -1511,6 +1412,15 @@ td {
   min-block-size: 30px;
 }
 
+/* Base image rule first for specificity ordering */
+.custom-item>img {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 1px;
+  margin-block-start: -15px;
+}
+
+/* Adjustment when inside dropdown editor */
 .dx-dropdowneditor-input-wrapper .custom-item>img {
   padding-inline-start: 8px;
 }
@@ -1524,12 +1434,7 @@ td {
   text-indent: 0;
 }
 
-.custom-item>img {
-  position: absolute;
-  inset-block-start: 50%;
-  inset-inline-start: 1px;
-  margin-block-start: -15px;
-}
+/* (moved above) */
 
 .dx-theme-material #custom-templates .dx-texteditor-buttons-container {
   display: none;
@@ -1547,4 +1452,8 @@ td {
 .dx-theme-material .dx-selectbox-container .product-name {
   padding-inline-start: 58px;
 }
+
+/* Global tam ekran yükleme katmanı */
+
+/* (Removed custom overlay CSS – using DxLoadPanel instead) */
 </style>

@@ -396,28 +396,62 @@ class KaliteController extends Controller
 
     public function KontrolAcKaydet(Request $request)
     {
-        // Log::info('KontrolAktifKaydet request:', $request->all());
+        // Beklenen parametreler: isEmriID (zorunlu), istasyonID (opsiyonel fakat tavsiye), personelID || userId
+        $isEmriID   = $request->input('isEmriID');
+        $istasyonID = $request->input('istasyonID');
+        $personelID = $request->input('personelID', $request->input('userId')); // Front-end userId gönderiyordu
+
+        if (!$isEmriID) {
+            return response()->json(['status' => 'error', 'message' => 'isEmriID zorunlu.'], 422);
+        }
+
+        Log::info('KontrolAcKaydet request', [
+            'isEmriID' => $isEmriID,
+            'istasyonID' => $istasyonID,
+            'personelID' => $personelID,
+        ]);
+
         try {
             DB::connection('pgsql_oft')->beginTransaction();
 
-            $guncellendi = DB::connection('pgsql_oft')
+            $qry = DB::connection('pgsql_oft')
                 ->table('oftt_kontrol_isemri')
-                ->where('isemri_id', $request->isEmriID)
-                ->update([
-                    'is_open' => 1,
-                    'guncelleyen_id' => $request->personelID,
-                    'updated_at' => now(),
-                ]);
+                ->where('isemri_id', $isEmriID);
 
-            if ($guncellendi) {
-                DB::connection('pgsql_oft')->commit();
-                return response()->json(['status' => 'ok']);
+            if ($istasyonID) {
+                $qry->where('istasyon_id', $istasyonID);
             }
 
+            // Güncellenecek kayıt var mı?
+            $varMi = (clone $qry)->count();
+            if ($varMi === 0) {
+                DB::connection('pgsql_oft')->rollBack();
+                return response()->json(['status' => 'error', 'message' => 'Eşleşen kayıt yok.'], 404);
+            }
+
+            $guncellendi = $qry->update([
+                'is_open' => 1, // integer kullan (sorgularda 1/0 ile kontrol ediliyor)
+                'guncelleyen_id' => $personelID,
+                'updated_at' => now(),
+            ]);
+
+            if ($guncellendi > 0) {
+                DB::connection('pgsql_oft')->commit();
+                return response()->json([
+                    'status' => 'ok',
+                    'affected' => $guncellendi,
+                ]);
+            }
+
+            // Hiç satır etkilenmediyse muhtemelen kayıt zaten açık.
             DB::connection('pgsql_oft')->rollBack();
-            return response()->json(['status' => 'error', 'message' => 'Kayıt bulunamadı'], 404);
+            return response()->json([
+                'status' => 'noop',
+                'message' => 'Kayıt zaten açık olabilir (değişiklik olmadı).'
+            ], 200);
         } catch (\Exception $e) {
             DB::connection('pgsql_oft')->rollBack();
+            Log::error('KontrolAcKaydet hata: ' . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
