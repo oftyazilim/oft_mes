@@ -160,6 +160,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/hata-kaydet-resim', [KaliteController::class, 'HataKaydetResim']);
 
   Route::delete('/hata-sil-resim', [PhotoController::class, 'deleteFoto']);
+  Route::delete('/kontrol-sil/{id}', [KaliteController::class, 'KontrolSil']);
 });
 
 // PUBLIC: Tekil fotoğraf dosyasını sun (auth gerektirmez). Güvenlik gerekirse signed URL eklenebilir.

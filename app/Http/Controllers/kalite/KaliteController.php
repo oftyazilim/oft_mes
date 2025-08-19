@@ -615,6 +615,7 @@ class KaliteController extends Controller
 
     public function KontrolSil($id)
     {
+        Log::info('Kontrol silme isteği', ['id' => $id]);
         try {
             DB::connection('pgsql_oft')->table('oftt_urun_kontrol_d')->where('id', $id)->delete();
 

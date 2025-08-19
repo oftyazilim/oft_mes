@@ -259,7 +259,7 @@
           <DxColumn data-field="id" caption="ID" width="70" :visible="false" />
           <DxColumn data-field="urun_kontrol_m_id" caption="Master ID" width="70" :visible="false" />
           <DxColumn data-field="kontrol_tarihi" caption="Kontrol Tarihi" data-type="date" :width="130" :format="{
-            formatter: (date) => {
+            formatter: (date: string | number | Date) => {
               const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                 year: 'numeric',
                 month: '2-digit',
@@ -353,8 +353,8 @@
 
           <template #fotoTemplate="{ data }">
             <template v-if="data.value === 't' || data.value === true">
-              <i @click="fotoGoster()" :class="['dx-icon', 'dx-icon-image']"
-                :style="{ fontSize: '16px', color: 'green' }"></i>
+              <i @click="fotoGoster(data?.data)" :class="['dx-icon', 'dx-icon-image']"
+                :style="{ fontSize: '16px', color: 'green', cursor: 'pointer' }" title="Fotoğrafları Göster"></i>
             </template>
           </template>
 
@@ -414,7 +414,7 @@
 
     <DxDataGrid id="gridEmirler" ref="emirlerRef" :key="emirlerKey" :data-source="gridEmirler" key-expr="id"
       :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true" :min-width="200" height="95%"
-      :allow-column-resizing="true" column-resizing-mode="widget" column-auto-width="true"
+      :allow-column-resizing="true" column-resizing-mode="widget" :column-auto-width="true"
       v-model:focused-row-key="focusedRowKey" @row-dbl-click="onRowDblClick" @selection-changed="onSelectionChanged">
 
       <DxColumn data-field="id" caption="ID" :visible="false" width="40" cell-template="secimTemplate" />
@@ -426,8 +426,7 @@
       <DxColumn data-field="istasyon_id" caption="İSTASYON ID" data-type="number" :width="60" :visible="false" />
 
 
-      <DxLoadPanel :key="loadingVisible" v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true"
-        :shading="true" />
+      <DxLoadPanel v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true" :shading="true" />
       <DxGroupPanel :visible="false" />
       <DxHeaderFilter :visible="false" />
       <DxFilterPanel :visible="false" />
@@ -438,8 +437,7 @@
       <DxSelection select-all-mode="page" mode="single" show-check-boxes-mode="always" />
 
       <DxSummary>
-        <DxTotalItem :align-by-column="true" column="TANIM" summary-type="count" display-format="{0} adet"
-          :alignment="right" />
+        <DxTotalItem :align-by-column="true" column="TANIM" summary-type="count" display-format="{0} adet" />
       </DxSummary>
 
       <template #secimTemplate="{ data }">
@@ -493,8 +491,8 @@
       <DxSelection select-all-mode="page" mode="multiple" show-check-boxes-mode="always" :allow-select-all="false" />
       <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
       <DxSummary>
-        <DxTotalItem :align-by-column="true" column="stok_kodu" summary-type="count" display-format="Satır sayısı: {0}"
-          :alignment="right" />
+        <DxTotalItem :align-by-column="true" column="stok_kodu" summary-type="count"
+          display-format="Satır sayısı: {0}" />
       </DxSummary>
 
     </DxDataGrid>
@@ -695,7 +693,7 @@ import DxSelectBox from 'devextreme-vue/select-box';
 import ArrayStore from 'devextreme/data/array_store';
 import notify from "devextreme/ui/notify";
 import Swal from "sweetalert2";
-import { onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { VBtn } from "vuetify/components";
 import HataBildirimiDialog from './HataBildirimiDialog.vue';
 
@@ -738,11 +736,8 @@ const gridSurec = ref<GridRow[]>([]);
 const allSelected = ref(false)
 const selectedCount = ref(0)
 const malzemeSayisi = ref(0)
-const resimler = ref([])
-
-const preview = ref('')
+// removed unused resimler/preview/selectedOption
 const fileInput = ref()
-const selectedOption = ref([])
 const previewDialog = ref(false)
 const selectedPhoto = ref('')
 const photo = ref<File | null>(null)
@@ -778,9 +773,10 @@ const hazirGerekceler = ref([])
 // ] // toplam 23 kontrol alanı
 
 interface GridRow {
-  rev: number;
-  tarih: Date;
-  aciklama: string;
+  id?: number;
+  revizyon?: string | number;
+  kontrol_tarihi?: string | Date;
+  [key: string]: any;
 }
 
 const items = [
@@ -789,16 +785,9 @@ const items = [
   { title: '⚠️ Şartlı Onay', value: 'Şartlı Onay', color: '#fff3cd' }
 ]
 
-const data = new ArrayStore({
-  data: items,
-  key: 'value',
-});
+const data = new ArrayStore({ data: items, key: 'value' });
 
-const formatNumber = number => {
-  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(
-    number,
-  )
-}
+const formatNumber = (number: number): string => new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(number)
 
 const kaydetOptions = {
   width: 100,
@@ -1316,7 +1305,7 @@ const hataGruplari = [
   },
 ]
 
-const sharedHeaderWithTooltip = (container, options) => {
+const sharedHeaderWithTooltip = (container: HTMLElement, options: any) => {
   const span = document.createElement('span');
   span.textContent = options.column.caption;
 
@@ -1341,7 +1330,6 @@ const temizle = () => {
   sonuc.value = ''
   hataOzet.value = ''
   seciliHatalar.value = {}
-  resimler.value = []
   photos.value = []
   selectedPhotos.value = []
 }
@@ -1575,7 +1563,7 @@ const KontrolKapat = () => {
       confirmButtonText: "Evet, sonlandıralım!",
       cancelButtonText: "Hayır, vazcgeçtim!",
     })
-    .then(async (result) => {
+    .then(async (result: any) => {
       if (result.isConfirmed) {
 
         await nextTick(); // Vue reaktif güncellemeleri tamamlansın
@@ -1588,17 +1576,26 @@ const KontrolKapat = () => {
     });
 };
 
-const fotoGoster = () => {
+const fotoGoster = (rowData?: any) => {
+  // Satırdan seri no geldiyse onu kullan; gelmediyse focused satırın seri no'su
+  const seriNo = rowData?.seri_no || photoSeriNo.value
+  if (!seriNo) {
+    notify({ message: 'Seri no bulunamadı.', type: 'error', displayTime: 2000 })
+    return
+  }
+  console.log('Fotoğraflar için seri no:', seriNo)
+  photoSeriNo.value = seriNo
   fotoDialog.value = true
-
-  axios.get('/api/hata-goster-resim',
-    {
-      params: { isEmriNo: seciliIsEmri.value.isEmriNo, serino: photoSeriNo.value }
+  axios.get('/api/hata-goster-resim', {
+    params: { isEmriNo: seciliIsEmri.value.isEmriNo, serino: seriNo },
+  }).then(res => {
+    seciliKayitFotolar.value = Array.isArray(res.data) ? res.data.map((f: { url: string }) => f.url) : []
+    if (seciliKayitFotolar.value.length === 0) {
+      notify({ message: 'Fotoğraf bulunamadı.', type: 'warning', displayTime: 2000 })
     }
-  ).then(res => {
-    seciliKayitFotolar.value = res.data.map((f: { url: string }) => f.url)
   }).catch(() => {
     seciliKayitFotolar.value = []
+    notify({ message: 'Fotoğraflar alınamadı.', type: 'error', displayTime: 2000 })
   })
 }
 
@@ -1707,7 +1704,7 @@ const pdfGoster = () => {
 }
 
 
-const photoHeaderTemplate = (header, info) => {
+const photoHeaderTemplate = (header: HTMLElement) => {
   const container = document.createElement('div')
   const icon = document.createElement('i')
 

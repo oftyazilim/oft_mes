@@ -47,7 +47,7 @@
               :allow-sorting="false" />
             <DxColumn data-field="item_id" caption="ITEM ID" :visible="false" :min-width="90" :allow-sorting="false" />
             <DxColumn data-field="stok_kodu" caption="STOK KODU" :visible="true" :width="120" :allow-sorting="false" />
-            <DxColumn data-field="stok_adi" caption="STOK ADI" min-width="200" :allow-sorting="false" />
+            <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="200" :allow-sorting="false" />
             <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="100" :visible="false"
               :allow-sorting="false" />
             <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" :allow-sorting="false" />
@@ -589,7 +589,7 @@
                       <VCol cols="12" class="mt-2 pa-0 ps-2 pe-3 text-center">
                         <h4>Malzeme Listesi ({{ gridDataMalzemeler.length }} parça) (Depo ID: {{ selectedRow.CIKIS_DEPO
                           }})</h4>
-                        <div style="height: 613px;">
+                        <div style="block-size: 613px;">
                           <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataMalzemeler"
                             key-expr="item_id" :show-borders="true" :min-width="400" :column-auto-width="false"
                             :allow-column-resizing="true" column-resizing-mode="widget" @cell-prepared="onCellPreparedM"
