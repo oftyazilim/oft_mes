@@ -21,8 +21,16 @@ class KapasiteController extends Controller
       ->distinct()
       ->get();
 
+    $tipler = DB::connection('pgsql')->table('uyumsoft.OFTV_ISEMIRLERI_DETAY')
+      ->select('isemri_tipi')
+      ->distinct()
+      ->orderBy('isemri_tipi')
+      ->get();
+
+
     return response()->json([
       'istasyonlar' => $istasyonlar,
+      'tipler' => $tipler,
     ], 200);
   }
 
@@ -62,10 +70,27 @@ class KapasiteController extends Controller
 
   public function getKapasiteData(Request $request)
   {
-    $data = DB::connection('pgsql')->table('uyumsoft.OFTV_ISEMIRLERI_DETAY')
+    Log::info('Kapasite Data İsteği:', ['request' => $request->all()]);
+    $query = DB::connection('pgsql')->table('uyumsoft.OFTV_ISEMIRLERI_DETAY')
       ->where('IS_ISTASYONU_ID', $request->istasyon)
-      ->where('hafta', '>=', $request->hafta)
-      ->where('isemri_tipi', '=', 'MAMUL')
+      ->where('hafta', '>=', $request->hafta);
+
+    // Tip filtresi: boş/null gönderildiyse tüm tipler gelir; string gönderildiyse eşit filtre; '(boş)' gibi özel label kullanıldıysa null/empty filtrelenir
+    if ($request->tip != 'TÜMÜ') {
+        $query->where('isemri_tipi', $request->tip);
+    }
+    // if ($request->filled('tip') && $request->input('tip') !== 'TÜMÜ') {
+    //   $tip = $request->input('tip');
+    //   if ($tip === '(boş)' || $tip === '') {
+    //     $query->where(function ($q) {
+    //       $q->whereNull('isemri_tipi')->orWhere('isemri_tipi', '');
+    //     });
+    //   } else {
+    //     $query->where('isemri_tipi', '=', $tip);
+    //   }
+    // }
+
+    $data = $query
       // ->where('isemri_tipi', '!=', 'MONTAJ İŞ EMRİ')
       ->orderBy('planlanan_baslangic')
       ->get()

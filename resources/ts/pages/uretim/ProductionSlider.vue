@@ -104,7 +104,7 @@
           <VRow>
             <VCol cols="6" class="text-start">
               <div class="d-flex align-center">
-                <span>Haftalık Üretimler</span>
+                <span>Haftalık Üretimlər</span>
               </div>
             </VCol>
             <VCol cols="6" class="text-end pa-1 pe-0">
@@ -402,13 +402,13 @@
         </VWindowItem>
         <VWindowItem value="tab-3">
           <VCardText class="pa-2">
-            <DxDataGrid id="gridDuruslar" ref="dataGridRefD" :data-source="gridDataDuruslar" key-expr="ID"
+            <DxDataGrid id="gridDuruslar" ref="dataGridRefD" :data-source="gridDataDuruslar" key-expr="id"
               :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true" :min-width="200"
               :allow-column-reordering="true" :column-auto-width="false" height="670">
-              <DxColumn data-field="ID" caption="ID" :visible="false" :min-width="90" />
-              <DxColumn data-field="IS_EMRI_NO" caption="İŞ EMRİ NO" :visible="true" width="120" />
-              <DxColumn data-field="DURUS_SEBEBI" caption="SEBEP" :visible="true" :min-width="250" />
-              <DxColumn data-field="DURUM_BAS_TARIHI" caption="BAŞLANGIÇ" data-type="date" width="130" :visible="true"
+              <DxColumn data-field="id" caption="ID" :visible="false" :min-width="90" />
+              <DxColumn data-field="is_emri_no" caption="İŞ EMRİ NO" :visible="true" width="120" />
+              <DxColumn data-field="durus_sebebi" caption="SEBEP" :visible="true" :min-width="250" />
+              <DxColumn data-field="durum_bas_tarihi" caption="BAŞLANGIÇ" data-type="date" width="130" :visible="true"
                 :format="{
                   formatter: (date: any) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
@@ -422,7 +422,7 @@
                     return formattedDate.replace(/\//g, '.');
                   },
                 }" />
-              <DxColumn data-field="DURUM_BIT_TARIHI" caption="BİTİŞ" data-type="date" width="130" :visible="true"
+              <DxColumn data-field="durum_bit_tarihi" caption="BİTİŞ" data-type="date" width="130" :visible="true"
                 :format="{
                   formatter: (date: any) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
@@ -436,7 +436,7 @@
                     return formattedDate.replace(/\//g, '.');
                   },
                 }" />
-              <DxColumn data-field="DAKIKA" caption="SÜRE(dk)" data-type="number" :visible="true" :width="120" :format="{
+              <DxColumn data-field="dakika" caption="SÜRE(dk)" data-type="number" :visible="true" :width="120" :format="{
                 type: 'fixedPoint',
                 precision: 1,
                 thousandsSeparator: ',',
@@ -449,9 +449,9 @@
               <DxSorting mode="none" />
 
               <DxSummary>
-                <DxTotalItem :align-by-column="true" column="DURUS_SEBEBI" summary-type="count"
+                <DxTotalItem :align-by-column="true" column="durus_sebebi" summary-type="count"
                   display-format="{0} duruş" :alignment="right" />
-                <DxTotalItem :align-by-column="true" column="DAKIKA" summary-type="sum" display-format="{0} dk"
+                <DxTotalItem :align-by-column="true" column="dakika" summary-type="sum" display-format="{0} dk"
                   :alignment="right" :customize-text="formatSummaryText" />
               </DxSummary>
             </DxDataGrid>
@@ -632,6 +632,13 @@
     <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="kapatOptions"
       @click="popupDepolarGosterVisible = false" />
   </DxPopup>
+
+  <VOverlay :model-value="loadingVisible" class="align-center justify-center" persistent scrim="rgba(0,0,0,0.35)">
+    <VCard class="pa-6 d-flex flex-column align-center" elevation="8" width="320">
+      <VProgressCircular indeterminate color="primary" size="48" width="5" class="mb-4" />
+      <div class="text-subtitle-1 font-weight-medium">{{ loadingMessage }}</div>
+    </VCard>
+  </VOverlay>
 </template>
 
 <script setup lang="ts">
@@ -753,6 +760,30 @@ const userData = useCookie<any>("userData");
 const pageTitleStore = usePageTitleStore();
 const currentTab = ref("tab-1");
 const loadingVisible = ref<boolean>(false);
+const loadingMessage = ref<string>('Yükleniyor...');
+let loadingStartedAt: number | null = null;
+const MIN_LOADING_MS = 350;
+function showLoading(msg: string = 'Yükleniyor...') {
+  loadingMessage.value = msg;
+  if (!loadingVisible.value) {
+    loadingVisible.value = true;
+    loadingStartedAt = Date.now();
+  }
+}
+function hideLoading() {
+  if (!loadingVisible.value) return;
+  const elapsed = loadingStartedAt ? Date.now() - loadingStartedAt : MIN_LOADING_MS;
+  const remaining = MIN_LOADING_MS - elapsed;
+  const finalize = () => {
+    loadingVisible.value = false;
+    loadingStartedAt = null;
+  };
+  if (remaining > 0) {
+    setTimeout(finalize, remaining);
+  } else {
+    finalize();
+  }
+}
 const currentDate = ref("");
 const currentTime = ref("");
 const uretimHizi = ref(0);
@@ -1264,7 +1295,7 @@ const detaylariGoster = async (item: any) => {
 };
 const duruslariAl = async () => {
   try {
-    loadingVisible.value = true;
+    showLoading('Duruş Listesi getiriliyor...');
     const response = await axios.get("/api/duruslar-aktif", {
       params: {
         istasyon: userData.value.istasyon_id,
@@ -1275,7 +1306,7 @@ const duruslariAl = async () => {
   } catch (error) {
     console.error("Veri çekilirken hata oluştu: ", error);
   }
-  loadingVisible.value = false;
+  hideLoading();
 };
 const kontrolGerekKaydet = async () => {
   if (!secili.value) return;
@@ -1296,7 +1327,7 @@ const kontrolGerekKaydet = async () => {
 };
 const getData = async () => {
   try {
-    loadingVisible.value = true;
+    showLoading('İş Emri listesi yükleniyor...');
     const response = await axios.get("/api/dataUretimEmirler", {
       params: {
         istasyon: userData.value.istasyon_id,
@@ -1307,11 +1338,11 @@ const getData = async () => {
   } catch (error) {
     console.error("Veri çekilirken hata oluştu: ", error);
   } finally {
-    loadingVisible.value = false;
+    hideLoading();
   }
 };
 const getEksikler = async () => {
-  loadingVisible.value = true;
+  showLoading('Eksikler alınıyor...');
   try {
     const response = await axios.get("/api/eksik-kontrolu", {
       params: {
@@ -1325,12 +1356,12 @@ const getEksikler = async () => {
   } catch (error) {
     console.error("Veri çekilirken hata oluştu: ", error);
   } finally {
-    loadingVisible.value = false;
+    hideLoading();
   }
 };
 const getMalzemeListesi = async () => {
   try {
-    loadingVisible.value = true;
+    showLoading('Malzeme Listesi yükleniyor...');
     const response = await axios.get("/api/isEmriDetay", {
       params: {
         tablo: "DETAY",
@@ -1341,7 +1372,7 @@ const getMalzemeListesi = async () => {
   } catch (error) {
     console.error("Veri çekilirken hata oluştu: ", error);
   } finally {
-    loadingVisible.value = false;
+    hideLoading();
   }
 };
 const getBakiyeler = async (itemID: number) => {
@@ -1449,41 +1480,41 @@ const aktifMolalar = ref<Record<string, string>>({});
 //             guid: item.guid || null,
 //           })
 //         }
-//       }
-//     } else {
-//       for (const Mola of MOLALAR) {
-//         const [saat, dakika] = Mola.saat.split(':').map(Number)
-//         const MolaStart = saat * 60 + dakika
-//         const MolaEnd = MolaStart + Mola.dakika
+//       } else {
+//         for (const Mola of MOLALAR) {
+//           const [saat, dakika] = Mola.saat.split(':').map(Number)
+//           const MolaStart = saat * 60 + dakika
+//           const MolaEnd = MolaStart + Mola.dakika
 
-//         if (nowTime >= MolaStart && nowTime < MolaEnd && item.status.toUpperCase() !== 'MOLA') {
-//           originalItems.value[item.isemriNo] = {
-//             status: item.status.toUpperCase(),
-//             baslikArkarenk: item.baslikArkarenk,
+//           if (nowTime >= MolaStart && nowTime < MolaEnd && item.status.toUpperCase() !== 'MOLA') {
+//             originalItems.value[item.isemriNo] = {
+//               status: item.status.toUpperCase(),
+//               baslikArkarenk: item.baslikArkarenk,
+//             }
+//             console.log('Mola Başladı:', item.isemriNo, Mola.saat, Mola.dakika)
+//             item.status = 'MOLA'
+//             item.baslikArkarenk = 'mola'
+//             aktifMolalar.value[item.isemriNo] = Mola.saat
+
+//             await axios.post('/api/durumKaydet', {
+//               isEmriId: item.isemriId,
+//               isEmriNo: item.isemriNo,
+//               urunID: item.partId,
+//               urunKodu: item.partCode,
+//               urunAdi: item.partName,
+//               durum: 'MOLA',
+//               vardiya: 5,
+//               istasyonKodu: '327',
+//               userId: userData.value.id,
+//               personelSayisi: 0,
+//               selectedDurus: {
+//                 break_reason_code: Mola.sebep_kodu,
+//                 description: Mola.sebep,
+//               },
+//               guid: item.guid || null,
+//             })
+//             break
 //           }
-//           console.log('Mola Başladı:', item.isemriNo, Mola.saat, Mola.dakika)
-//           item.status = 'MOLA'
-//           item.baslikArkarenk = 'mola'
-//           aktifMolalar.value[item.isemriNo] = Mola.saat
-
-//           await axios.post('/api/durumKaydet', {
-//             isEmriId: item.isemriId,
-//             isEmriNo: item.isemriNo,
-//             urunID: item.partId,
-//             urunKodu: item.partCode,
-//             urunAdi: item.partName,
-//             durum: 'MOLA',
-//             vardiya: 5,
-//             istasyonKodu: '327',
-//             userId: userData.value.id,
-//             personelSayisi: 0,
-//             selectedDurus: {
-//               break_reason_code: Mola.sebep_kodu,
-//               description: Mola.sebep,
-//             },
-//             guid: item.guid || null,
-//           })
-//           break
 //         }
 //       }
 //     }

@@ -15,6 +15,11 @@
                   value-expr="IS_ISTASYONU_ID" :height="37" :width="320" placeholder="Seçiniz..."
                   @value-changed="haftalariAl" />
               </div>
+              <div class="pa-2">İş&nbsp;Emri&nbsp;Tipi </div>
+              <div class="dx-field-value">
+                <DxSelectBox :data-source="tipler" v-model="selectedTip" display-expr="isemri_tipi"
+                  value-expr="isemri_tipi" :height="37" :width="250" placeholder="Seçiniz..." />
+              </div>
               <div class="pa-2">Hafta </div>
               <div class="dx-field-value">
                 <DxSelectBox :disabled="!selectedIstasyon || ekipSayisi === 0" :data-source="haftalar"
@@ -307,8 +312,11 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import {
+  DxChart
+} from 'devextreme-vue/chart';
+import type { DxDataGridTypes } from 'devextreme-vue/data-grid';
 import {
   DxColumn,
   DxColumnChooser,
@@ -319,39 +327,22 @@ import {
   DxFilterPanel,
   DxFilterRow,
   DxGroupItem,
-  DxGroupPanel,
-  DxGrouping,
   DxHeaderFilter,
-  DxItem,
   DxRowDragging,
   DxScrolling,
   DxSearchPanel,
   DxSelection,
   DxSorting,
   DxSummary,
-  DxToolbar,
-  DxTotalItem,
+  DxTotalItem
 } from 'devextreme-vue/data-grid';
 import { DxLoadPanel } from 'devextreme-vue/load-panel';
 import DxSelectBox from 'devextreme-vue/select-box';
-import { DxButton } from 'devextreme-vue/button';
-import type { DxDataGridTypes } from 'devextreme-vue/data-grid';
-import notify from 'devextreme/ui/notify';
-import {
-  DxChart,
-  DxAdaptiveLayout,
-  DxCommonSeriesSettings,
-  DxSize,
-  DxTooltip,
-} from 'devextreme-vue/chart';
-import {
-  DxPivotGrid, DxFieldChooser, DxSearch, DxFieldPanel,
-  DxPivotGridTypes, DxStateStoring
-} from 'devextreme-vue/pivot-grid';
-import query from 'devextreme/data/query';
 import { exportDataGrid } from 'devextreme/excel_exporter';
+import notify from 'devextreme/ui/notify';
 import { Workbook } from 'exceljs';
-import { saveAs } from 'file-saver-es'
+import { saveAs } from 'file-saver-es';
+import { onMounted, ref } from 'vue';
 
 const userData = useCookie<any>("userData");
 const chart = ref<DxChart>();
@@ -359,7 +350,9 @@ const dataSource = ref<any[]>([]);
 const haftalar = ref<Hafta[]>([]);
 const selectedHafta = ref(null)
 const istasyonlar = ref<Istasyon[]>([]);
+const tipler = ref<Istasyon[]>([]);
 const selectedIstasyon = ref(null)
+const selectedTip = ref<string | null>(null)
 const loadingVisible = ref<boolean>(false)
 const ekipSayisi = ref<number | null>(1)
 const selectedRowKeys = ref<number[]>([])
@@ -391,6 +384,12 @@ onMounted(async () => {
   try {
     const res = await axios.get('/api/kapasite-param');
     istasyonlar.value = res.data.istasyonlar;
+    // Tipler listesine 'TÜMÜ' seçeneğini ekle ve stringe normalize et
+    const rawTipler = Array.isArray(res.data.tipler) ? res.data.tipler : [];
+    const normalized = rawTipler.map((t: any) => ({ isemri_tipi: t?.isemri_tipi ?? '' }));
+    tipler.value = [{ isemri_tipi: 'TÜMÜ' }, ...normalized];
+    // Varsayılan olarak TÜMÜ seçili olsun
+    if (selectedTip.value == null) selectedTip.value = 'TÜMÜ';
   } catch (e) {
     console.error('Veri çekilemedi', e);
   }
@@ -405,7 +404,8 @@ async function getData() {
       params: {
         hafta: selectedHafta.value,
         istasyon: selectedIstasyon.value,
-        ekip: ekipSayisi.value
+        ekip: ekipSayisi.value,
+        tip: selectedTip.value ?? null,
       }
     });
     dataSource.value = res.data;
@@ -493,7 +493,6 @@ const fetchTakvim = async () => {
     loading.value = true
     const res = await axios.get('/api/kapasite-takvim')
     const hamVeri = res.data
-    console.log("Ham Veri: ", hamVeri)
     takvim.value = hamVeri.reduce((acc, satir) => {
       const gun = satir.gun.toLowerCase()
       if (!acc[gun]) acc[gun] = []

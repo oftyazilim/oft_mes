@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import depo from '@/navigation/vertical/depo'
 import axios from 'axios'
 import {
   DxColumn,
-  DxDataGrid,
-  DxSummary,
-  DxTotalItem
+  DxDataGrid
 } from 'devextreme-vue/data-grid'
 import notify from 'devextreme/ui/notify'
-import { nextTick, onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { VCardText } from 'vuetify/components'
 
 document.title = 'OFT - Ürün Sorgula';
@@ -71,6 +68,7 @@ const applyCode = async () => {
     // snackbarMessage.value = `Ürün "${formData.value.item_code}" başarıyla sorgulandı.`
     // snackbarColor.value = 'success'
     // snackbarVisible.value = true
+
   } catch (e) {
     console.error('Hata:', e)
 
@@ -122,8 +120,9 @@ const onCellPrepared = (e: any) => {
   }
 }
 
-const photo = ref(null)
-const photos = ref(null)
+interface StockPhotoItem { name: string; url: string; size: number; index: number }
+const photo = ref<File | null>(null)
+const photos = ref<StockPhotoItem[]>([])
 const preview = ref('')
 const raf = ref('')
 const fileInput = ref()
@@ -168,23 +167,26 @@ const DepolariAl = async () => {
 }
 
 const uploadPhoto = async (itemID: any) => {
-  if (!photo.value) return alert('Lütfen fotoğraf seçin.')
-
+  if (!photo.value) {
+    notify('Fotoğraf seçiniz.', 'warning', 2000)
+    return
+  }
+  if (!formDatam.value.urunKodu) {
+    notify('Ürün kodu yok.', 'error', 2000)
+    return
+  }
   const formData = new FormData()
   formData.append('photo', photo.value)
-  formData.append('itemID', itemID) // ← ya da item_id neyse
-
+  formData.append('itemCode', formDatam.value.urunKodu)
   try {
-    const response = await axios.post('/api/photo-upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    alert('Fotoğraf yüklendi!')
-    fetchPhotos()
+    await axios.post('/api/stok-foto/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+    notify('Fotoğraf yüklendi', 'success', 1500)
+    photo.value = null
     preview.value = ''
-
+    fetchPhotos()
   } catch (error) {
     console.error(error)
-    alert('Yükleme sırasında hata oluştu.')
+    notify('Yükleme hatası', 'error', 2000)
   }
 }
 
@@ -195,15 +197,23 @@ watch(photo, (newPhoto) => {
 })
 
 const fetchPhotos = async () => {
-  const response = await axios.get('/api/photos', {
-    params: { itemID: Number(formDatam.value.urunID) }
-  })
-  photos.value = response.data
+  if (!formDatam.value.urunKodu) { photos.value = []; return }
+  try {
+    const { data } = await axios.get('/api/stok-foto/list', { params: { itemCode: formDatam.value.urunKodu } })
+    photos.value = data
+  } catch (e) {
+    console.error('Foto listeleme hata', e)
+  }
 }
 
-const deletePhoto = async (id) => {
-  await axios.delete(`/api/photos/${id}`)
-  fetchPhotos()
+const deletePhoto = async (name: string) => {
+  if (!confirm('Silmek istediğinize emin misiniz?')) return
+  try {
+    await axios.delete('/api/stok-foto/delete', { data: { itemCode: formDatam.value.urunKodu, name } })
+    fetchPhotos()
+  } catch (e) {
+    console.error('Silme hata', e)
+  }
 }
 const previewDialog = ref(false)
 const selectedPhoto = ref('')
@@ -276,7 +286,7 @@ const formatNumber = number => {
             <h5 class="text-h5 mt-2">
               Ana Depo: <span class="toplam">{{ formatNumber(formDatam.toplama, 1) }}</span>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; İstasyon Depo: <span class="toplam">{{ formatNumber(formDatam.toplami, 1)
-                }}</span>
+              }}</span>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Genel&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span class="toplam">{{
                 formatNumber(formDatam.toplama + formDatam.toplami, 1) }}</span>
             </h5>
@@ -361,10 +371,9 @@ const formatNumber = number => {
     <VCol v-if="formDatam.urunKodu" cols="12" class="mx-auto">
       <VCard class="overflow-visible">
         <div class="d-flex align-center gap-4 flex-wrap bg-custom-background pa-6">
-          <AppSelect v-model="selectedOption" :items="depolar" item-title="description"
-          item-value="whouse_id" label="Depo" persistent-hint return-object single-line
-          placeholder="Seçiniz..." variant="outlined"  />
-          
+          <AppSelect v-model="selectedOption" :items="depolar" item-title="description" item-value="whouse_id"
+            label="Depo" persistent-hint return-object single-line placeholder="Seçiniz..." variant="outlined" />
+
           <div class="w-100 sticky-header overflow-hidden rounded-t">
             <div class="d-flex align-center mt-2 gap-4" style="flex: 1;">
               <VTextField v-model="raf" label="Raf Yeri" variant="outlined" />
@@ -404,10 +413,13 @@ const formatNumber = number => {
 
 
           <v-row>
-            <v-col v-for="photo in photos" :key="photo.id" cols="12" sm="4" md="3">
-              <v-img :src="photo.url" max-height="200" style="margin-left: -18px; cursor: pointer;" class="rounded-lg"
-                @click="previewPhoto(photo.url)" />
-              <VBtn icon="tabler-trash" color="error" rounded @click="deletePhoto(photo.id)" class="mt-1"></VBtn>
+            <v-col v-for="p in photos" :key="p.name" cols="12" sm="4" md="3">
+              <v-img :src="p.url" max-height="200" style="cursor: pointer; margin-inline-start: -18px;"
+                class="rounded-lg" @click="previewPhoto(p.url)" />
+              <div class="d-flex align-center mt-1">
+                <VBtn icon="tabler-trash" color="error" rounded @click="deletePhoto(p.name)"></VBtn>
+                <span class="ms-2 text-caption">{{ p.name }}</span>
+              </div>
             </v-col>
           </v-row>
 
@@ -439,13 +451,12 @@ const formatNumber = number => {
 
 <style>
 .toplam {
+  border: 1px solid rgb(250, 174, 119);
+  border-radius: 5px;
   background-color: rgb(255, 249, 216);
-  padding: 0 5px 0 5px;
   color: black;
   font-weight: bold;
-  border-color: rgb(250, 174, 119);
-  border-style: solid;
-  border-width: 1px;
-  border-radius: 5px;
+  padding-block: 0;
+  padding-inline: 5px;
 }
 </style>

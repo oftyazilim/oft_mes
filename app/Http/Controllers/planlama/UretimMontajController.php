@@ -385,6 +385,7 @@ class UretimMontajController extends Controller
 
   public function getUretimData(Request $request)
   {
+    Log::info('Uretim verisi alınıyor:', $request->all());
     $istasyon = $request->istasyon;
     // $istasyonArray = explode(',', $istasyon);
 

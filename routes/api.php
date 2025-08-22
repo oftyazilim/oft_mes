@@ -14,6 +14,7 @@ use App\Http\Controllers\satis\SatisController;
 use App\Http\Controllers\satinalma\SatinalmaController;
 use App\Http\Controllers\depo\DepoMamulController;
 use App\Http\Controllers\PhotoController;
+use App\Http\Controllers\depo\StokPhotoController;
 use Illuminate\Support\Facades\DB;
 use App\Services\FileSearchController;
 use App\Services\FileServeController;
@@ -171,6 +172,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // PUBLIC: Tekil fotoğraf dosyasını sun (auth gerektirmez). Güvenlik gerekirse signed URL eklenebilir.
 Route::get('/oft-resimler/{isemri_no}/{filename}', [PhotoController::class, 'serveImage']);
+Route::get('/stok-resimler/{itemCode}/{filename}', [StokPhotoController::class, 'serve']);
 
 // depo
 Route::middleware('auth:sanctum')->group(function () {
@@ -188,4 +190,9 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/depolarial', [DepoMamulController::class, 'DepolariAl']);
   Route::post('/rafgir', [DepoMamulController::class, 'RafGir']);
   Route::post('/kategori-guncelle', [DepoMamulController::class, 'KategoriGuncelle']);
+
+  // stok foto
+  Route::get('/stok-foto/list', [StokPhotoController::class, 'list']);
+  Route::post('/stok-foto/upload', [StokPhotoController::class, 'upload']);
+  Route::delete('/stok-foto/delete', [StokPhotoController::class, 'delete']);
 });
