@@ -167,5 +167,10 @@ declare module 'vue-router/auto-routes' {
     'wizard-examples-checkout': RouteRecordInfo<'wizard-examples-checkout', '/wizard-examples/checkout', Record<never, never>, Record<never, never>>,
     'wizard-examples-create-deal': RouteRecordInfo<'wizard-examples-create-deal', '/wizard-examples/create-deal', Record<never, never>, Record<never, never>>,
     'wizard-examples-property-listing': RouteRecordInfo<'wizard-examples-property-listing', '/wizard-examples/property-listing', Record<never, never>, Record<never, never>>,
+    'yardim-pdf-goruntule': RouteRecordInfo<'yardim-pdf-goruntule', '/yardim/pdf-goruntule', Record<never, never>, Record<never, never>>,
+    'yardim-pdf-ornek': RouteRecordInfo<'yardim-pdf-ornek', '/yardim/pdf-ornek', Record<never, never>, Record<never, never>>,
+    'yardim-ses-ornek': RouteRecordInfo<'yardim-ses-ornek', '/yardim/ses-ornek', Record<never, never>, Record<never, never>>,
+    'yardim-video-ornek': RouteRecordInfo<'yardim-video-ornek', '/yardim/video-ornek', Record<never, never>, Record<never, never>>,
+    'yardim-yetki-yonetimi-kilavuzu': RouteRecordInfo<'yardim-yetki-yonetimi-kilavuzu', '/yardim/yetki-yonetimi-kilavuzu', Record<never, never>, Record<never, never>>,
   }
 }
