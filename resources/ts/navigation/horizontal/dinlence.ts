@@ -19,6 +19,13 @@ export default [
         action: "read",
         subject: "dashboard",
       },
+      {
+        title: "Yemek Mönüsü",
+        to: "dinlence-yemek-listesi",
+        action: "read",
+        subject: ["Planlama", "Satınalma", "Satış", "Montaj"],
+        target: "_blank",
+      },
     ],
   },
 ];

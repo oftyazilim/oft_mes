@@ -18,6 +18,7 @@ use App\Http\Controllers\depo\StokPhotoController;
 use Illuminate\Support\Facades\DB;
 use App\Services\FileSearchController;
 use App\Services\FileServeController;
+use App\Http\Controllers\diger\DigerController;
 
 Route::group(['prefix' => 'auth'], function () {
   Route::post('login', [AuthController::class, 'login']);
@@ -210,3 +211,5 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/stok-foto/upload', [StokPhotoController::class, 'upload']);
   Route::delete('/stok-foto/delete', [StokPhotoController::class, 'delete']);
 });
+
+Route::post('/upload-yemek-listesi', [DigerController::class, 'uploadYemekListesi']);
