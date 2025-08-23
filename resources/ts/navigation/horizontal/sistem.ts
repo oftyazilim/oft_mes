@@ -14,6 +14,13 @@ export default [
             subject: "all",
             // target: "_blank",
           },
+          {
+            title: "Yetki Yönetimi",
+            to: { path: "/personel/yetki-yonetimi" },
+            icon: { icon: "tabler-shield-lock" },
+            action: "manage",
+            subject: "users",
+          },
           // {
           //   title: "Kullanıcı Listesi",
           //   to: { path: "/users" },

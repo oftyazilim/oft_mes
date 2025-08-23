@@ -43,7 +43,7 @@ app.mount("#app");
 
 // Set UI zoom to 90% on startup
 (() => {
-  const DEFAULT_ZOOM = 0.80;
+  const DEFAULT_ZOOM = 0.85;
   const zoomStr = localStorage.getItem("app-zoom");
   const zoom =
     Number.isFinite(Number(zoomStr)) && Number(zoomStr) > 0

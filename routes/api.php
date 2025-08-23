@@ -47,11 +47,14 @@ Route::group(['prefix' => 'roles', 'middleware' => 'auth:sanctum'], function () 
 // Users API routes
 Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () {
   Route::get('/permissions', [AuthController::class, 'permissions']);
+  Route::get('/all-basic', [UsersController::class, 'allBasic']);
   Route::get('/', [UsersController::class, 'index']);
   Route::get('/{id}', [UsersController::class, 'show']);
+  Route::get('/{id}/roles', [UsersController::class, 'getUserRoles']);
   Route::get('/{id}/permissions', [UsersController::class, 'getUserPermissions']);
 
   Route::post('/{id}/permissions/{permissionId}', [UsersController::class, 'assignUserPermission']);
+  Route::post('/{id}/roles', [UsersController::class, 'assignRoles']);
   Route::post('/', [UsersController::class, 'store']);
 
   Route::put('/{id}', [UsersController::class, 'update']);
@@ -61,6 +64,16 @@ Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () 
 
   Route::delete('/{id}', [UsersController::class, 'destroy']);
   Route::delete('/{id}/permissions/{permissionId}', [UsersController::class, 'removeUserPermission']);
+});
+
+// Permissions API routes
+Route::group(['prefix' => 'permissions', 'middleware' => 'auth:sanctum'], function () {
+  // List all permissions
+  Route::get('/', [App\Http\Controllers\personel\PermissionController::class, 'index']);
+  // Create permission
+  Route::post('/', [App\Http\Controllers\personel\PermissionController::class, 'store']);
+  // Delete permission
+  Route::delete('/{id}', [App\Http\Controllers\personel\PermissionController::class, 'destroy']);
 });
 
 // planlama-montaj

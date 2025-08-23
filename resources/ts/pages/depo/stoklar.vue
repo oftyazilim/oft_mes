@@ -1065,6 +1065,7 @@ const onFocusedRowChanged = async (e: DxDataGridTypes.FocusedRowChangedEvent) =>
 };
 
 const UrunSorgula = async () => {
+  return;
   if (!selectedRow.value) {
     console.warn('Seçili satır yok!')
     return

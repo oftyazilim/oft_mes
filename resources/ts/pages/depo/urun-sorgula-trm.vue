@@ -159,7 +159,7 @@ const DepolariAl = async () => {
     })
 
     depolar.value = response.data.depolar
-    console.log(depolar.value)
+    // console.log(depolar.value)
   }
   catch (error) {
     console.error('Veri çekilirken hata oluştu: ', error)

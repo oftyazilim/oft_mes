@@ -76,6 +76,15 @@ class UsersController extends Controller
         ]);
     }
 
+    /**
+     * Tüm kullanıcıları basit alanlarla döndür (id, name, email)
+     */
+    public function allBasic()
+    {
+        $users = User::query()->select('id', 'name', 'email')->orderBy('name')->get();
+        return response()->json($users);
+    }
+
 
     // 2. Yeni kayıt ekleme
     public function store(Request $request)
@@ -467,6 +476,17 @@ class UsersController extends Controller
 
         // Spatie yöntemini kullanarak roller ata
         $user->syncRoles($roles); // Önceki rolleri kaldırır ve yeni rolleri atar
+        return response()->json(['message' => 'Roller güncellendi', 'roles' => $user->getRoleNames()]);
+    }
+
+    /**
+     * Kullanıcının rol isimlerini getir
+     */
+    public function getUserRoles(int $id)
+    {
+        $user = User::find($id);
+        if (!$user) return response()->json(['message' => 'User not found'], 404);
+        return response()->json(['roles' => $user->getRoleNames()]);
     }
 
     public function changePassword(Request $request)

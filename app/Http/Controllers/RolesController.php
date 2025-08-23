@@ -16,7 +16,7 @@ class RolesController extends Controller
     public function index()
     {
         $roles = Role::all();
-        
+
         // Her role için user count'u manuel olarak hesapla
         $rolesWithCount = $roles->map(function ($role) {
             $role->users_count = $role->users()->count();
@@ -54,7 +54,7 @@ class RolesController extends Controller
         if ($searchQuery) {
             $query->where(function ($q) use ($searchQuery) {
                 $q->where('name', 'like', "%{$searchQuery}%")
-                  ->orWhere('email', 'like', "%{$searchQuery}%");
+                    ->orWhere('email', 'like', "%{$searchQuery}%");
             });
         }
 
@@ -79,7 +79,7 @@ class RolesController extends Controller
     public function availableRoles()
     {
         $roles = Role::select('id', 'name')->get();
-        
+
         return response()->json([
             'roles' => $roles,
         ]);
@@ -91,7 +91,7 @@ class RolesController extends Controller
     public function show($id)
     {
         $role = Role::with('permissions')->findOrFail($id);
-        
+
         return response()->json([
             'role' => $role,
         ]);
@@ -105,6 +105,9 @@ class RolesController extends Controller
         $request->validate([
             'name' => 'required|string|unique:roles,name',
             'permissions' => 'array',
+        ], [
+            'name.required' => 'Rol adı zorunludur.',
+            'name.unique' => 'Bu rol adı zaten kayıtlı.',
         ]);
 
         $role = Role::create([
@@ -113,7 +116,23 @@ class RolesController extends Controller
         ]);
 
         if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
+            // İzin isimlerini normalize et ve yoksa oluştur
+            $names = collect($request->permissions)
+                ->map(function ($p) {
+                    return is_array($p) ? ($p['name'] ?? null) : $p;
+                })
+                ->filter()
+                ->map(fn($n) => (string) $n)
+                ->unique()
+                ->values();
+
+            foreach ($names as $name) {
+                Permission::findOrCreate($name, 'web');
+            }
+            // Cache temizle
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+            $role->syncPermissions($names->all());
         }
 
         return response()->json([
@@ -132,6 +151,9 @@ class RolesController extends Controller
         $request->validate([
             'name' => 'required|string|unique:roles,name,' . $id,
             'permissions' => 'array',
+        ], [
+            'name.required' => 'Rol adı zorunludur.',
+            'name.unique' => 'Bu rol adı zaten kayıtlı.',
         ]);
 
         $role->update([
@@ -139,7 +161,23 @@ class RolesController extends Controller
         ]);
 
         if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
+            // İzin isimlerini normalize et ve yoksa oluştur
+            $names = collect($request->permissions)
+                ->map(function ($p) {
+                    return is_array($p) ? ($p['name'] ?? null) : $p;
+                })
+                ->filter()
+                ->map(fn($n) => (string) $n)
+                ->unique()
+                ->values();
+
+            foreach ($names as $name) {
+                Permission::findOrCreate($name, 'web');
+            }
+            // Cache temizle
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+            $role->syncPermissions($names->all());
         }
 
         return response()->json([
