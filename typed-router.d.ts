@@ -74,6 +74,8 @@ declare module 'vue-router/auto-routes' {
     'depo-stoklar': RouteRecordInfo<'depo-stoklar', '/depo/stoklar', Record<never, never>, Record<never, never>>,
     'depo-urun-sorgula': RouteRecordInfo<'depo-urun-sorgula', '/depo/urun-sorgula', Record<never, never>, Record<never, never>>,
     'depo-urun-sorgula-trm': RouteRecordInfo<'depo-urun-sorgula-trm', '/depo/urun-sorgula-trm', Record<never, never>, Record<never, never>>,
+    'dinlence-adam-asmaca': RouteRecordInfo<'dinlence-adam-asmaca', '/dinlence/adam-asmaca', Record<never, never>, Record<never, never>>,
+    'dinlence-test': RouteRecordInfo<'dinlence-test', '/dinlence/test', Record<never, never>, Record<never, never>>,
     'extensions-swiper': RouteRecordInfo<'extensions-swiper', '/extensions/swiper', Record<never, never>, Record<never, never>>,
     'extensions-tour': RouteRecordInfo<'extensions-tour', '/extensions/tour', Record<never, never>, Record<never, never>>,
     'forgot-password': RouteRecordInfo<'forgot-password', '/forgot-password', Record<never, never>, Record<never, never>>,
