@@ -2,28 +2,34 @@
   <VCard class="mt-0 pa-0">
     <VCardText class="mt-0 pa-0">
       <VCol cols="12" class="mt-0 pa-1 pe-2">
-        <VCardItem class="pb-0" title="Kapasite Hesaplama" subtitle="Sonlu kapasite hesaplaması yapılacaktır">
+        <VCardItem class="pb-0" title="Kapasite Hesaplama" subtitle="Sonlu kapasite hesaplaması">
           <template #append>
             <div class="d-flex gap-2">
               <div class="pa-2">Ekip</div>
               <div class="dx-field-value">
-                <AppTextField v-model="ekipSayisi" type="number" placeholder="0" @input="sadeceTamSayi" width="100" />
+                <AppTextField v-model="ekipSayisi" type="number" placeholder="0" @input="sadeceTamSayi" width="80" />
+              </div>
+              <div class="pa-2">İş&nbsp;Merkezi </div>
+              <div class="dx-field-value">
+                <DxSelectBox :data-source="merkezler" v-model="selectedMerkez" display-expr="mrk_adi"
+                  value-expr="ismerkezi_kodu" :height="37" :width="150" placeholder="Seçiniz..."
+                  @value-changed="getIstasyon" />
               </div>
               <div class="pa-2">İstasyon </div>
               <div class="dx-field-value">
                 <DxSelectBox :data-source="istasyonlar" v-model="selectedIstasyon" display-expr="IS_ISTASYONU"
-                  value-expr="IS_ISTASYONU_ID" :height="37" :width="320" placeholder="Seçiniz..."
-                  @value-changed="haftalariAl" />
+                  value-expr="IS_ISTASYONU_ID" :height="37" :width="250" placeholder="Seçiniz..."
+                  @value-changed="getTiplerHaftalar" />
               </div>
               <div class="pa-2">İş&nbsp;Emri&nbsp;Tipi </div>
               <div class="dx-field-value">
                 <DxSelectBox :data-source="tipler" v-model="selectedTip" display-expr="isemri_tipi"
-                  value-expr="isemri_tipi" :height="37" :width="250" placeholder="Seçiniz..." />
+                  value-expr="isemri_tipi" :height="37" :width="200" placeholder="Seçiniz..." />
               </div>
               <div class="pa-2">Hafta </div>
               <div class="dx-field-value">
                 <DxSelectBox :disabled="!selectedIstasyon || ekipSayisi === 0" :data-source="haftalar"
-                  v-model="selectedHafta" display-expr="hafta" value-expr="hafta" :height="37" :width="120"
+                  v-model="selectedHafta" display-expr="hafta" value-expr="hafta" :height="37" :width="100"
                   placeholder="Seçiniz..." />
               </div>
               <VBtn :disabled="!selectedHafta || !selectedIstasyon || ekipSayisi === 0" variant="tonal"
@@ -238,7 +244,7 @@
 
 
             <DxLoadPanel :key="loadingVisible" v-model:visible="loadingVisible" :show-indicator="true"
-              message="Hesaplanıyor..." :show-pane="true" :shading="true" />
+              :message="loadingMessage" :show-pane="true" :shading="true" />
             <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
             <DxHeaderFilter :visible="true" />
             <DxFilterPanel :visible="true" />
@@ -349,11 +355,14 @@ const chart = ref<DxChart>();
 const dataSource = ref<any[]>([]);
 const haftalar = ref<Hafta[]>([]);
 const selectedHafta = ref(null)
+const merkezler = ref<Merkez[]>([]);
 const istasyonlar = ref<Istasyon[]>([]);
-const tipler = ref<Istasyon[]>([]);
-const selectedIstasyon = ref(null)
+const tipler = ref<Tip[]>([]);
+const selectedMerkez = ref<string | null>(null)
+const selectedIstasyon = ref<string | null>(null)
 const selectedTip = ref<string | null>(null)
 const loadingVisible = ref<boolean>(false)
+const loadingMessage = ref<string>('')
 const ekipSayisi = ref<number | null>(1)
 const selectedRowKeys = ref<number[]>([])
 const takvim = ref({})
@@ -370,8 +379,14 @@ definePage({
 interface Hafta {
   hafta: string | number;
 }
+interface Merkez {
+  merkez: string | number;
+}
 interface Istasyon {
   istasyon: string | number;
+}
+interface Tip {
+  tip: string | number;
 }
 
 function sadeceTamSayi(event: Event) {
@@ -382,21 +397,61 @@ function sadeceTamSayi(event: Event) {
 
 onMounted(async () => {
   try {
-    const res = await axios.get('/api/kapasite-param');
-    istasyonlar.value = res.data.istasyonlar;
-    // Tipler listesine 'TÜMÜ' seçeneğini ekle ve stringe normalize et
-    const rawTipler = Array.isArray(res.data.tipler) ? res.data.tipler : [];
-    const normalized = rawTipler.map((t: any) => ({ isemri_tipi: t?.isemri_tipi ?? '' }));
-    tipler.value = [{ isemri_tipi: 'TÜMÜ' }, ...normalized];
-    // Varsayılan olarak TÜMÜ seçili olsun
-    if (selectedTip.value == null) selectedTip.value = 'TÜMÜ';
+    const res = await axios.get('/api/kapasite-merkez-al');
+    const rawMerkezler = Array.isArray(res.data.merkezler) ? res.data.merkezler : [];
+    const normalized = rawMerkezler.map((t: any) => ({
+      ismerkezi_kodu: t?.ismerkezi_kodu ?? '',
+      mrk_adi: t?.mrk_adi ?? ''
+    }));
+    merkezler.value = [...normalized];
   } catch (e) {
     console.error('Veri çekilemedi', e);
   }
   fetchTakvim();
 });
 
+async function getIstasyon() {
+  try {
+    loadingMessage.value = 'İstasyonlar yükleniyor...'
+    loadingVisible.value = true
+    const res = await axios.get('/api/kapasite-istasyon-al', {
+      params: {
+        merkez: selectedMerkez.value,
+      }
+    });
+    istasyonlar.value = res.data.istasyonlar;
+  } catch (e) {
+    console.error('Veri çekilemedi', e);
+  } finally {
+    loadingVisible.value = false
+    loadingMessage.value = ''
+  }
+};
+
+async function getTiplerHaftalar() {
+  try {
+    loadingMessage.value = 'Tipler ve haftalar yükleniyor...'
+    loadingVisible.value = true
+    const res = await axios.get('/api/kapasite-hafta', {
+      params: {
+        istasyon: selectedIstasyon.value,
+      }
+    });
+    haftalar.value = res.data.haftalar;
+    const rawTipler = Array.isArray(res.data.tipler) ? res.data.tipler : [];
+    const normalized = rawTipler.map((t: any) => ({ isemri_tipi: t?.isemri_tipi ?? '' }));
+    tipler.value = [{ isemri_tipi: 'TÜMÜ' }, ...normalized];
+    if (selectedTip.value == null) selectedTip.value = 'TÜMÜ';
+  } catch (e) {
+    console.error('Veri çekilemedi', e);
+  } finally {
+    loadingVisible.value = false
+    loadingMessage.value = ''
+  }
+}
+
 async function getData() {
+  loadingMessage.value = 'Veriler yükleniyor...'
   loadingVisible.value = true;
   dataSource.value = [];
   try {
@@ -412,9 +467,14 @@ async function getData() {
   } catch (e) {
     console.error('Veri çekilemedi', e);
   }
-  hesaplaKapasite();
-
-  loadingVisible.value = false;
+  // Hesaplama sürecinde de kullanıcıyı bilgilendir
+  try {
+    loadingMessage.value = 'Hesaplanıyor...'
+    hesaplaKapasite();
+  } finally {
+    loadingVisible.value = false;
+    loadingMessage.value = ''
+  }
 }
 
 const convertToISODate = (dateString: string | null | undefined) => {
@@ -486,7 +546,6 @@ const getIconType = (cellElement: HTMLElement, cellInfo: any): void => {
       cellElement.appendChild(whiteIcon) // İlk çocuk yoksa sona ekle
   }
 }
-
 
 const fetchTakvim = async () => {
   try {
@@ -641,19 +700,6 @@ const hesaplaKapasite = () => {
       displayTime: 5000,
     })
     // ElMessage.warning(`${hataSatirlari.value.length} iş emri planlanamadı.`)
-  }
-}
-
-async function haftalariAl() {
-  try {
-    const res = await axios.get('/api/kapasite-hafta', {
-      params: {
-        istasyon: selectedIstasyon.value,
-      }
-    });
-    haftalar.value = res.data.haftalar;
-  } catch (e) {
-    console.error('Veri çekilemedi', e);
   }
 }
 

@@ -80,11 +80,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // kapasite-hesapla
 Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/kapasite-param', [KapasiteController::class, 'getKapasiteParam']);
   Route::get('/get-kapasite-data', [KapasiteController::class, 'getKapasiteData']);
   Route::get('/kapasite-planlama', [KapasiteController::class, 'kapasitePlanla']);
   Route::get('/kapasite-takvim', [KapasiteController::class, 'getTakvim']);
   Route::get('/kapasite-hafta', [KapasiteController::class, 'getKapasiteHaftalar']);
+  Route::get('/kapasite-merkez-al', [KapasiteController::class, 'getMerkezler']);
+  Route::get('/kapasite-istasyon-al', [KapasiteController::class, 'getIstasyonlar']);
 
   Route::post('/kapasite-guncelle', [KapasiteController::class, 'kapasiteGuncelle']);
 });

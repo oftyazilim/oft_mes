@@ -12,31 +12,42 @@ use Carbon\Carbon;
 
 class KapasiteController extends Controller
 {
-  public function getKapasiteParam(Request $request)
+  public function getMerkezler()
+  {
+    $merkezler = DB::connection('pgsql')
+      ->table('uyumsoft.zz_bk_OFTV_IS_ISTASYONLARI')
+      ->select(
+        'ismerkezi_kodu',
+        DB::raw("concat_ws('-', ismerkezi_kodu, ismerkezi_adi) as mrk_adi") // 1200 ve istasyon_adi birleştirildi
+      )
+      ->where('firma_id', 2715)
+      ->orderBy('ismerkezi_kodu')
+      ->distinct()
+      ->get();
+
+    return response()->json([
+      'merkezler' => $merkezler,
+      'message' => 'Veriler başarıyla alındı',
+      'success' => true,
+    ]);
+  }
+
+  public function getIstasyonlar(Request $request)
   {
     $istasyonlar = DB::connection('pgsql')->table('uyumsoft.OFTV_ISEMIRLERI_DETAY')
       ->select('IS_ISTASYONU_ID', 'IS_ISTASYONU')
-      // ->where('IS_MERKEZI_KODU', '4001')
+      ->where('IS_MERKEZI_KODU', $request->merkez)
       ->orderBy('IS_ISTASYONU')
       ->distinct()
       ->get();
 
-    $tipler = DB::connection('pgsql')->table('uyumsoft.OFTV_ISEMIRLERI_DETAY')
-      ->select('isemri_tipi')
-      ->distinct()
-      ->orderBy('isemri_tipi')
-      ->get();
-
-
     return response()->json([
       'istasyonlar' => $istasyonlar,
-      'tipler' => $tipler,
     ], 200);
   }
 
   public function getKapasiteHaftalar(Request $request)
   {
-
     $haftalar = DB::connection('pgsql')->table('uyumsoft.OFTV_ISEMIRLERI_DETAY')
       ->select('hafta')
       ->where('IS_ISTASYONU_ID', $request->istasyon)
@@ -44,9 +55,17 @@ class KapasiteController extends Controller
       ->distinct()
       ->get();
 
+    $tipler = DB::connection('pgsql')->table('uyumsoft.OFTV_ISEMIRLERI_DETAY')
+      ->select('isemri_tipi')
+      ->where('IS_ISTASYONU_ID', $request->istasyon)
+      ->distinct()
+      ->orderBy('isemri_tipi')
+      ->get();
+
     // Log::info('Haftalar:', ['haftalar' => $haftalar]);
     return response()->json([
       'haftalar' => $haftalar,
+      'tipler' => $tipler,
     ], 200);
   }
 
@@ -77,7 +96,7 @@ class KapasiteController extends Controller
 
     // Tip filtresi: boş/null gönderildiyse tüm tipler gelir; string gönderildiyse eşit filtre; '(boş)' gibi özel label kullanıldıysa null/empty filtrelenir
     if ($request->tip != 'TÜMÜ') {
-        $query->where('isemri_tipi', $request->tip);
+      $query->where('isemri_tipi', $request->tip);
     }
     // if ($request->filled('tip') && $request->input('tip') !== 'TÜMÜ') {
     //   $tip = $request->input('tip');
