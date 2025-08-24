@@ -568,6 +568,10 @@
 
 
 <script setup lang="ts">
+definePage({
+  meta: { action: ['read'], subject: ['planlama', 'satinalma'] }
+})
+
 import axios from 'axios'
 import type { DxDataGridTypes } from 'devextreme-vue/data-grid'
 import {
@@ -667,7 +671,6 @@ document.title = "OFT - İhtiyaç Listesi";
 const EksikleriKontrolEt = async () => {
   await getEksikler()
 }
-
 
 function formatSummaryText(e) {
   return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 }).format(e.value);

@@ -1,21 +1,16 @@
 export default [
-  // {
-  //   heading: "SATINALMA",
-  //   action: "read",
-  //   subject: ["Planlama", "Satınalma"],
-  // },
   {
     title: "Satınalma",
     icon: { icon: "tabler-shopping-cart" },
     action: "read",
-    subject: ["Montaj", "Planlama"],
+    subject: ["satinalma", "planlama"],
     children: [
       {
         title: "Satınalma Siparişleri",
         to: "satinalma-satinalma-siparisleri",
         icon: { icon: "tabler-list" },
         action: "read",
-        subject: ["Planlama", "Satınalma"],
+        subject: ["satinalma", "planlama"],
         // target: '_blank',
       },
       {
@@ -23,7 +18,7 @@ export default [
         to: "satinalma-satinalma-talepler",
         icon: { icon: "tabler-list" },
         action: "read",
-        subject: ["Planlama", "Satınalma"],
+        subject: ["satinalma", "planlama"],
         // target: '_blank',
       },
       {
@@ -31,7 +26,7 @@ export default [
         to: "satinalma-ihtiyac-listesi-siparis",
         icon: { icon: "tabler-list" },
         action: "read",
-        subject: ["Satınalma", "Planlama"],
+        subject: ["satinalma", "planlama"],
         // target: '_blank',
       },
     ],

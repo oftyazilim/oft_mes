@@ -8,6 +8,7 @@ import uretim from "./uretim";
 import kalite from "./kalite";
 import depo from "./depo";
 import dinlence from "./dinlence";
+import yardim from "./yardim";
 
 export default [
   ...dashboard,
@@ -19,4 +20,5 @@ export default [
   ...depo,
   ...dinlence,
   ...sistem,
+  ...yardim,
 ] as HorizontalNavItems;

@@ -465,7 +465,7 @@ import DxDateBox from "devextreme-vue/date-box";
 import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup'
 
 definePage({
-  meta: { action: ['read'], subject: ['roles', 'montaj', 'users'] }
+  meta: { action: ['read'], subject: ['planlama', 'montaj', 'satinalma', 'satis'] }
 })
 
 const formatDate = date => {

@@ -785,7 +785,7 @@ import SurecCell from './SurecCell.vue';
 const userAbilityRules = useCookie<Rule[]>("userAbilityRules").value || [];
 
 definePage({
-  meta: { action: ['read'], subject: ['roles', 'montaj', 'users'] }
+  meta: { action: ['read'], subject: ['planlama', 'montaj'] }
 })
 
 let okumaIzni = false;
