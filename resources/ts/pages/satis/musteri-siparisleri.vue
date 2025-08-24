@@ -6,8 +6,8 @@
           <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" />
 
           <DxDataGrid id="grid" ref="dataGridRef" :key="gridKey" class="grid" :data-source="gridData"
-            key-expr="order_d_id" :show-borders="true" focused-row-enabled="true" row-alternation-enabled="true"
-            :min-width="200" allow-column-reordering="true" column-auto-width="true" allow-column-resizing="true"
+            key-expr="order_d_id" :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true"
+            :min-width="200" :allow-column-reordering="true" :column-auto-width="true" :allow-column-resizing="true"
             @contextMenuPreparing="onContextMenuPreparing" column-resizing-mode="widget"
             @selection-changed="onSelectionChanged" :auto-navigate-to-focused-row="true" width="100%"
             @exporting="onExporting" :selected-rows-keys="selectedRows" @row-prepared="renklendir">

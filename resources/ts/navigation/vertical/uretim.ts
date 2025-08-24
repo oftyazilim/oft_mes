@@ -1,6 +1,6 @@
 export default [
   {
-    title: "Montaj",
+    title: "Üretim",
     icon: { icon: "tabler-assembly" },
     action: "read",
     subject: "montaj",

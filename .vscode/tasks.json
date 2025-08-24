@@ -9,6 +9,15 @@
 				"$php"
 			],
 			"group": "build"
+		},
+		{
+			"label": "Build Frontend (Vite)",
+			"type": "shell",
+			"command": "pnpm -s build",
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
 		}
 	]
 }

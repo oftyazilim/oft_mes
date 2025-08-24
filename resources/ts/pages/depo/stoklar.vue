@@ -9,7 +9,7 @@
           :allow-column-reordering="true" :allow-column-resizing="true" column-resizing-mode="widget"
           v-model:focused-row-key="focusedRowKey" @content-ready="onContentReady" :selected-rows-keys="selectedRowKeys"
           @focused-row-changed="onFocusedRowChanged" @row-prepared="onRowPrepared"
-          @selection-changed="onSelectionChanged" @row-dbl-click="UrunSorgula" @exporting="onExporting">
+          @selection-changed="onSelectionChanged" @exporting="onExporting">
 
           <DxColumn type="buttons" :width="30">
             <DxGridButton hint="Detay Göster" icon="eyeopen" :visible="true" :disabled="false" @click="UrunSorgula" />
@@ -1065,7 +1065,7 @@ const onFocusedRowChanged = async (e: DxDataGridTypes.FocusedRowChangedEvent) =>
 };
 
 const UrunSorgula = async () => {
-  return;
+
   if (!selectedRow.value) {
     console.warn('Seçili satır yok!')
     return

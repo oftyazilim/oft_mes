@@ -13,7 +13,13 @@ import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
 import { VForm } from 'vuetify/components/VForm'
 
-const authThemeImg = useGenerateImageVariant(authV2LoginIllustrationLight, authV2LoginIllustrationDark, authV2LoginIllustrationBorderedLight, authV2LoginIllustrationBorderedDark, true)
+const authThemeImg = useGenerateImageVariant(
+  authV2LoginIllustrationLight,
+  authV2LoginIllustrationDark,
+  authV2LoginIllustrationBorderedLight,
+  authV2LoginIllustrationBorderedDark,
+  true,
+)
 
 const authThemeMask = useGenerateImageVariant(authV2MaskLight, authV2MaskDark)
 
@@ -28,7 +34,6 @@ const isPasswordVisible = ref(false)
 
 const route = useRoute()
 const router = useRouter()
-
 const ability = useAbility()
 
 const errors = ref<Record<string, string | undefined>>({
@@ -45,10 +50,16 @@ const credentials = ref({
 
 const rememberMe = ref(false)
 
-const login = async () => {
-  try {
-    // console.log('Login attempt with:', credentials.value)
+// Yükleme ve genel hata durumu
+const isSubmitting = ref(false)
+const generalError = ref<string | null>(null)
 
+const login = async () => {
+  // Başlangıç durumu: yükleme ve hataları temizle
+  isSubmitting.value = true
+  generalError.value = null
+  errors.value = { email: undefined, password: undefined }
+  try {
     const res = await $api('/auth/login', {
       method: 'POST',
       body: {
@@ -57,59 +68,51 @@ const login = async () => {
       },
       onResponseError({ response }) {
         console.error('Login error:', response._data)
-        errors.value = response._data.errors || { email: 'Login failed', password: 'Login failed' }
+        const apiErrors = response._data?.errors || null
+        errors.value = apiErrors || { email: 'Giriş başarısız', password: 'Giriş başarısız' }
+        generalError.value = response._data?.message
+          || (typeof response._data === 'string' ? response._data : null)
+          || 'Giriş işlemi başarısız oldu. Lütfen bilgilerinizi kontrol edin.'
       },
     })
 
     const { accessToken, userData, userAbilityRules } = res
 
-    // console.log('Raw userAbilityRules:', userAbilityRules)
-
     // Normalize ability rules
     const normalizedRules = normalizeAbilityRules(userAbilityRules)
-    // console.log('Normalized rules:', normalizedRules)
 
     // Cookie ömrünü Remember Me'ye göre ayarla
     const cookieOpts = rememberMe.value
-      ? { maxAge: 60 * 60 * 24 * 30 } // 30 gün kalıcı
-      : { session: true } // oturum (tarayıcı kapanınca silinsin)
+      ? { maxAge: 60 * 60 * 24 * 30 }
+      : { session: true }
 
-    // Ability rules'u cookie'ye kaydet ve ability'yi güncelle
-    // Save ability rules array directly
+    // Ability ve cookie güncelle
     useCookie('userAbilityRules', cookieOpts as any).value = userAbilityRules
-   // console.log('Updating ability with rules:', normalizedRules)
     ability.update(normalizedRules as any)
-    // console.log('Ability updated, rules count:', ability.rules.length)
 
-    // console.log('Ability updated, testing can("manage", "all"):', ability.can('manage', 'all'))
-
-    // Tüm görünür user alanlarını cookie'ye yaz (modelde $hidden gizler)
     const userDataCookie = useCookie<any>('userData', cookieOpts as any)
     userDataCookie.value = userData
     useCookie('accessToken', cookieOpts as any).value = accessToken
 
-    // console.log('Cookies set - userData:', !!useCookie('userData').value, 'accessToken:', !!useCookie('accessToken').value)
-    // console.log('UserData stored in cookie (full):', userDataCookie.value)
-    // console.log(userData)
-    // Redirect to `to` query if exist or redirect to index route
-    // ❗ nextTick is required to wait for DOM updates and later redirect
     await nextTick(() => {
       const targetPath = route.query.to ? String(route.query.to) : '/home-page'
-      // console.log('Redirecting to:', targetPath)
       router.push(targetPath)
     })
   }
   catch (err) {
     console.error(err)
+    if (!generalError.value)
+      generalError.value = 'Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.'
+  }
+  finally {
+    isSubmitting.value = false
   }
 }
 
 const onSubmit = () => {
   refVForm.value?.validate()
     .then(({ valid: isValid }) => {
-      if (isValid) {
-        login()
-      }
+      if (isValid) login()
     })
 }
 </script>
@@ -150,20 +153,15 @@ const onSubmit = () => {
             Lütfen hesabınıza giriş yapın ve maceraya başlayın...
           </p>
         </VCardText>
-        <!-- <VCardText>
-          <VAlert
-            color="primary"
-            variant="tonal"
-          >
-            <p class="text-sm mb-2">
-              Admin Email: <strong>admin@demo.com</strong> / Pass: <strong>admin</strong>
-            </p>
-            <p class="text-sm mb-0">
-              Client Email: <strong>client@demo.com</strong> / Pass: <strong>client</strong>
-            </p>
-          </VAlert>
-        </VCardText> -->
         <VCardText>
+          <!-- Genel uyarılar -->
+          <VAlert v-if="isSubmitting" type="info" class="mb-4">
+            Giriş yapılıyor, lütfen bekleyin...
+          </VAlert>
+          <VAlert v-if="generalError" type="error" class="mb-4">
+            {{ generalError }}
+          </VAlert>
+
           <VForm ref="refVForm" @submit.prevent="onSubmit">
             <VRow>
               <!-- email -->
@@ -187,40 +185,10 @@ const onSubmit = () => {
                   </RouterLink>
                 </div>
 
-                <VBtn block type="submit">
+                <VBtn block type="submit" :loading="isSubmitting" :disabled="isSubmitting">
                   Giriş Yap
                 </VBtn>
               </VCol>
-
-              <!-- create account -->
-              <!-- <VCol
-                cols="12"
-                class="text-center"
-              >
-                <span>New on our platform?</span>
-                <RouterLink
-                  class="text-primary ms-1"
-                  :to="{ name: 'register' }"
-                >
-                  Create an account
-                </RouterLink>
-              </VCol>
-              <VCol
-                cols="12"
-                class="d-flex align-center"
-              >
-                <VDivider />
-                <span class="mx-4">or</span>
-                <VDivider />
-              </VCol> -->
-
-              <!-- auth providers -->
-              <!-- <VCol
-                cols="12"
-                class="text-center"
-              >
-                <AuthProvider />
-              </VCol> -->
             </VRow>
           </VForm>
         </VCardText>
