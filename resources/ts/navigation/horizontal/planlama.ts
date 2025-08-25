@@ -25,7 +25,7 @@ export default [
         title: "Kapasite Hesapla",
         to: "planlama-kapasite-hesapla",
         icon: { icon: "tabler-list" },
-        action: "read",
+        action: "create",
         subject: ["planlama"],
         // target: '_blank',
       },

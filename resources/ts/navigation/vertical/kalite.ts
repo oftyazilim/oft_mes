@@ -10,7 +10,7 @@ export default [
         title: "Ürün Kontrolü",
         to: "kalite-uretim-kontrol",
         icon: { icon: "tabler-microscope" },
-        action: "read",
+        action: "create",
         subject: ["Kalite"],
         // target: '_blank',
       },

@@ -296,6 +296,11 @@ const saveUser = async () => {
       ismerkezi: String(secimMerkezler.value ?? ''),
       istasyon: toCsv(secimIstasyonlar.value),
     });
+    // Kaydetme sonrası kullanıcı güncelleme olayını yayınla
+    try {
+      const newId = (response as any)?.data?.id ?? 0
+      window.dispatchEvent(new CustomEvent('user-updated', { detail: { id: newId, roles: selectedRoles.value } }))
+    } catch { /* noop */ }
   } catch (error: any) {
     if (error?.response?.data?.errors) {
       console.error('Doğrulama hataları:', error.response.data.errors);
@@ -320,6 +325,10 @@ const updateUser = async () => {
       ismerkezi: String(secimMerkezler.value ?? ''),
       istasyon: toCsv(secimIstasyonlar.value),
     });
+    // Güncelleme sonrası kullanıcı güncelleme olayını yayınla
+    try {
+      window.dispatchEvent(new CustomEvent('user-updated', { detail: { id: userData.id, roles: selectedRoles.value } }))
+    } catch { /* noop */ }
   } catch (error: any) {
     console.error("Kullanıcı güncellenirken hata oluştu:", error?.response?.data ?? error);
   }
@@ -415,8 +424,8 @@ const toCsv = (val: any): string => {
               <!-- 👉 Roller -->
               <VCol cols="6">
                 <AppSelect v-model="selectedRoles" :rules="[requiredValidator]" :items="roller" item-title="name"
-                  :menu-props="{ maxHeight: '400' }" label="Roller" multiple persistent-hint
-                  placeholder="Rol seçiniz..." />
+                  item-value="name" :return-object="false" :menu-props="{ maxHeight: '400' }" label="Roller" multiple
+                  persistent-hint placeholder="Rol seçiniz..." chips closable-chips />
               </VCol>
 
               <!-- 👉 İş Merkezleri -->

@@ -220,9 +220,9 @@ const assignedPerms = ref<{ id: number; name: string }[]>([])
 const availablePerms = ref<{ id: number; name: string }[]>([])
 
 const filteredUsers = computed(() => {
-  const q = userSearch.value.trim().toLowerCase()
+  const q = String(userSearch.value ?? '').trim().toLowerCase()
   if (!q) return users.value
-  return users.value.filter(u => (u.name + u.email).toLowerCase().includes(q))
+  return users.value.filter(u => (u.name + ' ' + u.email).toLowerCase().includes(q))
 })
 
 // Roles
@@ -251,22 +251,22 @@ const subjects = ['genel', 'montaj', 'planlama', 'kalite', 'depo', 'satinalma', 
 const userPermSearch = ref('')
 
 const filteredPerms = computed(() => {
-  const q = permSearch.value.trim().toLowerCase()
+  const q = String(permSearch.value ?? '').trim().toLowerCase()
   if (!q) return allPerms.value
   return allPerms.value.filter(p => p.name.toLowerCase().includes(q))
 })
 const filteredRoles = computed(() => {
-  const q = roleSearch.value.trim().toLowerCase()
+  const q = String(roleSearch.value ?? '').trim().toLowerCase()
   if (!q) return roles.value
   return roles.value.filter((r: any) => String(r.name).toLowerCase().includes(q))
 })
 const filteredAssignedPerms = computed(() => {
-  const q = userPermSearch.value.trim().toLowerCase()
+  const q = String(userPermSearch.value ?? '').trim().toLowerCase()
   if (!q) return assignedPerms.value
   return assignedPerms.value.filter(p => p.name.toLowerCase().includes(q))
 })
 const filteredAvailablePerms = computed(() => {
-  const q = userPermSearch.value.trim().toLowerCase()
+  const q = String(userPermSearch.value ?? '').trim().toLowerCase()
   if (!q) return availablePerms.value
   return availablePerms.value.filter(p => p.name.toLowerCase().includes(q))
 })
@@ -363,6 +363,10 @@ async function saveUserRoles() {
   showLoading('Roller kaydediliyor...')
   try {
     await axios.post(`/api/users/${selectedUserId.value}/roles`, { roles: userRoles.value })
+    // Roller sekmesindeki kullanıcı sayıları güncellensin
+    await loadRoles()
+    // Kullanıcıya atanmış/atanabilir izin listelerini tazele
+    await fetchUserPerms()
     showSnack('Kullanıcının rolleri güncellendi.', 'success')
     await refreshAbilityIfCurrentUser(selectedUserId.value)
   } catch (e: any) {

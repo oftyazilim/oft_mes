@@ -147,7 +147,6 @@
 </template>
 
 <script setup lang="ts">
-import AddNewUserDrawer from './kullanici-ekle.vue';
 import axios from 'axios';
 import DxContextMenu, { DxContextMenuTypes } from 'devextreme-vue/context-menu';
 import {
@@ -157,11 +156,14 @@ import {
   DxColumnChooserSelection,
   DxDataGrid,
   DxDataGridTypes,
+  DxEditing,
   DxExport,
   DxGrouping,
   DxGroupItem,
   DxGroupPanel,
   DxHeaderFilter,
+  DxPaging,
+  DxPosition,
   DxRowDragging,
   DxScrolling,
   DxSearchPanel,
@@ -176,6 +178,7 @@ import notify from 'devextreme/ui/notify';
 import { Workbook } from "exceljs";
 import { saveAs } from "file-saver-es";
 import { computed, onMounted, ref, watch } from "vue";
+import AddNewUserDrawer from './kullanici-ekle.vue';
 // import { usePageTitleStore } from "@/stores/pageTitle";
 import { DxButton } from "devextreme-vue/button";
 import DxList from 'devextreme-vue/list';
@@ -308,30 +311,114 @@ const cellTemplate = (container: HTMLElement, options: any) => {
 
   roles.forEach((role: string) => {
     const trimmedRole = role.trim();
-    const roleData = colors[trimmedRole] || {};
+    const roleStyle = getRoleStyle(trimmedRole);
 
     const span = document.createElement("span");
-    span.textContent = roleData.text || trimmedRole;
+    span.textContent = roleStyle.label;
     span.style.display = "inline-block";
     span.style.padding = "2px 8px";
     span.style.borderRadius = "8px";
-    span.style.backgroundColor = roleData.color || "#ccc";
-    span.style.color = "#fff";
+    span.style.backgroundColor = roleStyle.bg;
+    span.style.color = roleStyle.fg;
     span.style.fontSize = "12px";
 
     container.appendChild(span);
   });
 };
 
-const colors: any = {
-  'SuperAdmin': { color: 'red', text: 'SuperAdmin' },
-  'Montaj': { color: '#28a745', text: 'Montaj' },
-  'Planlama': { color: '#ffc107', text: 'Planlama' },
-  'Satınalma': { color: '#ffc107', text: 'Satınalma' },
-  'Satış': { color: '#ffc107', text: 'Satış' },
-  'user': { color: 'magenta', text: 'user' },
-  'Dashboard': { color: '#007bff', text: 'Dashboard' },
-  'all': { color: '#ac3545', text: 'all' },
+const ROLE_COLOR_STORAGE_KEY = 'roleColorsV4'
+const roleColorCache = new Map<string, { bg: string; fg: string }>()
+
+// Daha belirgin farklılıklar için geniş ve dengeli HUE paleti (pastel kalır, ayrışma artar)
+const HUE_PALETTE = [
+  10, 28, 45, 60, 80, 100, 120, 140,
+  160, 180, 200, 220, 240, 260, 280, 300, 320, 340,
+]
+
+function initRoleColorCache() {
+  try {
+    const raw = localStorage.getItem(ROLE_COLOR_STORAGE_KEY)
+    if (!raw) return
+    const obj = JSON.parse(raw) as Record<string, { bg: string; fg: string }>
+    Object.entries(obj).forEach(([k, v]) => roleColorCache.set(k, v))
+  } catch { /* ignore */ }
+}
+
+function persistRoleColorCache() {
+  try {
+    const obj: Record<string, { bg: string; fg: string }> = {}
+    roleColorCache.forEach((v, k) => { obj[k] = v })
+    localStorage.setItem(ROLE_COLOR_STORAGE_KEY, JSON.stringify(obj))
+  } catch { /* ignore */ }
+}
+
+function hashString(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i)
+    hash |= 0 // 32-bit int
+  }
+  return Math.abs(hash)
+}
+
+function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
+  // h [0,360), s,l [0,100]
+  s /= 100
+  l /= 100
+  const c = (1 - Math.abs(2 * l - 1)) * s
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
+  const m = l - c / 2
+  let rP = 0, gP = 0, bP = 0
+  if (0 <= h && h < 60) { rP = c; gP = x; bP = 0 }
+  else if (60 <= h && h < 120) { rP = x; gP = c; bP = 0 }
+  else if (120 <= h && h < 180) { rP = 0; gP = c; bP = x }
+  else if (180 <= h && h < 240) { rP = 0; gP = x; bP = c }
+  else if (240 <= h && h < 300) { rP = x; gP = 0; bP = c }
+  else { rP = c; gP = 0; bP = x }
+  const r = Math.round((rP + m) * 255)
+  const g = Math.round((gP + m) * 255)
+  const b = Math.round((bP + m) * 255)
+  return { r, g, b }
+}
+
+function yiqFromRgb(r: number, g: number, b: number): number {
+  // YIQ brightness approximation
+  return (r * 299 + g * 587 + b * 114) / 1000
+}
+
+function getRoleStyle(roleName: string): { bg: string; fg: string; label: string } {
+  const key = roleName || '—'
+  const cached = roleColorCache.get(key)
+  if (cached) return { ...cached, label: roleName || key }
+
+  // Hue from hash to get stable but spread colors
+  const hue = HUE_PALETTE[hashString(key) % HUE_PALETTE.length]
+  // Pastel tonlar: temel doygunluk/aydınlık ve küçük jitter ile ayrışma
+  const baseS = 46
+  const baseL = 80
+  const h = hashString(key)
+  const satJitter = (h % 11) - 5 // [-5..+5]
+  const lightJitter = ((Math.floor(h / 7) % 9) - 4) // [-4..+4]
+  const saturation = clamp(baseS + satJitter, 40, 56)
+  const lightness = clamp(baseL + lightJitter, 76, 84)
+  const bg = `hsl(${hue}, ${saturation}%, ${lightness}%)`
+
+  const { r, g, b } = hslToRgb(hue, saturation, lightness)
+  const yiq = yiqFromRgb(r, g, b)
+  const fg = yiq >= 140 ? '#111' : '#fff'
+
+  const style = { bg, fg }
+  roleColorCache.set(key, style)
+  // persist lazily
+  persistRoleColorCache()
+  return { ...style, label: roleName || key }
+}
+
+// Init cache once
+initRoleColorCache()
+
+function clamp(num: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, num))
 }
 
 const handleRowUpdating = (e: any) => {
@@ -363,13 +450,52 @@ const handleRowRemoving = (e: any) => {
   });
 };
 
-onMounted( async () => {
+onMounted(async () => {
   await getData();
+  // Kullanıcı güncellenince (roller vb.) izin panellerini ve sağdaki rol listesini tazele
+  const handler = async (ev: Event) => {
+    const detail = (ev as CustomEvent).detail as { id?: number; roles?: string[] }
+    const id = detail?.id ?? selectedRow.value?.id
+    if (!id) return
+    // Grid datasını yenileyip seçili kullanıcıyı bul
+    await getData();
+    const updatedRow = gridData.value.find((u: any) => u.id === id)
+    if (updatedRow) {
+      selectedRow.value = updatedRow
+      // Sağdaki Atanmış Roller listesini güncelle
+      const roles = (updatedRow.roles || "").split(",")
+      users.value = roles.map((r: string) => ({ name: r.trim() })).filter((r: { name: string }) => r.name)
+      // İzinleri yeniden yükle
+      await loadPermissions()
+      // Grid odak satırını koru
+      dataGridRef.value?.instance?.option('focusedRowKey', id)
+    }
+  }
+  window.addEventListener('user-updated', handler as EventListener)
 });
 
 watch(isAddNewUserDrawerVisible, (newValue, oldValue) => {
   if (!newValue && oldValue) {
-    if (!isAddNewUserDrawerVisible.value) getData();
+    (async () => {
+      await getData();
+      // Drawer kapandıktan sonra seçili kullanıcı bağlamını tazele
+      const id = selectedRow.value?.id;
+      if (id) {
+        const updatedRow = gridData.value.find((u: any) => u.id === id);
+        if (updatedRow) {
+          selectedRow.value = updatedRow;
+          // Sağdaki "Atanmış Roller" listesini güncelle
+          const roles = (updatedRow.roles || "").split(",");
+          users.value = roles
+            .map((role: string) => ({ name: role.trim() }))
+            .filter((r: { name: string }) => r.name);
+          // Kullanıcı izinlerini yeniden yükle
+          await loadPermissions();
+          // Grid odak satırını koru
+          dataGridRef.value?.instance?.option('focusedRowKey', id);
+        }
+      }
+    })();
   }
 });
 

@@ -372,7 +372,7 @@ const maxSure = ref(0)
 
 
 definePage({
-  meta: { action: ['read'], subject: ['planlama'] }
+  meta: { action: ['create'], subject: ['planlama'] }
 })
 
 
