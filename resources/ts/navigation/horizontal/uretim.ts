@@ -1,7 +1,7 @@
 export default [
   {
     title: "Üretim",
-    icon: { icon: "tabler-assembly" },
+    icon: { icon: "tabler-building-factory-2" },
     action: "read",
     subject: "montaj",
     children: [
