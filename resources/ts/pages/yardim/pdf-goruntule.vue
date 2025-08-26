@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 
 definePage({
-    meta: { action: 'manage', subject: 'all' },
+    meta: { action: 'read', subject: 'genel' },
 })
 
 // Default sample; allow query override ?src=/docs/your.pdf

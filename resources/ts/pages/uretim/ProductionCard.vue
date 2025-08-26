@@ -17,7 +17,7 @@
         {{ isemriNo }} &nbsp;
         <span style="font-size: 16px;">{{
           sebep != null ? sebep.substring(0, 30) : ""
-        }}</span>
+          }}</span>
       </span>
       <span class="time-display">{{ sonDurumSuresi }}</span>
     </VRow>
@@ -199,6 +199,7 @@
     <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="{
       ...kaydetOptions,
       onClick: durusSebebiKaydet,
+      disabled: durusKayitLoading,
     }" />
     <br />
 
@@ -252,6 +253,7 @@ const durusSebepleri = ref([]);
 const status = ref("");
 const allowPopupClose = ref(true);
 const ekipSecDialog = ref(false)
+const durusKayitLoading = ref(false)
 
 // Aktif ekipleri kapatıp ardından iş emrini kapat
 const topluBitir = async () => {
@@ -531,6 +533,7 @@ const durusSebebiGir = async () => {
 };
 
 const durusSebebiKaydet = async () => {
+  if (durusKayitLoading.value) return;
   if (!selectedSebep.value) {
     notify({
       message: "Lütfen bir duruş sebebi seçiniz.",
@@ -540,15 +543,20 @@ const durusSebebiKaydet = async () => {
     return;
   }
   try {
+    durusKayitLoading.value = true;
+    allowPopupClose.value = false;
     const response = await axios.post("/api/durusKaydet", {
       isEmriId: props.isemriId,
       istasyonKodu: userData.value.istasyon_id,
       userId: userData.value.id,
       selectedDurus: selectedSebep.value,
     });
+    notify({ message: 'Duruş kaydedildi.', type: 'success', displayTime: 2000 });
   } catch (error) {
     console.error("Kaydetme sırasında bir hata oluştu:", error);
+    notify({ message: 'Duruş kaydedilemedi.', type: 'error', displayTime: 3000 });
   } finally {
+    durusKayitLoading.value = false;
     allowPopupClose.value = true;
     popupDurusSecGosterVisible.value = false;
   }

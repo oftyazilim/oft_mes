@@ -141,16 +141,16 @@ class UretimMontajController extends Controller
       $cikisDepo = $cikisDepoId
         ? DB::connection('pgsql')->table('uyumsoft.invd_whouse')->where('whouse_id', $cikisDepoId)->first()
         : null;
-        // 2) Çalışma tarih aralığı
-        $calismaTarih = DB::table('oftt_calisma_sureleri_montaj')
+      // 2) Çalışma tarih aralığı
+      $calismaTarih = DB::table('oftt_calisma_sureleri_montaj')
         ->selectRaw('MIN(durum_bas_tarihi) as ilk_tarih, MAX(durum_bit_tarihi) as son_tarih')
         ->where('guid', $request->guid)
         ->first();
-        
-        $startDate = $calismaTarih?->ilk_tarih ? Carbon::parse($calismaTarih->ilk_tarih) : null;
-        $endDate   = $calismaTarih?->son_tarih ? Carbon::parse($calismaTarih->son_tarih) : Carbon::now();
-        
-        // 3) troc_workorder Ekle (orijinal statik ekleme)
+
+      $startDate = $calismaTarih?->ilk_tarih ? Carbon::parse($calismaTarih->ilk_tarih) : null;
+      $endDate   = $calismaTarih?->son_tarih ? Carbon::parse($calismaTarih->son_tarih) : Carbon::now();
+
+      // 3) troc_workorder Ekle (orijinal statik ekleme)
       DB::connection('pgsql_oft')->table('Troc_WorkOrder')->insert([
         'guid'                       => $request->guid,
         'branchcode'                 => $isemri->firma_kodu ?? null,
@@ -170,19 +170,19 @@ class UretimMontajController extends Controller
         'semiprdmtrwhousecode'       => $cikisDepo->whouse_code ?? null,
         'note1'                      => $isemri->sip_not1 ?? '',
       ]);
-      
+
       // 4) troc_employeeruntime – aktif ekipler
       if (!empty($request->guid)) {
         $personeller = DB::table('oftt_aktif_ekipler')
           ->where('guid', $request->guid)
           ->get();
-          
-          foreach ($personeller as $personel) {
-            $startTime = $this->parseTarih($personel->start_work_time);
-            $endTime   = $this->parseTarih($personel->end_work_time, Carbon::now());
-            DB::connection('pgsql_oft')->table('Troc_EmployeeRuntime')->insert([
-              'workorderguid'        => $request->guid,
-              'employeeno'            => $personel->sicil_no,
+
+        foreach ($personeller as $personel) {
+          $startTime = $this->parseTarih($personel->start_work_time);
+          $endTime   = $this->parseTarih($personel->end_work_time, Carbon::now());
+          DB::connection('pgsql_oft')->table('Troc_EmployeeRuntime')->insert([
+            'workorderguid'        => $request->guid,
+            'employeeno'            => $personel->sicil_no,
             'employeename'          => $personel->personel_full_name,
             'startdate'             => $startTime,
             'enddate'               => $endTime,
@@ -195,48 +195,48 @@ class UretimMontajController extends Controller
       if (!empty($request->guid)) {
         $duruslar = DB::connection('pgsql_oft')->table('oftt_calisma_sureleri_montaj')
           ->where('guid', $request->guid)
-          ->where('durum', 'DURUYOR') 
+          ->where('durum', 'DURUYOR')
           ->orderBy('durum_bas_tarihi', 'asc')
           ->get();
-          if ($duruslar->isNotEmpty()) {
-            foreach ($duruslar as $durus) {
-              $startTimeBreak = $durus->durum_bas_tarihi ? Carbon::parse($durus->durum_bas_tarihi) : null;
-              $endTimeBreak   = $durus->durum_bit_tarihi ? Carbon::parse($durus->durum_bit_tarihi) : Carbon::now();
-              
-              $personeller = DB::connection('pgsql_oft')
+        if ($duruslar->isNotEmpty()) {
+          foreach ($duruslar as $durus) {
+            $startTimeBreak = $durus->durum_bas_tarihi ? Carbon::parse($durus->durum_bas_tarihi) : null;
+            $endTimeBreak   = $durus->durum_bit_tarihi ? Carbon::parse($durus->durum_bit_tarihi) : Carbon::now();
+
+            $personeller = DB::connection('pgsql_oft')
               ->table('oftt_aktif_ekipler')
               ->where('guid', $request->guid)
               ->where('start_work_time', '<=', $startTimeBreak)
               ->where(function ($query) use ($endTimeBreak) {
                 $query->where('end_work_time', '>=', $endTimeBreak)
-                ->orWhereNull('end_work_time');
+                  ->orWhereNull('end_work_time');
               })
               ->get();
-              // Log::info('Duruşlar: ' . $duruslar);
-              // Log::info('Personeller: ' . $personeller);
-              // Log::info('Duruş Sebebi: ' . $durus->durus_sebebi_kodu);
-              // Log::info('Start Time Break: ' . $startTimeBreak);
-              // Log::info('End Time Break: ' . $endTimeBreak);
+            // Log::info('Duruşlar: ' . $duruslar);
+            // Log::info('Personeller: ' . $personeller);
+            // Log::info('Duruş Sebebi: ' . $durus->durus_sebebi_kodu);
+            // Log::info('Start Time Break: ' . $startTimeBreak);
+            // Log::info('End Time Break: ' . $endTimeBreak);
 
-              $lineNo = 0;
-              foreach ($personeller as $personel) {
-                $lineNo += 10;
-                DB::connection('pgsql_oft')->table('Troc_WorderBreak')->insert([
-                  'workorderguid'  => $request->guid,
-                  'breaklineno'    => $lineNo,
-                  'startdate'       => $startTimeBreak,
-                  'enddate'         => $endTimeBreak,
-                  'breakreasoncode' => $durus->durus_sebebi_kodu ?? ($durus->durus_sebebi_kodu ?? null),
-                  'citizenshipno'   => $personel->citizenship_no,
-                  'notelarge'       => 'test',
-                  'notelarge1'      => 'test',
-                  'notelarge2'      => 'test',
-                  'notelarge3'      => 'test',
-                ]);
-              }
+            $lineNo = 0;
+            foreach ($personeller as $personel) {
+              $lineNo += 10;
+              DB::connection('pgsql_oft')->table('Troc_WorderBreak')->insert([
+                'workorderguid'  => $request->guid,
+                'breaklineno'    => $lineNo,
+                'startdate'       => $startTimeBreak,
+                'enddate'         => $endTimeBreak,
+                'breakreasoncode' => $durus->durus_sebebi_kodu ?? ($durus->durus_sebebi_kodu ?? null),
+                'citizenshipno'   => $personel->citizenship_no,
+                'notelarge'       => 'test',
+                'notelarge1'      => 'test',
+                'notelarge2'      => 'test',
+                'notelarge3'      => 'test',
+              ]);
             }
           }
         }
+      }
 
       DB::commit();
       return response()->json(['success' => true]);
@@ -331,7 +331,7 @@ class UretimMontajController extends Controller
 
   public function KontrolGerekKaydet(Request $request)
   {
-    // Log::info('KontrolGerekKaydet request:', $request->all());
+    Log::info('KontrolGerekKaydet request:', $request->all());
 
     $veri = $request->all();
 
@@ -376,11 +376,55 @@ class UretimMontajController extends Controller
       'created_at' => now(),
       'updated_at' => now(),
     ];
-    DB::connection('pgsql_oft')
-      ->table('oftt_kontrol_isemri')
-      ->insert($kaydet);
+    // Doğal anahtar: (isemri_id, istasyon_id) ile upsert yap
+    try {
+      DB::connection('pgsql_oft')
+        ->table('oftt_kontrol_isemri')
+        ->updateOrInsert([
+          'isemri_id' => $veri['isEmriID'],
+          'istasyon_id' => $veri['istasyonID'],
+        ], $kaydet);
+    } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+      // Büyük olasılıkla id sequence senkron değil; düzeltip bir kez daha dene
+      Log::warning('oftt_kontrol_isemri insert unique violation, sequence düzeltilecek: ' . $e->getMessage());
+      $this->fixSequence('oftt_kontrol_isemri', 'id', 'pgsql_oft');
+      // Retry once
+      DB::connection('pgsql_oft')
+        ->table('oftt_kontrol_isemri')
+        ->updateOrInsert([
+          'isemri_id' => $veri['isEmriID'],
+          'istasyon_id' => $veri['istasyonID'],
+        ], $kaydet);
+    } catch (\Illuminate\Database\QueryException $e) {
+      // Başka bir nedenle unique violation veya race condition olabilir; var ise güncelle, yoksa hata döndür
+      $kod = (int) ($e->errorInfo[0] ?? 0);
+      Log::error('oftt_kontrol_isemri insert hata: ' . $e->getMessage());
+      // Son çare: zaten varsa güncelleyelim
+      DB::connection('pgsql_oft')
+        ->table('oftt_kontrol_isemri')
+        ->where('isemri_id', $veri['isEmriID'])
+        ->where('istasyon_id', $veri['istasyonID'])
+        ->update($kaydet);
+    }
 
     return response()->json(['status' => 'ok']);
+  }
+
+  /**
+   * PostgreSQL sequence senkronizasyonu düzeltir: nextval, MAX(id)+1 olacak.
+   */
+  protected function fixSequence(string $table, string $idCol, string $connection = 'pgsql')
+  {
+    try {
+      $sql = "SELECT setval(pg_get_serial_sequence('" . $table . "', '" . $idCol . "'), COALESCE((SELECT MAX(" . $idCol . ") FROM " . $table . "), 0))";
+      DB::connection($connection)->unprepared($sql);
+    } catch (\Throwable $e) {
+      Log::error('Sequence düzeltilemedi: ' . $e->getMessage(), [
+        'table' => $table,
+        'idCol' => $idCol,
+        'connection' => $connection,
+      ]);
+    }
   }
 
   public function getUretimData(Request $request)
@@ -920,6 +964,7 @@ class UretimMontajController extends Controller
       ];
     });
 
+    // Log::info('Kartlar:', $formatted->toArray());
 
     return response()->json($formatted);
   }

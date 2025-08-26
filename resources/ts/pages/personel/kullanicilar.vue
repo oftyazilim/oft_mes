@@ -144,6 +144,13 @@
   </div>
   <AddNewUserDrawer v-model:isDrawerOpen="isAddNewUserDrawerVisible" :userData="modalParametre" />
 
+  <VOverlay persistent contained :model-value="loading" class="align-center justify-center">
+    <VCard class="pa-4 d-flex align-center justify-center">
+      <VProgressCircular indeterminate color="primary" class="me-3" />
+      <span>{{ loadingMessage }}</span>
+    </VCard>
+  </VOverlay>
+
 </template>
 
 <script setup lang="ts">
@@ -209,6 +216,12 @@ const assignedGridRef = ref<DxDataGrid | null>(null);
 const expandAll = ref(true);
 const totalRecord = ref(0);
 
+// Global yükleme durumu ve mesajı
+const loading = ref(false);
+const loadingMessage = ref('');
+const showLoading = (msg: string) => { loadingMessage.value = msg; loading.value = true };
+const hideLoading = () => { loading.value = false; loadingMessage.value = '' };
+
 const onFocusedRowChanged = (e: any) => {
   if (e.rowType === 'group') return;
   const data = e.row!.data!;
@@ -227,9 +240,14 @@ const onFocusedRowChanged = (e: any) => {
 // İzinleri yükle
 const loadPermissions = async () => {
   if (!selectedRow.value) return;
-  const { data } = await axios.get(`/api/users/${selectedRow.value.id}/permissions`);
-  assignedPermissions.value = data.assigned;
-  availablePermissions.value = data.available;
+  try {
+    showLoading('İzinler yükleniyor...');
+    const { data } = await axios.get(`/api/users/${selectedRow.value.id}/permissions`);
+    assignedPermissions.value = data.assigned;
+    availablePermissions.value = data.available;
+  } finally {
+    hideLoading();
+  }
 };
 
 // İzin atama
@@ -293,6 +311,7 @@ const editorOptions: DxTextBoxTypes.Properties = { placeholder: "Sütun ara" };
 
 const getData = async () => {
   try {
+    showLoading('Veri yükleniyor...');
     const response = await axios.get(apiUrl);
     gridData.value = response.data.data;
     kademeler.value = response.data.kademeler;
@@ -300,7 +319,8 @@ const getData = async () => {
   } catch (error) {
     console.error('Error fetching data:', error);
     notify(`Kullanıcılar verisi alınamadı`, 'error', 1500)
-
+  } finally {
+    hideLoading();
   }
 };
 

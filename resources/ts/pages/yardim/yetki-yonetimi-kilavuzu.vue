@@ -7,7 +7,7 @@ import { definePage } from 'unplugin-vue-router'
 import guideMd from '../../../../docs/yetki-yonetimi-kilavuzu.md?raw'
 
 definePage({
-  meta: { action: 'manage', subject: 'all', layout: 'default' },
+  meta: { action: 'read', subject: 'genel', layout: 'default'  },
 })
 
 const mdText = guideMd

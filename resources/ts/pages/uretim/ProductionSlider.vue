@@ -359,6 +359,12 @@
         </VWindowItem>
         <VWindowItem value="tab-2">
           <VCardText class="pa-2">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <div class="text-subtitle-2">Gereksiz beklemeleri engellemek için otomatik yükleme kaldırılmıştır...</div>
+              <VBtn color="primary" variant="outlined" size="small" @click="getMalzemeListesi">
+                Listeyi Yükle
+              </VBtn>
+            </div>
             <DxContextMenu :data-source="menuItemsM" :width="200" target="#gridMalzemeler" @item-click="itemClickM" />
             <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataEksikListesi" key-expr="item_id"
               :show-borders="true" :min-width="400" :column-auto-width="false" :allow-column-resizing="true"
@@ -578,8 +584,8 @@
   </div>
 
   <PersonelSecDialog v-model="ekipSecDialog" :isemriID="Number(selectedRow.isemri_id)"
-    :istasyon-id="Number(selectedRow.IS_ISTASYONU_ID)" :guid="guid" @kaydedildi="aktifEkipleriAl"
-    @iptal="console.log('Dialog kapatıldı')" />
+    :istasyon-id="Number(selectedRow.IS_ISTASYONU_ID)" :guid="guid" @kaydedildi="onEkipKaydedildi"
+    @iptal="onEkipIptal" />
 
   <DxPopup v-model:visible="popupNotGirVisible" :width="600" :height="300" :hide-on-outside-click="false"
     :show-close-button="true">
@@ -806,14 +812,14 @@ interface MontajVeri {
   isEmriNo: string;
   sure: number;
   durum: string;
-  tplSureAktif?: string; // Added property
-  durSureAktif?: string; // Added property to fix the error
-  calSureAktif?: string; // Added property to fix the error
-  plnSureAktif?: string; // Added property to fix the error
+  tplSureAktif?: string;
+  durSureAktif?: string;
+  calSureAktif?: string;
+  plnSureAktif?: string;
   calSure: number;
   durSure: number;
-  tplSure: number; // Added property to fix the error
-  plnSure: number; // Added property to fix the error
+  tplSure: number;
+  plnSure: number;
   calOran: number;
   durOran: number;
   hdfSure: number;
@@ -821,7 +827,7 @@ interface MontajVeri {
   istasyonID: number;
   isEmriID: number;
   isEmriTipi: string;
-  durumBasTarih: string; // Added property to fix the error
+  durumBasTarih: string;
 }
 
 const onShowDetails = (detail: any) => {
@@ -1275,10 +1281,9 @@ const weekCellTemplate = (cellElement: HTMLElement, cellInfo: any): void => {
   }
 };
 const detaylariGoster = async (item: any) => {
-  // console.log('Detayları Göster:', item);
-  // if (secili.value.guid != "") await duruslariAl();
+  // Aynı kart tekrar tıklandıysa hiçbir şey yapma
   if (secili.value.guid === item.guid) return;
-  // aktifEkip.value = [];
+  // Yeni karta geçerken malzeme gridini temizle, otomatik yükleme yapma
   gridDataEksikListesi.value = [];
   secili.value.guid = item.guid;
   secili.value.isEmriId = item.isemriId;
@@ -1289,9 +1294,7 @@ const detaylariGoster = async (item: any) => {
   secili.value.istasyonID = item.istasyonID;
   secili.value.personelID = item.personelId;
   selectedIsemriNo.value = item.isemriNo;
-  // await aktifEkipleriAl();
-  // await duruslariAl();
-  await getMalzemeListesi();
+  // İstenirse butonla yüklenecek
 };
 const duruslariAl = async () => {
   try {
@@ -1572,9 +1575,7 @@ const aktifEt = async () => {
   gridData.value = updatedData;
 
   // await nextTick(); // Vue reaktif güncellemeleri tamamlansın
-
-  await fetchKartlar();
-  await getMalzemeListesi();
+  // Kart ve malzeme listesi yenilemesini ekipSecDialog kapandıktan sonra yapacağız
 };
 
 const durumuGuncelle = async (durum: any) => {
@@ -1836,6 +1837,24 @@ onBeforeUnmount(() => {
   stopAutoScroll();
 });
 
+// Personel seçim dialogu eventleri
+const onEkipKaydedildi = async () => {
+  try {
+    showLoading("Aktif ediliyor...");
+    await aktifEt();
+    ekipSecDialog.value = false;
+    await fetchKartlar();
+    // Malzeme listesi manuel butonla yüklenecek; otomatik çağrılmıyor
+    gridDataEksikListesi.value = [];
+  } finally {
+    hideLoading();
+  }
+};
+
+const onEkipIptal = () => {
+  ekipSecDialog.value = false;
+};
+
 const menuItems = [
   { text: "Yenile" },
   { text: "Aktif Yap" },
@@ -1859,18 +1878,17 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
         guid.value = uuidv4();
         // Slider kart seçim bilgisi güncelle
         selectedIsemriNo.value = selectedRow.value.isemri_no;
-        const selectedItemIndex = montajVerileri.value.findIndex(
-          (item: { personelID: number; isEmriNo: string }) =>
-            item.isEmriNo === selectedRow.value.isemri_no &&
-            Number(item.personelID) === Number(userData.value.id)
+        const alreadyActive = items.value.some((it: any) =>
+          it?.isemriNo === selectedRow.value.isemri_no
         );
-        if (selectedItemIndex !== -1) {
+        if (alreadyActive) {
           notify("Bu iş emri zaten aktif.", "success", 2000);
           return;
         }
         ekipSecDialog.value = true;
         if (secili) secili.value.guid = guid.value;
-        aktifEt();
+        // Aktivasyon, personel seçimi kaydedildikten sonra yapılacak
+        // console.log("Aktivasyon işlemi gerçekleştiriliyor...");
         break;
       case "Detay Göster":
         // DetayGoster();
@@ -2040,11 +2058,8 @@ const onContextMenuPreparing = (e: any) => {
   box-sizing: border-box;
   border: 2px solid gray;
   border-radius: 10px;
-
-  /* background-color: rgb(var(--v-theme-secondary)); */
-
-  /* background-image: url("https://www.transparenttextures.com/patterns/dark-mosaic.png"); */
-
+  background-color: #349c2f;
+  background-image: url("https://www.transparenttextures.com/patterns/dark-mosaic.png");
   background-repeat: repeat;
   background-size: auto;
   block-size: 318px;

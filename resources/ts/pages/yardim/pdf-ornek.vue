@@ -2,7 +2,7 @@
 import { definePage } from 'unplugin-vue-router';
 
 definePage({
-    meta: { action: 'manage', subject: 'all' },
+  meta: { action: 'read', subject: 'genel' },
 })
 
 const pdfUrl = '/docs/sample.pdf'
