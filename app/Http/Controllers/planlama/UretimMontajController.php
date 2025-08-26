@@ -150,16 +150,17 @@ class UretimMontajController extends Controller
       $startDate = $calismaTarih?->ilk_tarih ? Carbon::parse($calismaTarih->ilk_tarih) : null;
       $endDate   = $calismaTarih?->son_tarih ? Carbon::parse($calismaTarih->son_tarih) : Carbon::now();
 
-      // 3) troc_workorder Ekle (orijinal statik ekleme)
-      DB::connection('pgsql_oft')->table('Troc_WorkOrder')->insert([
+      // 3) troc_workorder Ekle (idempotent updateOrInsert)
+      DB::connection('pgsql_oft')->table('Troc_WorkOrder')->updateOrInsert([
+        'wordermid'    => $isemri->isemri_id ?? null,
+        'operationno'  => $isemri->operasyon_no ?? ($isemri->Operasyon_no ?? 0),
+        'itemcode'     => $isemri->stok_kodu ?? '',
+        'awstationcode' => $isemri->is_istasyonu_kodu ?? ($isemri->IS_ISTASYONU_KODU ?? ''),
+      ], [
         'guid'                       => $request->guid,
         'branchcode'                 => $isemri->firma_kodu ?? null,
-        'wordermid'                  => $isemri->isemri_id ?? null,
         'worderno'                   => $isemri->isemri_no ?? null,
-        'operationno'                => $isemri->operasyon_no ?? ($isemri->Operasyon_no ?? 0),
-        'itemcode'                   => $isemri->stok_kodu ?? '',
         'wstationcode'               => $isemri->is_istasyonu_kodu ?? ($isemri->IS_ISTASYONU_KODU ?? ''),
-        'awstationcode'              => $isemri->is_istasyonu_kodu ?? ($isemri->IS_ISTASYONU_KODU ?? ''),
         'startdate'                  => $startDate,
         'enddate'                    => $endDate,
         'qtynet'                     => $request->uretimMiktari ?? 0,
@@ -690,12 +691,12 @@ class UretimMontajController extends Controller
     // $bugun = Carbon::today()->toDateString(); // '2025-07-21'
 
     $toplam = DB::connection('pgsql')
-      ->table('uyumsoft.OFTV_ISEMIRLERI_DETAY')
+      ->table('uyumsoft.zz_bk_OFTV_TUM_ISEMIRLERI')
       ->where('IS_ISTASYONU_ID', $istasyon)
       ->whereDate('planlanan_bitis_tarihi', '=', now())
       ->sum('kalan_miktar');
 
-    // Log::info($toplam);
+    Log::info($toplam);
 
     $tarih = Carbon::today()->toDateString();
     // Log::info('Tarih: ' . $tarih);

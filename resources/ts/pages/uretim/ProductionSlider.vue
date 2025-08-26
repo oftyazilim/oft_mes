@@ -368,7 +368,7 @@
             <DxContextMenu :data-source="menuItemsM" :width="200" target="#gridMalzemeler" @item-click="itemClickM" />
             <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataEksikListesi" key-expr="item_id"
               :show-borders="true" :min-width="400" :column-auto-width="false" :allow-column-resizing="true"
-              column-resizing-mode="widget" height="665" @cell-prepared="onCellPreparedM" :focused-row-enabled="true"
+              column-resizing-mode="widget" height="625" @cell-prepared="onCellPreparedM" :focused-row-enabled="true"
               :row-alternation-enabled="true" @contextMenuPreparing="onContextMenuPreparing">
               <DxColumn data-field="tipi" caption="TİPİ" data-type="string" :visible="true" :width="65"
                 :cell-template="tipCellTemplate" />
@@ -408,9 +408,15 @@
         </VWindowItem>
         <VWindowItem value="tab-3">
           <VCardText class="pa-2">
+            <div class="d-flex justify-space-between align-center mb-2">
+              <div class="text-subtitle-2">Gereksiz beklemeleri engellemek için otomatik yükleme kaldırılmıştır...</div>
+              <VBtn color="primary" variant="outlined" size="small" @click="duruslariAl">
+                Listeyi Yükle
+              </VBtn>
+            </div>
             <DxDataGrid id="gridDuruslar" ref="dataGridRefD" :data-source="gridDataDuruslar" key-expr="id"
               :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true" :min-width="200"
-              :allow-column-reordering="true" :column-auto-width="false" height="670">
+              :allow-column-reordering="true" :column-auto-width="false" height="625">
               <DxColumn data-field="id" caption="ID" :visible="false" :min-width="90" />
               <DxColumn data-field="is_emri_no" caption="İŞ EMRİ NO" :visible="true" width="120" />
               <DxColumn data-field="durus_sebebi" caption="SEBEP" :visible="true" :min-width="250" />
@@ -859,10 +865,13 @@ const FiltreTemizle = () => {
 };
 const toggleGoster = () => { goster.value = !goster.value; };
 // Özet metin formatlayıcı
-function formatSummaryText(itemInfo: { value: string | number | Date; valueText: string }) {
-  if (itemInfo.value instanceof Date) return itemInfo.valueText;
-  return itemInfo.value?.toString();
+function formatSummaryText(e) {
+  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(e.value) + " dk";
 }
+// function formatSummaryText(itemInfo: { value: string | number | Date; valueText: string }) {
+//   if (itemInfo.value instanceof Date) return itemInfo.valueText;
+//   return itemInfo.value?.toString();
+// }
 const right: 'right' = 'right';
 // Hafta hücresi not popup state
 const planlamaNotu = ref('');
@@ -972,7 +981,7 @@ function vardiyadaKacinciDakika(now: Date = new Date()): number {
   const Molalar = [
     [createTime(10, 0), createTime(10, 15)], // 15 dk çay
     [createTime(12, 45), createTime(13, 15)], // 30 dk yemek
-    [createTime(15, 0), createTime(15, 15)], // 15 dk çay
+    [createTime(14, 0), createTime(14, 2)], // 15 dk çay
   ];
 
   // Geçen süre (dakika)
@@ -1458,25 +1467,86 @@ const tipCellTemplate = (cellElement: HTMLElement, cellInfo: any): void => {
 const molalar = [
   { saat: "10:00", dakika: 15, sebep: "ÇAY MOLASI", sebep_kodu: "003" },
   { saat: "13:05", dakika: 2, sebep: "YEMEK MOLASI", sebep_kodu: "0102" },
-  { saat: "13:24", dakika: 2, sebep: "ÇAY MOLASI", sebep_kodu: "003" },
+  { saat: "14:00", dakika: 2, sebep: "ÇAY MOLASI", sebep_kodu: "003" },
 ];
 
 const aktifMolalar = ref<Record<string, string>>({});
 // Daha stabil mola akışı için per-kart durum ve zamanlayıcı
 interface MolaState { windowSaat: string; endAtMs: number; inFlight: boolean; timerId?: ReturnType<typeof setTimeout> }
 const molaStates = ref<Record<string, MolaState>>({});
-const MOLA_GRACE_MS = 3000; // sınır anlarında dalgalanmayı azaltmak için
+const MOLA_GRACE_MS = 5000; // sınır anlarında dalgalanmayı azaltmak için
 
 // Zamanlanmış molaları takip eden kontrol
+const endMolaForCard = async (isemriNo: string) => {
+  const item = items.value.find((x: any) => x.isemriNo === isemriNo);
+  if (!item) return;
+  const state = molaStates.value[isemriNo];
+  const aktifSaat = aktifMolalar.value[isemriNo];
+  const aktifMola = molalar.find((m) => m.saat === aktifSaat);
+  if (!aktifMola) return;
+  if (state?.inFlight) return;
+  molaStates.value[isemriNo] = { ...(state || { windowSaat: aktifMola.saat, endAtMs: Date.now(), inFlight: false }), inFlight: true };
+
+  const original = originalItems.value[isemriNo] || {};
+  const restoreStatus = original.status && original.status !== 'MOLA' ? original.status : 'Çalışıyor';
+
+  // UI güncelle
+  item.status = restoreStatus;
+  item.baslikArkarenk = original.baslikArkarenk || item.baslikArkarenk;
+
+  try {
+    await axios.post('/api/durumKaydet', {
+      isEmriId: item.isemriId,
+      isEmriNo: item.isemriNo,
+      urunID: item.partId,
+      urunKodu: item.partCode,
+      urunAdi: item.partName,
+      durum: restoreStatus,
+      vardiya: 2,
+      istasyonKodu: userData.value.istasyon_id,
+      userId: userData.value.id,
+      personelSayisi: 0,
+      selectedDurus: original.returnDurus ?? null,
+      guid: item.guid || null,
+    });
+  } catch (e) {
+    console.error('Mola bitiş kaydı başarısız:', e);
+  }
+
+  // Başlıkta görünen sebep ve kodu geri yükle
+  const restoreUpper = (restoreStatus || '').toUpperCase();
+  if (restoreUpper === 'AYAR') {
+    (item as any).sebep = original.headerSebep || 'HAZIRLIK ÇALIŞMASI';
+    (item as any).sebep_kodu = '';
+    (item as any).break_reason_code = '';
+  } else if (restoreUpper === 'DURUYOR') {
+    const rd = original.returnDurus || { break_reason_code: '0000', description: 'GİRİLMEDİ' };
+    (item as any).sebep = original.headerSebep || rd.description || 'GİRİLMEDİ';
+    (item as any).sebep_kodu = rd.break_reason_code || '0000';
+    (item as any).break_reason_code = rd.break_reason_code || '0000';
+  } else {
+    (item as any).sebep = original.headerSebep || '';
+    if (original.headerSebepKodu) {
+      (item as any).sebep_kodu = original.headerSebepKodu;
+      (item as any).break_reason_code = original.headerSebepKodu;
+    } else {
+      delete (item as any).sebep_kodu;
+      delete (item as any).break_reason_code;
+    }
+  }
+
+  if (molaStates.value[isemriNo]?.timerId) clearTimeout(molaStates.value[isemriNo].timerId as any);
+  delete molaStates.value[isemriNo];
+  delete aktifMolalar.value[isemriNo];
+  delete originalItems.value[isemriNo];
+};
+
 const scheduleMolaEnd = (isemriNo: string, endAtMs: number) => {
   // Önceki timer varsa iptal
   const st = molaStates.value[isemriNo];
   if (st?.timerId) clearTimeout(st.timerId as any);
   const delay = Math.max(0, endAtMs - Date.now() + MOLA_GRACE_MS);
-  const timerId = setTimeout(() => {
-    // Zamanlayıcı anında bitiş işlemini tetiklemek için sadece işaret bırakır; asıl iş MolaKontrol içinde yapılacak
-    // Böylece tek yerde (MolaKontrol) DB yazımları yönetilir
-  }, delay);
+  const timerId = setTimeout(() => { endMolaForCard(isemriNo); }, delay);
   molaStates.value[isemriNo] = { ...(st || { windowSaat: '', endAtMs, inFlight: false }), endAtMs, timerId };
 };
 
@@ -1502,60 +1572,8 @@ const MolaKontrol = async () => {
         if (!state || state.endAtMs !== endMs) scheduleMolaEnd(item.isemriNo, endMs);
 
         if (nowMs >= endMs - MOLA_GRACE_MS) {
-          // Mola bitti -> Eski duruma dön
-          const original = originalItems.value[item.isemriNo] || {};
           if (state?.inFlight) continue; // başka bir bitiş işlemi sürüyor
-          molaStates.value[item.isemriNo] = { ...(state || { windowSaat: aktifMola.saat, endAtMs: endMs, inFlight: false }), inFlight: true };
-          const restoreStatus = original.status && original.status !== 'MOLA' ? original.status : 'Çalışıyor';
-          // UI güncelle
-          item.status = restoreStatus;
-          item.baslikArkarenk = original.baslikArkarenk || item.baslikArkarenk;
-          // DB'ye yaz
-          try {
-            await axios.post('/api/durumKaydet', {
-              isEmriId: item.isemriId,
-              isEmriNo: item.isemriNo,
-              urunID: item.partId,
-              urunKodu: item.partCode,
-              urunAdi: item.partName,
-              durum: restoreStatus,
-              vardiya: 2,
-              istasyonKodu: userData.value.istasyon_id,
-              userId: userData.value.id,
-              personelSayisi: 0,
-              selectedDurus: original.returnDurus ?? null,
-              guid: item.guid || null,
-            });
-          } catch (e) {
-            console.error('Mola bitiş kaydı başarısız:', e);
-          }
-          // Temizle
-          // Başlıkta görünen sebep ve kodu geri yükle (duruma özel)
-          const restoreUpper = (restoreStatus || '').toUpperCase();
-          if (restoreUpper === 'AYAR') {
-            (item as any).sebep = original.headerSebep || 'HAZIRLIK ÇALIŞMASI';
-            (item as any).sebep_kodu = '';
-            (item as any).break_reason_code = '';
-          } else if (restoreUpper === 'DURUYOR') {
-            const rd = original.returnDurus || { break_reason_code: '0000', description: 'GİRİLMEDİ' };
-            (item as any).sebep = original.headerSebep || rd.description || 'GİRİLMEDİ';
-            (item as any).sebep_kodu = rd.break_reason_code || '0000';
-            (item as any).break_reason_code = rd.break_reason_code || '0000';
-          } else {
-            (item as any).sebep = original.headerSebep || '';
-            if (original.headerSebepKodu) {
-              (item as any).sebep_kodu = original.headerSebepKodu;
-              (item as any).break_reason_code = original.headerSebepKodu;
-            } else {
-              delete (item as any).sebep_kodu;
-              delete (item as any).break_reason_code;
-            }
-          }
-          delete aktifMolalar.value[item.isemriNo];
-          delete originalItems.value[item.isemriNo];
-          // Durum kilidi ve timer temizliği
-          if (molaStates.value[item.isemriNo]?.timerId) clearTimeout(molaStates.value[item.isemriNo].timerId as any);
-          delete molaStates.value[item.isemriNo];
+          await endMolaForCard(item.isemriNo);
         }
       }
       continue; // Bu kart için bir sonraki tura geç
@@ -1571,6 +1589,10 @@ const MolaKontrol = async () => {
 
       // Kart zaten MOLA'da mı? ise atla
       if ((item.status || '').toUpperCase() === 'MOLA') break;
+
+      // Aynı pencere için zaten başlatılmışsa tekrar başlatma
+      const existing = molaStates.value[item.isemriNo];
+      if (existing && existing.windowSaat === M.saat) break;
 
       // Referansa al: mevcut durum ve eğer duruşsa sebep/kod
       const upperStatus = (item.status || '').toUpperCase();
@@ -1920,12 +1942,11 @@ const fetchKartlar = async () => {
 const onCardAction = async () => {
   await fetchKartlar();
   await aktifEkipleriAl?.(); // varsa mevcut fonksiyon
-  await duruslariAl?.(); // opsiyonel diğer veriler
+  // Duruş listesi manuel butonla yüklenecek
 };
 
 const onDurusGirildi = async () => {
-  // Duruş popup kapandıktan sonra kartları ve duruş listesini güncelle
-  await duruslariAl?.();
+  // Duruş popup kapandıktan sonra yalnızca kartları güncelle
   await fetchKartlar();
 };
 
@@ -1939,7 +1960,7 @@ onMounted(async () => {
   // await duruslariAl();
   startAutoScroll();
   interval = setInterval(verileriAl, 15000);
-  MolaTimer = setInterval(MolaKontrol, 45000);
+  MolaTimer = setInterval(MolaKontrol, 5000);
 });
 
 onBeforeUnmount(() => {
