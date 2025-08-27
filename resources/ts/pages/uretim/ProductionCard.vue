@@ -17,7 +17,7 @@
         {{ isemriNo }} &nbsp;
         <span style="font-size: 16px;">{{
           sebep != null ? sebep.substring(0, 30) : ""
-          }}</span>
+        }}</span>
       </span>
       <span class="time-display">{{ sonDurumSuresi }}</span>
     </VRow>
@@ -214,8 +214,10 @@
       <VCardTitle>Üretim Miktarı Giriniz</VCardTitle>
       <VTextField v-model="uretimMiktari" type="number" />
     </template>
-    <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="kaydetOptions" @click="kapat" />
-    <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="vazgecOptions" />
+    <DxToolbarItem widget="dxButton" toolbar="bottom" location="center"
+      :options="{ ...kaydetOptions, onClick: kapat, disabled: actionLoading }" />
+    <DxToolbarItem widget="dxButton" toolbar="bottom" location="center"
+      :options="{ ...vazgecOptions, disabled: actionLoading }" />
   </DxPopup>
 
   <PersonelSecDialog v-model="ekipSecDialog" :isemriID="Number(props.isemriId)"

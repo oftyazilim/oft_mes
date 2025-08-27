@@ -1,15 +1,21 @@
 <template>
   <VRow>
     <VCol cols="12">
+      <!-- Kayıt sayacı üstten kaldırıldı, summary grid içinde gösterilecek -->
       <DxDataGrid id="grid-satis" ref="dataGridRef" :data-source="gridData" key-expr="id" :show-borders="true"
         width="100%" :focused-row-enabled="true" :row-alternation-enabled="true" @exporting="onExporting"
-        @focused-row-changed="onFocusedRowChanged" @cell-prepared="onCellPrepared" >
+        @focused-row-changed="onFocusedRowChanged" @cell-prepared="onCellPrepared">
+        <DxSummary>
+          <DxTotalItem column="komut" summary-type="count" display-format="Toplam: {0} kayıt" />
+          <DxGroupItem column="komut" summary-type="count" display-format="Grup: {0} kayıt" />
+        </DxSummary>
 
         <DxColumn data-field="id" caption="ID" :visible="true" width="90" />
         <DxColumn data-field="user_id" caption="USER ID" :visible="true" width="80" />
+        <DxColumn data-field="name" caption="KULLANICI" :visible="true" width="130" />
         <DxColumn data-field="tarih" caption="TARİH" data-type="date" :width="150" :visible="true" alignment="center"
           :format="{
-            formatter: (date) => {
+            formatter: (date: string | number | Date) => {
               const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                 year: 'numeric',
                 month: '2-digit',
@@ -24,12 +30,12 @@
         <DxColumn data-field="sayfa" caption="SAYFA" :visible="true" width="150" />
         <DxColumn data-field="eylem" caption="EYLEM" :visible="true" width="150" />
         <DxColumn data-field="ip" caption="IP" :visible="true" width="120" />
-        <DxColumn data-field="name" caption="KULLANICI" :visible="true" width="130" />
         <DxColumn data-field="unvan" caption="ÜNVAN" :visible="true" width="200" />
         <DxColumn data-field="proses" caption="PROSES" :visible="true" width="190" />
         <DxColumn data-field="ismerkezi_id" caption="İŞ MERKEZİ ID" :visible="true" width="90" />
         <DxColumn data-field="istasyon_id" caption="İSTASYON ID" :visible="true" width="90" />
-        <DxColumn data-field="operasyon_id" caption="OPERASYON ID" :visible="true" width="90" />
+        <DxColumn data-field="method" caption="METOD" :visible="true" width="90" />
+        <DxColumn data-field="komut" caption="KOMUT" :visible="true" width="auto" />
 
         <DxGrouping :auto-expand-all="expandAll" />
         <DxGroupPanel :visible="true" />
@@ -38,9 +44,7 @@
         <DxFilterRow :visible="true" />
         <!-- <DxFilterBuilderPopup :visible="true" /> -->
         <DxSearchPanel :visible="true" :width="240" placeholder="Ara..." />
-        <DxLoadPanel :key="loadingVisible" v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true"
-        :shading="true" />
-                <DxScrolling mode="virtual" />
+        <DxScrolling mode="virtual" />
         <DxExport :enabled="true" :allow-export-selected-data="false" />
         <DxColumnChooser height="540px" :enabled="true" mode="select">
           <DxPosition my="right top" at="right bottom" of=".dx-datagrid-column-chooser-button" />
@@ -64,7 +68,7 @@
         <template #menuYenileTemplate>
           <div style="display: flex; align-items: center;">
             <i class="dx-icon dx-icon-refresh"></i>
-            <span style="margin-left: 8px;">Yenile</span>
+            <span style="margin-inline-start: 8px;">Yenile</span>
           </div>
         </template>
       </DxDataGrid>
@@ -73,42 +77,37 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, defineComponent, ref, computed } from "vue";
-import {
-  DxDataGrid,
-  DxScrolling,
-  DxSorting,
-  DxEditing,
-  DxFilterPanel,
-  DxHeaderFilter,
-  DxSearchPanel,
-  DxFilterRow,
-  DxFilterBuilderPopup,
-  DxColumnChooser,
-  DxPosition,
-  DxColumnChooserSearch,
-  DxColumnChooserSelection,
-  DxGroupPanel,
-  DxSummary,
-  DxGroupItem,
-  DxTotalItem,
-  DxSortByGroupSummaryInfo,
-  DxExport,
-  DxDataGridTypes,
-  DxColumn,
-  DxItem,
-  DxToolbar,
-  DxGrouping
-} from 'devextreme-vue/data-grid';
-import { DxTextBoxTypes } from "devextreme-vue/text-box";
+definePage({ meta: { action: 'manage', subject: 'all' } })
+import { usePageTitleStore } from "@/stores/pageTitle";
 import axios from 'axios';
-import notify from 'devextreme/ui/notify';
 import { DxButton } from 'devextreme-vue/button';
+import {
+  DxColumn,
+  DxColumnChooser,
+  DxColumnChooserSelection,
+  DxDataGrid,
+  DxDataGridTypes,
+  DxExport,
+  DxFilterPanel,
+  DxFilterRow,
+  DxGrouping,
+  DxGroupItem,
+  DxGroupPanel,
+  DxHeaderFilter,
+  DxItem,
+  DxPosition,
+  DxScrolling,
+  DxSearchPanel,
+  DxSummary,
+  DxToolbar,
+  DxTotalItem
+} from 'devextreme-vue/data-grid';
+import { DxLoadPanel } from 'devextreme-vue/load-panel';
 import { exportDataGrid } from "devextreme/excel_exporter";
+import notify from 'devextreme/ui/notify';
 import { Workbook } from "exceljs";
 import { saveAs } from "file-saver-es";
-import { usePageTitleStore } from "@/stores/pageTitle";
-import { DxLoadPanel } from 'devextreme-vue/load-panel'
+import { onMounted, ref } from "vue";
 
 const pageTitleStore = usePageTitleStore();
 pageTitleStore.setTitle('Kullanıcı Logları');
@@ -131,6 +130,10 @@ const onCellPrepared = (e: any) => {
   }
 };
 
+const onFocusedRowChanged = (e: DxDataGridTypes.FocusedRowChangedEvent) => {
+  // odaklı satır değişince yapılacak işlemler (opsiyonel)
+};
+
 const Yenile = () => {
   getData();
 }
@@ -150,8 +153,8 @@ const getData = async () => {
 };
 
 onMounted(() => {
-   getData();
-   axios
+  getData();
+  axios
     .post("/api/log-kayit", {
       userId: userData.value.id,
       sayfa: 'Kullanıcı Logları',
@@ -169,7 +172,7 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
     worksheet,
     autoFilterEnabled: true,
   }).then(() => {
-    workbook.xlsx.writeBuffer().then((buffer) => {
+    workbook.xlsx.writeBuffer().then((buffer: ArrayBuffer) => {
       saveAs(
         new Blob([buffer], { type: "application/octet-stream" }),
         "KullaniciLoglari.xlsx"
@@ -187,9 +190,9 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
 #grid-satis {
   display: flex;
   flex-direction: column;
+
   /* margin: 10px; */
-  margin-top: -20px;
-  margin-bottom: 20px;
   block-size: 85vh;
+  margin-block: -20px 20px;
 }
 </style>

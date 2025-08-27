@@ -10,6 +10,7 @@ export default [
           {
             title: "Kullanıcı Listesi",
             to: "personel-kullanicilar",
+            icon: { icon: "tabler-users" },
             action: "manage",
             subject: "all",
             // target: "_blank",
@@ -20,6 +21,13 @@ export default [
             icon: { icon: "tabler-shield-lock" },
             action: "manage",
             subject: "users",
+          },
+          {
+            title: "Kullanıcı Logları",
+            to: { path: "/personel/loglar" },
+            icon: { icon: "tabler-list-details" },
+            action: "manage",
+            subject: "all",
           },
         ],
       },

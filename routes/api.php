@@ -79,6 +79,10 @@ Route::group(['prefix' => 'permissions', 'middleware' => 'auth:sanctum'], functi
 
 // planlama-montaj
 Route::middleware('auth:sanctum')->group(function () {
+  // Kullanıcı logları
+  Route::get('/loglar', [UsersController::class, 'getLoglar']);
+  Route::post('/log-kayit', [UsersController::class, 'LogKayit']);
+
   Route::get('/data', [EmirlerController::class, 'getData']);
   Route::get('/aktifleri-al', [EmirlerController::class, 'AktifleriAl']);
   Route::get('/isEmriDetay', [EmirlerController::class, 'getIsEmriDetay']);

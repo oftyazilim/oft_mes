@@ -865,7 +865,7 @@ const FiltreTemizle = () => {
 };
 const toggleGoster = () => { goster.value = !goster.value; };
 // Özet metin formatlayıcı
-function formatSummaryText(e) {
+function formatSummaryText(e: any) {
   return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(e.value) + " dk";
 }
 // function formatSummaryText(itemInfo: { value: string | number | Date; valueText: string }) {

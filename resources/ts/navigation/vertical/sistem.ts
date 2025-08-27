@@ -21,6 +21,13 @@ export default [
             action: "manage",
             subject: "users",
           },
+          {
+            title: "Kullanıcı Logları",
+            to: { path: "/personel/loglar" },
+            icon: { icon: "tabler-list-details" },
+            action: "manage",
+            subject: "all",
+          },
         ],
       },
     ],
