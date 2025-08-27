@@ -21,7 +21,7 @@
             <DxColumn data-field="hafta" caption="HAFTA" :fixed="true" :width="120" :visible="true" alignment="left"
               :cell-template="weekCellTemplate" />
             <DxColumn data-field="haftax" caption="HFT" data-type="string" :visible="false" :width="20" />
-            <DxColumn data-field="aksesuar" caption="AKSESUAR" :visible="true" :width="60"
+            <DxColumn data-field="aksesuar" caption="AKSESUAR" :visible="false" :width="60"
               cell-template="aksesuarTemplate" alignment="center" :allow-sorting="false" />
             <DxColumn data-field="grup_id" caption="GRUP ID" data-type="string" :visible="false" :width="40" />
             <DxColumn data-field="IS_ISTASYONU" caption="İST. ADI" :visible="true" :width="130" />
@@ -33,7 +33,7 @@
             <DxColumn data-field="OPERASYON_ID" caption="OPRSYN ID" :visible="false" :width="120" />
             <DxColumn data-field="OPERASYON" caption="OPRSYN" :visible="true" :width="120" />
             <DxColumn data-field="Operasyon_no" caption="OPRSYN NO" :visible="false" :width="120" />
-            <DxColumn data-field="siparis_belge_no" caption="SİPARİŞ NO" :width="90" :visible="true"
+            <DxColumn data-field="siparis_belge_no" caption="SİPARİŞ NO" :width="110" :visible="true"
               :allow-sorting="false" />
             <DxColumn data-field="siparis_miktari" caption="SİPARİŞ MİKTARI" data-type="number" :width="90"
               :visible="true" :allow-sorting="false" />
@@ -41,7 +41,7 @@
               :visible="true" :allow-sorting="false" />
             <DxColumn data-field="cari_ad" caption="MÜŞTERİ" :visible="true" :min-width="140" :allow-sorting="false" />
             <DxColumn data-field="renk_id" caption="RENK ID" :visible="false" :min-width="90" :allow-sorting="false" />
-            <DxColumn data-field="renk_kodu" caption="RENK KODU" :visible="true" :min-width="110" :allow-sorting="false"
+            <DxColumn data-field="renk_kodu" caption="RENK KODU" :visible="false" :min-width="110" :allow-sorting="false"
               :cell-template="renkleriGoster" />
             <DxColumn data-field="renk_adi" caption="RENK ADI" :visible="false" :min-width="90"
               :allow-sorting="false" />
@@ -587,7 +587,7 @@
                     <VRow>
                       <VCol cols="12" class="mt-2 pa-0 ps-2 pe-3 text-center">
                         <h4>Malzeme Listesi ({{ gridDataMalzemeler.length }} parça) (Depo ID: {{ selectedRow.CIKIS_DEPO
-                        }})</h4>
+                          }})</h4>
                         <div style="block-size: 613px;">
                           <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataMalzemeler"
                             key-expr="item_id" :show-borders="true" :min-width="400" :column-auto-width="false"
@@ -785,8 +785,14 @@ import { usePageTitleStore } from '@/stores/pageTitle'
 const userAbilityRules = useCookie<Rule[]>("userAbilityRules").value || [];
 
 definePage({
-  meta: { action: ['read'], subject: ['planlama', 'montaj'] }
+  meta: { action: ['read'], subject: ['planlama', 'mekanik'] }
 })
+
+const pageTitleStore = usePageTitleStore()
+const pageName = 'Mekanik İş Emirleri'
+const pageAlias = 'PLN-MEKANIK'
+pageTitleStore.setTitle(`${pageName} (${pageAlias})`)
+document.title = `OFT - ${pageName} | ${pageAlias}`
 
 let okumaIzni = false;
 let olusturmaIzni = false;
@@ -832,12 +838,6 @@ const popupDepolarGosterVisible = ref(false)
 const initialValue = ref<Date[]>([])
 const disabledDates = ref(null)
 const calendarRef = ref(null)
-const pageTitleStore = usePageTitleStore()
-const pageName = 'Montaj İş Emirleri'
-const pageAlias = 'PLN-MONTAJ'
-
-pageTitleStore.setTitle(`${pageName} (${pageAlias})`)
-document.title = `OFT - ${pageName} | ${pageAlias}`
 
 const positionOf = ref(null)
 const currentEmployee = ref({})
@@ -887,9 +887,7 @@ const istasyon = ref(0)
 const merkezler = ref([])
 const merkez = ref(0)
 const montajVerileri = ref([])
-// le = "OFT - Montaj"document.tit;
 
-// Seçili Satırların ID'leri
 const selectedRowKeys = ref([])
 
 function onValueChanged(e) {
@@ -1752,22 +1750,13 @@ const getData = async () => {
     const response = await axios.get('/api/data', {
       params: {
         tablo: 'DETAY',
-        isMerkezi: ['4001'],
+        isMerkezi: ['1100', '1150', '1200', '1500'],
       },
     })
 
     gridData.value = response.data.emirler
     gridDataS.value = response.data.siparisler
     notlar.value = response.data.notlar
-    // await fetchMontajVerileri();
-    // gridData.value.forEach(grid => { grid.aktif = 0; });
-    // montajVerileri.value.forEach(montaj => {
-    //   gridData.value.forEach(grid => {
-    //     if (grid.isemri_id === Number(montaj.isEmriId)) {
-    //       grid.aktif = 1;
-    //     }
-    //   });
-    // });
   }
   catch (error) {
     console.error('Veri çekilirken hata oluştu: ', error)

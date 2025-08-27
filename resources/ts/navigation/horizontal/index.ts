@@ -18,7 +18,7 @@ export default [
   ...uretim,
   ...kalite,
   ...depo,
-  // ...dinlence,
+  ...dinlence,
   ...sistem,
   ...yardim,
 ] as HorizontalNavItems;

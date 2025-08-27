@@ -247,7 +247,7 @@ const permSubject = ref<string | null>('montaj')
 const customPerm = ref('')
 const permSearch = ref('')
 const actions = ['read', 'create', 'update', 'delete', 'manage']
-const subjects = ['genel', 'montaj', 'planlama', 'kalite', 'depo', 'satinalma', 'satis', 'users', 'roles']
+const subjects = ['genel', 'montaj', 'planlama', 'kalite', 'depo', 'satinalma', 'satis', 'users', 'roles', 'mekanik']
 const userPermSearch = ref('')
 
 const filteredPerms = computed(() => {

@@ -3,7 +3,7 @@ export default [
     title: "Planlama",
     icon: { icon: "tabler-calendar-time" },
     action: "read",
-    subject: ["planlama"],
+    subject: ["planlama", "mekanik"],
     children: [
       {
         title: "İş Emirleri - Montaj",
@@ -11,6 +11,14 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama"],
+        // target: '_blank',
+      },
+      {
+        title: "İş Emirleri - Mekanik",
+        to: "planlama-is-emirleri-mekanik",
+        icon: { icon: "tabler-list" },
+        action: "read",
+        subject: ["planlama", "mekanik"],
         // target: '_blank',
       },
       {

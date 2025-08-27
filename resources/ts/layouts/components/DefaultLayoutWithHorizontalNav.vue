@@ -1,28 +1,34 @@
 <script lang="ts" setup>
 import navItems from '@/navigation/horizontal'
 
+import { usePageTitleStore } from '@/stores/pageTitle'
 import { themeConfig } from '@themeConfig'
+import { onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 // Components
 import Footer from '@/layouts/components/Footer.vue'
 import NavBarNotifications from '@/layouts/components/NavBarNotifications.vue'
-import NavSearchBar from '@/layouts/components/NavSearchBar.vue'
 import NavbarShortcuts from '@/layouts/components/NavbarShortcuts.vue'
 import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
 import UserProfile from '@/layouts/components/UserProfile.vue'
-import NavBarI18n from '@core/components/I18n.vue'
 import { HorizontalNavLayout } from '@layouts'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
+
+// Store: current page title/alias
+const pageTitleStore = usePageTitleStore()
+const route = useRoute()
+
+// Sayfa değişince önceki başlık kalmasın
+onMounted(() => pageTitleStore.setTitle(''))
+watch(() => route.fullPath, () => pageTitleStore.setTitle(''))
 </script>
 
 <template>
   <HorizontalNavLayout :nav-items="navItems">
     <!-- 👉 navbar -->
     <template #navbar>
-      <RouterLink
-        to="/"
-        class="app-logo d-flex align-center gap-x-3"
-      >
+      <RouterLink to="/" class="app-logo d-flex align-center gap-x-3">
         <VNodeRenderer :nodes="themeConfig.app.logo" />
 
         <h1 class="app-title font-weight-bold leading-normal text-xl text-capitalize">
@@ -30,6 +36,11 @@ import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
         </h1>
       </RouterLink>
       <VSpacer />
+
+      <!-- Kalıcı sayfa bilgisi: logoya dokunmadan sağ tarafta gösterilir -->
+      <div v-if="pageTitleStore.title" class="page-title-badge me-3 d-none d-sm-flex">
+        <span class="badge-text">{{ pageTitleStore.title }}</span>
+      </div>
 
       <!-- <NavSearchBar trigger-btn-class="ms-lg-n3" /> -->
 
@@ -56,3 +67,20 @@ import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
     <TheCustomizer />
   </HorizontalNavLayout>
 </template>
+
+<style scoped>
+.page-title-badge {
+  align-items: center;
+}
+
+.badge-text {
+  border-radius: 9999px;
+  background-color: rgba(25, 118, 210, 12%);
+  color: rgb(25, 118, 210);
+  font-size: 0.8rem;
+  line-height: 1;
+  padding-block: 6px;
+  padding-inline: 10px;
+  white-space: nowrap;
+}
+</style>

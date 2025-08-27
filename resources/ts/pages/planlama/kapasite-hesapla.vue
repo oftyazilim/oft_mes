@@ -349,6 +349,7 @@ import notify from 'devextreme/ui/notify';
 import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver-es';
 import { onMounted, ref } from 'vue';
+import { usePageTitleStore } from '@/stores/pageTitle'
 
 const userData = useCookie<any>("userData");
 const chart = ref<DxChart>();
@@ -370,6 +371,11 @@ const hataSatirlari = ref<any[]>([])
 const loading = ref(false)
 const maxSure = ref(0)
 
+const pageTitleStore = usePageTitleStore()
+const pageName = 'Kapasite Hesaplama'
+const pageAlias = 'PLN-KAPASİTE'
+pageTitleStore.setTitle(`${pageName} (${pageAlias})`)
+document.title = `OFT - ${pageName} | ${pageAlias}`
 
 definePage({
   meta: { action: ['create'], subject: ['planlama'] }
