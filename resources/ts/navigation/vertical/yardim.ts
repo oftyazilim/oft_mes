@@ -32,6 +32,11 @@ export default [
         action: "manage",
         subject: "all",
       },
+      {
+        title: "Seri Port (CH340)",
+        to: { path: "/yardim/seri-port" },
+        icon: { icon: "tabler-usb" },
+      },
     ],
   },
 ];
