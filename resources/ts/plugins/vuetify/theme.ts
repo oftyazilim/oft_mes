@@ -48,7 +48,7 @@ export const themes: Record<string, ThemeDefinition> = {
 
     variables: {
       'code-color': '#d400ff',
-      'overlay-scrim-background': '#2F2B3D',
+      'overlay-scrim-background': '#181918', //'#2F2B3D',
       'tooltip-background': '#2F2B3D',
       'overlay-scrim-opacity': 0.5,
       'hover-opacity': 0.06,
@@ -99,9 +99,9 @@ export const themes: Record<string, ThemeDefinition> = {
       'error': '#FF4C51',
       'on-error': '#fff',
       'error-darken-1': '#E64449',
-      'background': '#25293C',
+      'background': '#141E28', //'#25293C',
       'on-background': '#E1DEF5',
-      'surface': '#2F3349',
+      'surface': '#1E2832', //'#2F3349',
       'on-surface': '#E1DEF5',
       'grey-50': '#26293A',
       'grey-100': '#2F3349',

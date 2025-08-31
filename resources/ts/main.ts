@@ -7,7 +7,6 @@ import { registerPlugins } from "@core/utils/plugins";
 
 // Styles
 import "@core-scss/template/index.scss";
-import "@styles/styles.scss";
 
 import "animate.css";
 import axios from "axios";
@@ -25,6 +24,7 @@ import { licenseKey } from "./devextreme-license";
 
 // // Global override (scoped değil!)
 // import '../styles/devextreme-overrides.css'
+import "@styles/styles.scss";
 
 
 
@@ -81,3 +81,5 @@ axios.interceptors.request.use((config) => {
   }
   return config;
 });
+
+

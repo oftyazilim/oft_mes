@@ -21,7 +21,7 @@
             <DxColumn data-field="hafta" caption="HAFTA" :fixed="true" :width="120" :visible="true" alignment="left"
               :cell-template="weekCellTemplate" />
             <DxColumn data-field="haftax" caption="HFT" data-type="string" :visible="false" :width="20" />
-            <DxColumn data-field="aksesuar" caption="AKSESUAR" :visible="false" :width="60"
+            <DxColumn data-field="aksesuar" caption="AKSESUAR" :visible="true" :width="60"
               cell-template="aksesuarTemplate" alignment="center" :allow-sorting="false" />
             <DxColumn data-field="grup_id" caption="GRUP ID" data-type="string" :visible="false" :width="40" />
             <DxColumn data-field="IS_ISTASYONU" caption="İST. ADI" :visible="true" :width="130" />
@@ -33,7 +33,7 @@
             <DxColumn data-field="OPERASYON_ID" caption="OPRSYN ID" :visible="false" :width="120" />
             <DxColumn data-field="OPERASYON" caption="OPRSYN" :visible="true" :width="120" />
             <DxColumn data-field="Operasyon_no" caption="OPRSYN NO" :visible="false" :width="120" />
-            <DxColumn data-field="siparis_belge_no" caption="SİPARİŞ NO" :width="110" :visible="true"
+            <DxColumn data-field="siparis_belge_no" caption="SİPARİŞ NO" :width="90" :visible="true"
               :allow-sorting="false" />
             <DxColumn data-field="siparis_miktari" caption="SİPARİŞ MİKTARI" data-type="number" :width="90"
               :visible="true" :allow-sorting="false" />
@@ -41,7 +41,7 @@
               :visible="true" :allow-sorting="false" />
             <DxColumn data-field="cari_ad" caption="MÜŞTERİ" :visible="true" :min-width="140" :allow-sorting="false" />
             <DxColumn data-field="renk_id" caption="RENK ID" :visible="false" :min-width="90" :allow-sorting="false" />
-            <DxColumn data-field="renk_kodu" caption="RENK KODU" :visible="false" :min-width="110" :allow-sorting="false"
+            <DxColumn data-field="renk_kodu" caption="RENK KODU" :visible="true" :min-width="110" :allow-sorting="false"
               :cell-template="renkleriGoster" />
             <DxColumn data-field="renk_adi" caption="RENK ADI" :visible="false" :min-width="90"
               :allow-sorting="false" />
@@ -53,8 +53,8 @@
             <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" :allow-sorting="false" />
             <DxColumn data-field="teslim_tarihi" caption="TESLİM TARİHİ" data-type="date" :width="140" :visible="true"
               :format="{
-                formatter: (date: string | number | Date) => {
-                  const formattedDate = new Intl.DateTimeFormat('tr-TR', {
+                formatter: (date: Date | string): string => {
+                  const formattedDate: string = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
@@ -64,26 +64,26 @@
               }" :cell-template="getIconType" :allow-sorting="false" />
             <DxColumn data-field="planlanan_baslangic" caption="PLN BŞL" data-type="date" :width="130" :visible="true"
               :format="{
-                formatter: (date: string | number | Date) => {
-                  const formattedDate = new Intl.DateTimeFormat('tr-TR', {
+                formatter: (date: Date | string): string => {
+                  const formattedDate: string = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
                     hour: '2-digit',
                     minute: '2-digit',
-                  }).format(new Date(date));
+                  }).format(new Date(date as string | number | Date));
 
                   return formattedDate.replace(/\//g, '.');
                 },
               }" />
             <DxColumn data-field="planlanan_bitis_tarihi" caption="PLN BTŞ" data-type="date" :width="110"
               :visible="true" :format="{
-                formatter: (date: string | number | Date) => {
-                  const formattedDate = new Intl.DateTimeFormat('tr-TR', {
+                formatter: (date: Date | string): string => {
+                  const formattedDate: string = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
-                  }).format(new Date(date));
+                  }).format(new Date(date as string | number | Date));
 
                   return formattedDate.replace(/\//g, '.');
                 },
@@ -137,14 +137,14 @@
             <DxColumn data-field="CIKIS_DEPO" caption="ÇIKIŞ DEPO" :min-width="80" :allow-sorting="false" />
             <DxColumn data-field="kayit_tarihi" caption="OLUŞTURMA TARİHİ" data-type="date" :width="130" :visible="true"
               :format="{
-                formatter: (date: string | number | Date) => {
+                formatter: (date: Date | string): string => {
                   const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
                     hour: '2-digit',
                     minute: '2-digit',
-                  }).format(new Date(date));
+                  }).format(new Date(date as string | number | Date));
 
                   return formattedDate.replace(/\//g, '.');
                 },
@@ -175,12 +175,12 @@
               <DxItem location="before" locate-in-menu="auto" template="collapseTemplate" />
               <DxItem location="before" template="totalCountTemplate" />
               <DxItem location="before" template="totalRecordTemplate" />
-              <DxItem location="before" template="gruplaTemplate" :visible="grupVisible && olusturmaIzni"
+              <DxItem location="before" template="gruplaTemplate" :visible="grupVisible && canManagePlanlama"
                 @click="grup" />
-              <DxItem location="before" template="baslangicTarihiTemplate" :visible="grupVisible && olusturmaIzni"
+              <DxItem location="before" template="baslangicTarihiTemplate" :visible="grupVisible && canManagePlanlama"
                 @click="TarihGoster" />
               <DxItem location="before" locate-in-menu="auto" template="aksesuarliTemplate"
-                :visible="grupVisible && olusturmaIzni" @click="AksesuarGoster" />
+                :visible="grupVisible && canManagePlanlama" @click="AksesuarGoster" />
               <DxItem location="after" locate-in-menu="auto" template="yenileTemplate"
                 menu-item-template="menuYenileTemplate" @click="Yenile" />
               <DxItem location="after" locate-in-menu="auto" template="filtreTemizleTemplate"
@@ -537,16 +537,16 @@
                     <VRow>
                       <VCol cols="7" class="pa-0 ps-2 pe-3">
                         <DxSelectBox v-model="selectedNot" :items="notlar" display-expr="not" value-expr="not"
-                          :disabled="!olusturmaIzni" label="Planlama Notu Eklemeleri" class="kalin" />
+                          :disabled="!canManagePlanlama" label="Planlama Notu Eklemeleri" class="kalin" />
                       </VCol>
                       <VCol cols="5" class="mt-4 pa-0 ps-0  pe-0">
                         <VRow>
                           <VCol cols="2" class="pe-0 ps-1">
                             <VBtn text="" icon="tabler-arrow-down" rounded color="warning" block
-                              :disabled="!olusturmaIzni" v-model="selectedRow.teknik_not1" @click="addToTextArea" />
+                              :disabled="!canManagePlanlama" v-model="selectedRow.teknik_not1" @click="addToTextArea" />
                           </VCol>
                           <VCol cols="7" class="pa-0 ps-1 pt-3 pe-1">
-                            <VBtn color="error" block @click="NotKaydet" :disabled="!olusturmaIzni">
+                            <VBtn color="error" block @click="NotKaydet" :disabled="!canManagePlanlama">
                               <VIcon start icon="tabler-device-floppy" />
                               Kaydet
                             </VBtn>
@@ -659,28 +659,28 @@
 
                     <DxColumn data-field="IS_ISTASYONU" caption="İSTASYON ADI" :width="180" />
                     <DxColumn data-field="OPERASYON" caption="OPERASYON" :width="180" />
-                    <DxColumn data-field="stok_adi" caption="STOK ADI" min-width="200" />
+                    <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="200" />
                     <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="150" :visible="false" />
                     <DxColumn data-field="planlanan_baslangic" caption="PLN BŞL" data-type="date" :width="100"
                       :visible="true" :format="{
-                        formatter: (date) => {
+                        formatter: (date: Date | string): string => {
                           const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                             year: 'numeric',
                             month: '2-digit',
                             day: '2-digit',
-                          }).format(new Date(date));
+                          }).format(new Date(date as string | number | Date));
 
                           return formattedDate.replace(/\//g, '.');
                         },
                       }" />
                     <DxColumn data-field="planlanan_bitis_tarihi" caption="PLN BTŞ" data-type="date" :width="100"
                       :visible="true" :format="{
-                        formatter: (date) => {
+                        formatter: (date: Date | string): string => {
                           const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                             year: 'numeric',
                             month: '2-digit',
                             day: '2-digit',
-                          }).format(new Date(date));
+                          }).format(new Date(date as string | number | Date));
 
                           return formattedDate.replace(/\//g, '.');
                         },
@@ -691,11 +691,11 @@
                       cell-template="surecCellTemplate" alignment="center" />
                     <DxColumn data-field="aksesuar" caption="AKSESUAR" :visible="props.operasyon" :width="60"
                       cell-template="aksesuarTemplate" alignment="center" />
-                    <DxColumn data-field="operasyon_hazirlik_suresi" caption="HZRL DK" data-type="number" min-width="90"
+                    <DxColumn data-field="operasyon_hazirlik_suresi" caption="HZRL DK" data-type="number"
+                      :min-width="90" :width="90" />
+                    <DxColumn data-field="operasyon_suresi" caption="OPRS DK" data-type="number" :min-width="90"
                       :width="90" />
-                    <DxColumn data-field="operasyon_suresi" caption="OPRS DK" data-type="number" min-width="90"
-                      :width="90" />
-                    <DxColumn data-field="isemri_tipi" caption="İŞ EMRİ TİPİ" min-width="120" :width="140" />
+                    <DxColumn data-field="isemri_tipi" caption="İŞ EMRİ TİPİ" :min-width="120" :width="140" />
 
                     <DxGroupPanel :visible="false" />
                     <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
@@ -734,10 +734,12 @@
 // *********** İzinler *****************************************************
 // import type { Rule } from "./ability";
 
-import { onMounted, ref } from "vue";
+import { useAbility } from "@casl/vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 
 // import { DxTooltip } from 'devextreme-vue/tooltip';
 import { staticPrimaryColor } from '@/plugins/vuetify/theme';
+import { usePageTitleStore } from '@/stores/pageTitle';
 import axios from "axios";
 import { DxButton } from 'devextreme-vue/button';
 import DxCalendar from 'devextreme-vue/calendar';
@@ -778,33 +780,12 @@ import query from 'devextreme/data/query';
 import { exportDataGrid } from 'devextreme/excel_exporter';
 import notify from 'devextreme/ui/notify';
 import { Workbook } from 'exceljs';
-import { saveAs } from 'file-saver-es';
+import { saveAs } from 'file-saver';
 import SurecCell from './SurecCell.vue';
-import { usePageTitleStore } from '@/stores/pageTitle'
-
-const userAbilityRules = useCookie<Rule[]>("userAbilityRules").value || [];
 
 definePage({
   meta: { action: ['read'], subject: ['planlama', 'mekanik'] }
 })
-
-const pageTitleStore = usePageTitleStore()
-const pageName = 'Mekanik İş Emirleri'
-const pageAlias = 'PLN-MEKANIK'
-pageTitleStore.setTitle(`${pageName} (${pageAlias})`)
-document.title = `OFT - ${pageName} | ${pageAlias}`
-
-let okumaIzni = false;
-let olusturmaIzni = false;
-let guncellemeIzni = false;
-let silmeIzni = false;
-
-userAbilityRules.forEach((rule, index) => {
-  if ((rule.action === "read" && rule.subject === "Planlama") || (rule.action === "manage" && rule.subject === "all")) okumaIzni = true;
-  if ((rule.action === "create" && rule.subject === "Planlama") || (rule.action === "manage" && rule.subject === "all")) olusturmaIzni = true;
-  if ((rule.action === "update" && rule.subject === "Planlama") || (rule.action === "manage" && rule.subject === "all")) guncellemeIzni = true;
-  if ((rule.action === "delete" && rule.subject === "Planlama") || (rule.action === "manage" && rule.subject === "all")) silmeIzni = true;
-});
 
 function formatliNumber(value: number): string {
   return new Intl.NumberFormat("tr-TR", {
@@ -822,8 +803,12 @@ function formatDate(dateString: string): string {
     year: "numeric",
   });
 }
-function formatSummaryText(e) {
-  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(e.value);
+function formatSummaryText(itemInfo: { value: string | number | Date; valueText: string }): string {
+  // Only format if value is a number, otherwise return valueText as is
+  if (typeof itemInfo.value === 'number') {
+    return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(itemInfo.value);
+  }
+  return itemInfo.valueText;
 }
 function truncateText(text: string, maxLength: number): string {
   return text.length > maxLength ? text.substring(0, maxLength) : text;
@@ -836,24 +821,35 @@ const popupDetayGosterVisible = ref(false)
 const popupIstasyonVisible = ref(false)
 const popupDepolarGosterVisible = ref(false)
 const initialValue = ref<Date[]>([])
-const disabledDates = ref(null)
-const calendarRef = ref(null)
+const disabledDates = ref<null | ((data: { view: string; date: Date }) => boolean)>(null)
+const calendarRef = ref<any>(null)
+const pageTitleStore = usePageTitleStore()
+const pageName = 'Mekanik İş Emirleri'
+const pageAlias = 'PLN-MEKANIK'
 
-const positionOf = ref(null)
-const currentEmployee = ref({})
+pageTitleStore.setTitle(`${pageName} (${pageAlias})`)
+document.title = `OFT - ${pageName} | ${pageAlias}`
+
+const positionOf = ref<any>(null)
+const currentEmployee = ref<Record<string, unknown>>({})
 
 const expandAll = ref(false)
 const aksesuar = ref(false)
 const birlesik = ref(false)
 const rotaGuncelle = ref(true)
-const notlar = ref([])
-const gridData = ref([])
-const gridDataS = ref([])
-const gridDataDetay = ref([])
-const gridDataMalzemeler = ref([])
-const gridIsMerkezleri = ref([])
-const gridIsIstasyonlari = ref([])
-const gridBakiyeler = ref([])
+const notlar = ref<any[]>([])
+interface GridDataItem {
+  teknik_not1?: string
+  isemri_no?: string
+  [key: string]: any
+}
+const gridData = ref<GridDataItem[]>([])
+const gridDataS = ref<any[]>([])
+const gridDataDetay = ref<any[]>([])
+const gridDataMalzemeler = ref<any[]>([])
+const gridIsMerkezleri = ref<any[]>([])
+const gridIsIstasyonlari = ref<any[]>([])
+const gridBakiyeler = ref<any[]>([])
 const dataGridRef = ref<DxDataGrid | null>(null)
 const dataGridRefD = ref<DxDataGrid | null>(null)
 const dataGridRefM = ref<DxDataGrid | null>(null)
@@ -862,53 +858,52 @@ const loadingVisible = ref<boolean>(false)
 const position = { of: 'window' }
 const totalGroupCount = ref(0)
 const totalRecord = ref(0)
-const activeGroupField = ref(null)
+const activeGroupField = ref<string | null>(null)
 const grupVisible = ref(false)
 
 // const selectedRow = ref<any | null>(null);
-const selectedRows = ref([])
+const selectedRows = ref<any[]>([])
 const baslangicGunu = ref(new Date())
 const bitisGunu = ref(new Date())
-const planlamaNotu = ref(null)
-const notBaslik = ref('')
-const tarihAlani = ref('')
-const UretimNotu = ref(null)
-const selectedNot = ref(null)
-const textAreaValue = ref('')
+const planlamaNotu = ref<string | null>(null)
+const notBaslik = ref<string>('')
+const tarihAlani = ref<string>('')
+const UretimNotu = ref<string | null>(null)
+const selectedNot = ref<string | null>(null)
+const textAreaValue = ref<string>('')
 const gridKey = ref(Date.now())
 const focusedRowKey = ref(0)
-const isMerkeziKodu = ref(0)
-const isIstasyonuKodu = ref(0)
+const isMerkeziKodu = ref<number | number[]>(0)
+const isIstasyonuKodu = ref<number | number[]>(0)
 const cekilecekGun = ref(2)
-const eksikStokKodu = ref(0)
-const eksikStokAdi = ref('')
-const istasyonlar = ref([])
-const istasyon = ref(0)
-const merkezler = ref([])
-const merkez = ref(0)
-const montajVerileri = ref([])
+const eksikStokKodu = ref<number | string>(0)
+const eksikStokAdi = ref<string>('')
+const istasyonlar = ref<any[]>([])
+const istasyon = ref<number>(0)
+const merkezler = ref<any[]>([])
+const merkez = ref<number>(0)
+const mekanikVerileri = ref<any[]>([])
+const selectedRowKeys = ref<any[]>([])
 
-const selectedRowKeys = ref([])
-
-function onValueChanged(e) {
+function onValueChanged(e: any) {
   isIstasyonuKodu.value = []
   gridIsIstasyonlari.value = []
-  getIstasyon()
+  getIstasyonlar()
 }
 
-function isWeekend(date) {
+function isWeekend(date: Date): boolean {
   const day = date.getDay()
 
   return day === 0 || day === 6
 }
 
-function disableWeekend({ value }) {
+function disableWeekend({ value }: { value: boolean }) {
   disabledDates.value = value
     ? data => data.view === 'month' && isWeekend(data.date)
     : null
 }
 
-const onRangeSelect = value => {
+const onRangeSelect = (value: Date[]) => {
   initialValue.value = [value[0], value[1]]
 
   // console.log(initialValue);
@@ -981,26 +976,28 @@ const copyToClipboard = () => {
   document.body.removeChild(tempTextArea)
 }
 
-const saveGridState = () => {
-  let state = null;
-  if (dataGridRef.value && dataGridRef.value.instance) {
-    state = dataGridRef.value.instance.state();
-    localStorage.setItem(props.tab, JSON.stringify(state));
+const saveGridState = (): void => {
+  let state: unknown = null
+  if (dataGridRef.value?.instance) {
+    state = dataGridRef.value.instance.state()
+    const serialized = JSON.stringify(state)
+    localStorage.setItem(props.tab, serialized)
   }
 }
 
-const loadGridState = () => {
+const loadGridState = (): void => {
   const savedState = localStorage.getItem(props.tab);
   if (savedState && dataGridRef.value && dataGridRef.value.instance)
     dataGridRef.value.instance.state(JSON.parse(savedState))
 }
 
-const onStateResetClick = () => {
+const onStateResetClick = (): void => {
   localStorage.removeItem(props.tab)
-  dataGridRef.value!.instance!.state(null)
+  if (dataGridRef.value?.instance)
+    (dataGridRef.value.instance as any).state(null)
 }
 
-const onSelectionChanged = (e: any) => {
+const onSelectionChanged = (e: any): void => {
   selectedRows.value = e.selectedRowsData // Seçilen satırların tüm verileri
 }
 
@@ -1235,6 +1232,7 @@ const selectedRow = ref({
   stok_kodu: '',
   stok_adi: '',
   CIKIS_DEPO: '', // Added property to fix the error
+  siparis_miktari: 0, // Added to fix compile error
 })
 
 const numberedSteps = ref([
@@ -1456,10 +1454,9 @@ const TeslimTarihiKaydet = async () => {
   }
 }
 
-const clearSelection = () => {
-  const dataGrid = dataGridRef.value!.instance!
-
-  dataGrid.clearSelection()
+const clearSelection = (): void => {
+  const dataGrid = dataGridRef.value?.instance
+  dataGrid?.clearSelection()
 }
 
 const NotKaydet = async () => {
@@ -1496,7 +1493,7 @@ const NotKaydet = async () => {
   }
 }
 
-const onCellPrepared = (e: any) => {
+const onCellPrepared = (e: any): void => {
   if (
     e.rowType === 'data'
     && ((e.column.dataField === 'isemri_miktari' || e.column.dataField === 'uretilen_net_miktar' || e.column.dataField === 'kalan_miktar') && e.value > 0)
@@ -1524,7 +1521,7 @@ const onCellPrepared = (e: any) => {
     e.cellElement.style.fontWeight = 'bold'
 }
 
-const onRowPrepared = (e: any) => {
+const onRowPrepared = (e: any): void => {
   if (e.rowType !== 'data')
     return // Sadece veri satırlarını işle
 
@@ -1547,14 +1544,14 @@ const onRowPrepared = (e: any) => {
   }
 }
 
-const onCellPreparedB = (e: any) => {
+const onCellPreparedB = (e: any): void => {
   if (
     e.rowType === 'data'
     && e.column.dataField === 'qty_prm')
     e.cellElement.style.fontWeight = 'bold'
 }
 
-const onCellPreparedM = (e: any) => {
+const onCellPreparedM = (e: any): void => {
   if (
     e.rowType === 'data'
     && e.column.dataField === 'bakiye' && e.value < 0) {
@@ -1568,7 +1565,7 @@ const onCellPreparedM = (e: any) => {
     e.cellElement.style.fontWeight = 'bold'
 }
 
-const onRowClick = (e: any) => {
+const onRowClick = (e: any): void => {
   if (e.rowType === 'data') {
     gridBakiyeler.value = []
     eksikStokKodu.value = e.data.stok_kodu
@@ -1589,8 +1586,8 @@ const props = defineProps<{
   indx: string
 }>()
 
-const FiltreTemizle = () => {
-  dataGridRef.value?.instance.clearFilter()
+const FiltreTemizle = (): void => {
+  dataGridRef.value?.instance?.clearFilter()
 }
 
 const tipCellTemplate = (cellElement: HTMLElement, cellInfo: any): void => {
@@ -1610,7 +1607,7 @@ const tipCellTemplate = (cellElement: HTMLElement, cellInfo: any): void => {
     return icon
   }
 
-  let renk
+  let renk: string = 'gray'
 
   switch (tip) {
     case 'Hammadde':
@@ -1631,7 +1628,7 @@ const tipCellTemplate = (cellElement: HTMLElement, cellInfo: any): void => {
   cellElement.insertBefore(plnIcon, cellElement.firstChild)
 }
 
-const onFocusedRowChanged = (e: any) => {
+const onFocusedRowChanged = (e: any): void => {
   if (e.rowIndex === -1)
     return
   const data = e.row!.data!
@@ -1648,21 +1645,27 @@ const onFocusedRowChanged = (e: any) => {
     grupVisible.value = true
 }
 
-const onContextMenuPreparing = (e: any) => {
+const onContextMenuPreparing = (e: any): void => {
   const data = e.row!.data!
 
   aksesuar.value = data.aksesuar !== null
 }
 
-const onContentReady = (e: any) => {
+const onContentReady = (e: any): void => {
   const gridInstance = dataGridRef.value?.instance
+  if (!gridInstance)
+    return
 
-  totalRecord.value = gridInstance?.getDataSource()?.totalCount()
+  totalRecord.value = gridInstance.getDataSource()?.totalCount() || 0
 
-  const groups = gridInstance.getDataSource()?.group()
-  if (groups && groups.length > 0) {
-    activeGroupField.value = groups[0].selector
-    totalGroupCount.value = getGroupCount(activeGroupField.value)
+  const groupDescriptor = gridInstance.getDataSource()?.group() as any
+  if (Array.isArray(groupDescriptor) && groupDescriptor.length > 0) {
+    activeGroupField.value = groupDescriptor[0]?.selector || null
+    totalGroupCount.value = activeGroupField.value ? getGroupCount(activeGroupField.value as string) : 0
+  }
+  else if (groupDescriptor?.selector) {
+    activeGroupField.value = groupDescriptor.selector as string
+    totalGroupCount.value = activeGroupField.value ? getGroupCount(activeGroupField.value) : 0
   }
   else {
     activeGroupField.value = null
@@ -1670,7 +1673,7 @@ const onContentReady = (e: any) => {
   }
 }
 
-const handleOptionChanged = (e: any) => {
+const handleOptionChanged = (e: any): void => {
   if (e.fullName === 'dataSource')
     e.component.option('loadPanel.enabled', false) // Yükleme panelini kapat
 }
@@ -1683,7 +1686,7 @@ const toggleGoster = () => {
   goster.value = !goster.value
 }
 
-const TarihGoster = (alan: string) => {
+const TarihGoster = (alan: string): void => {
   if (selectedRows.value.length === 0) {
     notify('Önce iş emrini seçmelisiniz...', 'error', 1500)
 
@@ -1696,7 +1699,7 @@ const TarihGoster = (alan: string) => {
   popupTarihVisible.value = true
 }
 
-const TeslimTarihGoster = (alan: string) => {
+const TeslimTarihGoster = (alan: string): void => {
   if (selectedRows.value.length === 0) {
     notify('Önce iş emrini seçmelisiniz...', 'error', 1500)
     return
@@ -1707,7 +1710,7 @@ const TeslimTarihGoster = (alan: string) => {
   popupTeslimTarihVisible.value = true
 }
 
-const IstasyonaGonder = () => {
+const IstasyonaGonder = (): void => {
   if (selectedRows.value.length === 0) {
     notify('Önce iş emrini seçmelisiniz...', 'error', 1500)
 
@@ -1722,7 +1725,7 @@ const IstasyonaGonder = () => {
   popupIstasyonVisible.value = true
 }
 
-const DetayGoster = () => {
+const DetayGoster = (): void => {
   if (selectedRow.value === null) {
     notify('Önce iş emrini seçmelisiniz...', 'error', 1500)
 
@@ -1734,7 +1737,7 @@ const DetayGoster = () => {
   popupDetayGosterVisible.value = true
 }
 
-const AksesuarGoster = () => {
+const AksesuarGoster = (): void => {
   if (selectedRows.value.length === 0) {
     notify('Önce iş emrini seçmelisiniz...', 'error', 1500)
 
@@ -1763,15 +1766,12 @@ const getData = async () => {
   }
   finally {
     loadingVisible.value = false
-
-    // const now1 = new Date();
-    // console.log(now1.toLocaleTimeString());
   }
 }
-const fetchMontajVerileri = async () => {
+const fetchMekanikVerileri = async () => {
   try {
     const response = await axios.get('/api/aktifleri-al', { params: { istasyon: userData.value.istasyon_id, planlama: 1, } })
-    montajVerileri.value = response.data.data.map((veri, index) => ({
+    mekanikVerileri.value = response.data.data.map((veri: any, index: number) => ({
       id: index, // Eğer benzersiz bir ID varsa kullan
       isEmriNo: veri.IS_EMRI_NO,
       urunAdi: veri.URUN_ADI,
@@ -1853,7 +1853,7 @@ const getBakiyeler = async (itemID: number) => {
   }
 }
 
-const refreshGrid = () => {
+const refreshGrid = (): void => {
   const gridInstance = dataGridRef.value?.instance // DataGrid bileşeninin referansı
   if (gridInstance)
     gridInstance.refresh()
@@ -1863,23 +1863,23 @@ onMounted(async () => {
   await getData()
   loadGridState()
   nextTick(() => {
-    dataGridRef.value?.instance.clearSelection()
+    if (dataGridRef.value && dataGridRef.value.instance) {
+      dataGridRef.value.instance.clearSelection()
+    }
   })
   console.log('Kullanıcı bilgileri:', userData.value)
 })
 
-const Yenile = async () => {
+const Yenile = async (): Promise<void> => {
   await getData() // Veri çekme işlemi
 }
 
-const toggleExpandAll = () => {
+const toggleExpandAll = (): void => {
   expandAll.value = !expandAll.value
 }
 
-const formatNumber = number => {
-  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(
-    number,
-  )
+const formatNumber = (num: number): string => {
+  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(num)
 }
 
 const userData = useCookie<any>('userData')
@@ -1904,19 +1904,28 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
   e.cancel = true
 }
 
-const menuItems = [
+const ability = useAbility()
+const canManagePlanlama = computed(() =>
+  ability.can('manage', 'planlama') || ability.can('update', 'mekanik')
+)
+
+const baseMenuItems = [
   { text: 'Yenile' },
   { text: 'Haftaya Göre Grupla' },
   { text: 'Detay Göster' },
-  { text: 'İstasyona Gönder', visible: olusturmaIzni },
-  { text: 'Üretim Tarihini Değiştir', visible: olusturmaIzni },
-  { text: 'Teslim Tarihini Değiştir', visible: olusturmaIzni },
-  { text: 'Aksesuar', visible: olusturmaIzni },
+  { text: 'İstasyona Gönder', requiresManage: true },
+  { text: 'Üretim Tarihini Değiştir', requiresManage: true },
+  { text: 'Teslim Tarihini Değiştir', requiresManage: true },
+  { text: 'Aksesuar', requiresManage: true },
   { text: 'Teknik Resim Göster' },
   { text: 'Düzen Yükle' },
   { text: 'Düzen Kaydet' },
   { text: 'Düzen Sıfırla' },
 ]
+
+const menuItems = computed(() =>
+  baseMenuItems.filter(item => canManagePlanlama.value || !('requiresManage' in item))
+)
 
 function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
   if (!itemData?.items) {
@@ -1972,8 +1981,8 @@ const ResimGoster = () => {
   window.open(pdfUrl, '_blank')
 }
 
-function groupByWeek() {
-  if (dataGridRef.value) {
+function groupByWeek(): void {
+  if (dataGridRef.value?.instance) {
     dataGridRef.value.instance.clearGrouping(); // Önceki gruplamayı temizle
     dataGridRef.value.instance.columnOption('haftax', 'groupIndex', 0);
   }

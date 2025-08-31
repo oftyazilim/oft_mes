@@ -17,7 +17,20 @@
 
         <v-divider class="my-4" />
 
-        <v-textarea v-model="rx" label="Gelen Veri" rows="12" readonly auto-grow />
+        <div class="d-flex align-center gap-6 my-4">
+          <div class="status-box" :class="firstBoxClass" title="Şalter (0 → gri, 1 → yeşil)" />
+          <div class="status-box" :class="secondBoxClass" title="Makine (0 → gri, 1 → yeşil)" />
+          <div class="status-box" :class="thirdBoxClass" title="Sayaç Tetik (0 → gri, 1 → mavi)" />
+        </div>
+
+        <div class="mt-4 d-flex flex-column gap-2">
+          <div>Şalter: <strong>{{ states.switchOn ? 'Açık (Yeşil)' : 'Kapalı (Gri)' }}</strong></div>
+          <div>Makine: <strong>{{ states.machineRun ? 'Çalışıyor (Yeşil)' : 'Bekliyor (Gri)' }}</strong></div>
+          <div>Tetik: <strong>{{ states.pulse ? '1 (Mavi)' : '0 (Gri)' }}</strong></div>
+          <v-divider class="my-2" />
+          <div>Sayaç: <v-chip color="primary" variant="flat">{{ counter }}</v-chip></div>
+          <div class="text-medium-emphasis text-caption">Çerçeve formatı: 0|1|0# (\"#\" ile biter)</div>
+        </div>
       </v-card-text>
     </v-card>
   </div>
@@ -25,17 +38,33 @@
 
 <script setup lang="ts">
 import { usePageTitleStore } from '@/stores/pageTitle'
-import { onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 
 const pageTitle = usePageTitleStore()
 pageTitle.setTitle('Seri Port (CH340)')
 
+// Bilgi/diagnostic toplayıcı (UI'da gösterilmiyor)
 const rx = ref('')
 const tx = ref('')
 const baudRates = [9600, 19200, 38400, 57600, 115200]
-const baudRate = ref<number>(115200)
+const baudRate = ref<number>(9600)
 const busy = ref(false)
 const isConnected = ref(false)
+
+// Görselleştirme durumları
+const states = reactive({
+  switchOn: false,   // 1. kutu (yeşil)
+  machineRun: false, // 2. kutu (yeşil)
+  pulse: false,      // 3. kutu (mavi) → rising edge ile sayaç++
+})
+
+const counter = ref(0)
+const prevPulse = ref(false)
+const incomingBuffer = ref('')
+
+const firstBoxClass = computed(() => states.switchOn ? 'status-green' : 'status-gray')
+const secondBoxClass = computed(() => states.machineRun ? 'status-green' : 'status-gray')
+const thirdBoxClass = computed(() => states.pulse ? 'status-blue' : 'status-gray')
 
 let port: SerialPort | null = null
 let reader: ReadableStreamDefaultReader<Uint8Array> | null = null
@@ -117,7 +146,7 @@ async function readLoop() {
   while (isConnected.value && reader) {
     const { value, done } = await reader.read()
     if (done) break
-    if (value) rx.value += String(value)
+    if (value) handleIncoming(String(value))
   }
 }
 
@@ -159,4 +188,47 @@ async function disconnect() {
 onBeforeUnmount(() => {
   if (isConnected.value) disconnect()
 })
+
+// ---- Yardımcılar ----
+function handleIncoming(chunk: string) {
+  // Arduino'dan akış: çerçeve '#'
+  incomingBuffer.value += chunk
+  while (true) {
+    const hashIndex = incomingBuffer.value.indexOf('#')
+    if (hashIndex === -1) break
+    const frame = incomingBuffer.value.slice(0, hashIndex)
+    incomingBuffer.value = incomingBuffer.value.slice(hashIndex + 1)
+    processFrame(frame)
+  }
+}
+
+function processFrame(frame: string) {
+  // Örn: "1|0|1" → [switchOn, machineRun, pulse]
+  const parts = frame.trim().split('|')
+  if (parts.length < 8) return
+
+  const v0 = parts[0].trim() === '1'
+  const v1 = parts[1].trim() === '1'
+  const v2 = parts[6].trim() === '1'
+
+  states.switchOn = v0
+  states.machineRun = v1
+
+  // Rising edge detection for pulse → sayaç++
+  if (v2 && !prevPulse.value) counter.value += 1
+  states.pulse = v2
+  prevPulse.value = v2
+}
 </script>
+
+<style scoped>
+.status-box {
+  inline-size: 50px;
+  block-size: 50px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.status-gray { background: #9e9e9e; }
+.status-green { background: #4caf50; }
+.status-blue { background: #2196f3; }
+</style>

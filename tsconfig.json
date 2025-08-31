@@ -64,6 +64,10 @@
       "vite-plugin-vue-meta-layouts/client"
     ]
   },
+  "vueCompilerOptions": {
+    // Template type-checking çok sayıda demo dosyada uyarı ürettiği için kapatıyoruz
+    "skipTemplateCodegen": true
+  },
   "include": [
     "./typed-router.d.ts",
     "./vite.config.*",
@@ -77,6 +81,12 @@
   ],
   "exclude": [
     "./dist",
-    "./node_modules"
+    "./node_modules",
+    // Demo/örnek içerikleri tip kontrolünden hariç tut
+    "./resources/ts/views/demos/**",
+    "./resources/ts/views/front-pages/**",
+    "./resources/ts/views/wizard-examples/**",
+    "./resources/ts/pages/front-pages/**",
+    "./resources/ts/views/apps/academy/**"
   ]
 }

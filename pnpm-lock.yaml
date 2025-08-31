@@ -88,6 +88,9 @@ importers:
       exceljs:
         specifier: ^4.4.0
         version: 4.4.0
+      file-saver:
+        specifier: ^2.0.5
+        version: 2.0.5
       file-saver-es:
         specifier: ^2.0.5
         version: 2.0.5
@@ -224,6 +227,12 @@ importers:
       '@tiptap/extension-underline':
         specifier: ^2.12.0
         version: 2.26.1(@tiptap/core@2.26.1(@tiptap/pm@2.26.1))
+      '@types/file-saver':
+        specifier: ^2.0.7
+        version: 2.0.7
+      '@types/file-saver-es':
+        specifier: ^2.0.3
+        version: 2.0.3
       '@types/mapbox-gl':
         specifier: 3.4.1
         version: 3.4.1
@@ -1313,6 +1322,12 @@ packages:
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
+
+  '@types/file-saver-es@2.0.3':
+    resolution: {integrity: sha512-1N7YkjKDfSSlBq9TCbNelivW+CkqEGh6HWzOP2w8znKsyASufdp8ymxnmKs67hyO9r175xMUu1e2w50xfBD4Ew==}
+
+  '@types/file-saver@2.0.7':
+    resolution: {integrity: sha512-dNKVfHd/jk0SkR/exKGj2ggkB45MAkzvWCaqLUUgkyjITkGNzH8H+yUwr+BLJUBjZOe9w8X3wgmXhZDRg1ED6A==}
 
   '@types/geojson@7946.0.16':
     resolution: {integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==}
@@ -2847,6 +2862,9 @@ packages:
 
   file-saver-es@2.0.5:
     resolution: {integrity: sha512-Kg0lt+is9nOyi/VDms9miScNGot25jVFbjFccXuCL/shd2Q+rt70MALxHVkXllsX83JEBLiHQNjDPGd/6FIOoQ==}
+
+  file-saver@2.0.5:
+    resolution: {integrity: sha512-P9bmyZ3h/PRG+Nzga+rbdI4OEpNDzAVyy74uVO9ATgzLK6VtAsYybF/+TOCvrc0MO793d6+42lLyZTw7/ArVzA==}
 
   fill-range@7.1.1:
     resolution: {integrity: sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==}
@@ -6118,6 +6136,10 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
+  '@types/file-saver-es@2.0.3': {}
+
+  '@types/file-saver@2.0.7': {}
+
   '@types/geojson@7946.0.16': {}
 
   '@types/hast@3.0.4':
@@ -8087,6 +8109,8 @@ snapshots:
       flat-cache: 5.0.0
 
   file-saver-es@2.0.5: {}
+
+  file-saver@2.0.5: {}
 
   fill-range@7.1.1:
     dependencies:

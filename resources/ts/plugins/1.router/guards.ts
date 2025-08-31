@@ -1,6 +1,6 @@
+import { normalizeAbilityRules } from "@/utils/ability-normalizer";
 import { canNavigate } from "@layouts/plugins/casl";
 import type { RouteNamedMap, _RouterTyped } from "unplugin-vue-router";
-import { normalizeAbilityRules } from "@/utils/ability-normalizer";
 
 export const setupGuards = (
   router: _RouterTyped<RouteNamedMap & { [key: string]: any }>
@@ -58,7 +58,10 @@ export const setupGuards = (
     // console.log('Checking navigation for:', to.path)  //oft_not
     // console.log("User logged in:", isLoggedIn);  //oft_not
     // Ability'yi cookie'den yükle
-    const userAbilityRules = useCookie("userAbilityRules").value;
+    const userAbilityRules = useCookie("userAbilityRules").value as unknown as
+      | import("@/utils/ability-normalizer").AbilityRule[]
+      | { action?: string[]; subject?: string[] }
+      | null;
     const ability = useAbility();
 
     if (userAbilityRules) {

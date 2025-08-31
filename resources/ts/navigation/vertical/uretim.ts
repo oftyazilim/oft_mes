@@ -12,6 +12,13 @@ export default [
         action: "read",
         subject: ["montaj"],
       },
+            {
+        title: "Rollform",
+        to: "uretim-uretim-rollform",
+        icon: { icon: "tabler-brand-bebo" },
+        action: "read",
+        subject: ["mekanik"],
+      },
     ],
   },
 ];
