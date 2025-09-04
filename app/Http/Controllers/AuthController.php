@@ -173,6 +173,35 @@ class AuthController extends Controller
     }
 
     /**
+     * Change password for the authenticated user.
+     */
+    public function changePassword(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = $request->user();
+
+        // Default şifrede current_password zorunlu değil, aksi halde zorunlu
+        $defaultPassword = config('auth.default_password');
+        $usesDefaultPassword = $defaultPassword && Hash::check($defaultPassword, $user->password);
+
+        $rules = [
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ];
+        if (!$usesDefaultPassword) {
+            $rules['current_password'] = ['required', 'current_password'];
+        }
+        $validated = $request->validate($rules);
+
+        $user->password = Hash::make($validated['password']);
+        $user->setRememberToken(Str::random(60));
+        $user->save();
+
+        return response()->json([
+            'message' => 'Şifre başarıyla güncellendi.',
+        ]);
+    }
+
+    /**
      * DEBUG: Inspect a user's roles/permissions and computed ability rules.
      * Not for production use. Optionally pass ?id= or /auth/debug/{id}.
      */

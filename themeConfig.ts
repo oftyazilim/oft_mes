@@ -1,6 +1,7 @@
 import { defineThemeConfig } from "@core";
 import { Skins } from "@core/enums";
 import { breakpointsVuetifyV3 } from "@vueuse/core";
+import { h } from "vue";
 import { VIcon } from "vuetify/components/VIcon";
 
 // ❗ Logo SVG must be imported with ?raw suffix

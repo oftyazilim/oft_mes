@@ -112,4 +112,7 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    // Varsayılan kullanıcı şifresi (zorunlu değişim akışında current_password'suz değişime izin vermek için)
+    'default_password' => env('DEFAULT_PASSWORD', 'pass1234'),
+
 ];

@@ -2,7 +2,6 @@
 <script setup lang="ts">
 import { normalizeAbilityRules } from '@/utils/ability-normalizer'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
-import { emailValidator, requiredValidator } from '@core/utils/validators'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
 import authV2LoginIllustrationDark from '@images/pages/auth-v2-login-illustration-dark.png'
@@ -31,6 +30,10 @@ definePage({
 })
 
 const isPasswordVisible = ref(false)
+
+// Güvenli başlık ve logo (dev'de undefined durumlarını tolere eder)
+const appTitle = computed(() => themeConfig?.app?.title ?? 'oft mes')
+const appLogo = computed(() => themeConfig?.app?.logo ?? null)
 
 const route = useRoute()
 const router = useRouter()
@@ -95,7 +98,8 @@ const login = async () => {
     useCookie('accessToken', cookieOpts as any).value = accessToken
 
     await nextTick(() => {
-      const targetPath = route.query.to ? String(route.query.to) : '/home-page'
+      const isDefaultPwd = credentials.value.password === 'pass1234'
+      const targetPath = isDefaultPwd ? '/force-password' : (route.query.to ? String(route.query.to) : '/home-page')
       router.push(targetPath)
     })
   }
@@ -125,9 +129,9 @@ const onSubmit = () => {
 <template>
   <RouterLink to="/">
     <div class="auth-logo d-flex align-center gap-x-3">
-      <VNodeRenderer :nodes="themeConfig.app.logo" />
+      <VNodeRenderer v-if="appLogo" :nodes="appLogo" />
       <h1 class="auth-title">
-        {{ themeConfig.app.title }}
+        {{ appTitle }}
       </h1>
     </div>
   </RouterLink>
@@ -147,7 +151,7 @@ const onSubmit = () => {
       <VCard flat :max-width="500" class="mt-12 mt-sm-0 pa-4">
         <VCardText>
           <h4 class="text-h4 mb-1">
-            <span class="text-capitalize"> {{ themeConfig.app.title }}'e hoşgeldiniz' </span>! 👋🏻
+            <span class="text-capitalize"> {{ appTitle }}'e hoşgeldiniz' </span>! 👋🏻
           </h4>
           <p class="mb-0">
             Lütfen hesabınıza giriş yapın ve maceraya başlayın...
