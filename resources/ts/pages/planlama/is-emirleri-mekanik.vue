@@ -148,8 +148,7 @@
 
                   return formattedDate.replace(/\//g, '.');
                 },
-              }" />
-            <DxLoadPanel v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true" :shading="true" />
+}" />
             <DxSelection mode="multiple" select-all-mode="page" show-check-boxes-mode="onClick" />
             <DxGrouping :auto-expand-all="expandAll" />
             <DxGroupPanel :visible="true" />
@@ -321,7 +320,12 @@
               </template>
             </template>
           </DxDataGrid>
+
         </div>
+
+        <!-- Global Load Panel (grid dışında) -->
+        <DxLoadPanel v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true" :shading="true"
+          :message="loadingMessage || 'Yükleniyor...'" :position="position" shading-color="rgba(0,0,0,0.35)" />
       </VCol>
     </VCardText>
   </VCard>
@@ -738,7 +742,6 @@ import { useAbility } from "@casl/vue";
 import { computed, nextTick, onMounted, ref } from "vue";
 
 // import { DxTooltip } from 'devextreme-vue/tooltip';
-import { staticPrimaryColor } from '@/plugins/vuetify/theme';
 import { usePageTitleStore } from '@/stores/pageTitle';
 import axios from "axios";
 import { DxButton } from 'devextreme-vue/button';
@@ -855,6 +858,19 @@ const dataGridRefD = ref<DxDataGrid | null>(null)
 const dataGridRefM = ref<DxDataGrid | null>(null)
 const goster = ref(true)
 const loadingVisible = ref<boolean>(false)
+const loadingMessage = ref<string>("")
+
+async function beginLoading(message: string = "Veriler yükleniyor…") {
+  loadingMessage.value = message
+  loadingVisible.value = true
+  await nextTick()
+  await new Promise(requestAnimationFrame)
+}
+
+function endLoading() {
+  loadingVisible.value = false
+  loadingMessage.value = ""
+}
 const position = { of: 'window' }
 const totalGroupCount = ref(0)
 const totalRecord = ref(0)
@@ -1674,8 +1690,9 @@ const onContentReady = (e: any): void => {
 }
 
 const handleOptionChanged = (e: any): void => {
-  if (e.fullName === 'dataSource')
-    e.component.option('loadPanel.enabled', false) // Yükleme panelini kapat
+  if (e.fullName === 'dataSource') {
+    // e.component.option('loadPanel.enabled', false)
+  }
 }
 
 const getGroupCount = (groupField: string) => query(gridData.value)
@@ -1749,7 +1766,7 @@ const AksesuarGoster = (): void => {
 
 const getData = async () => {
   try {
-    loadingVisible.value = true
+    await beginLoading('Veriler yükleniyor…')
     const response = await axios.get('/api/data', {
       params: {
         tablo: 'DETAY',
@@ -1765,7 +1782,7 @@ const getData = async () => {
     console.error('Veri çekilirken hata oluştu: ', error)
   }
   finally {
-    loadingVisible.value = false
+    endLoading()
   }
 }
 const fetchMekanikVerileri = async () => {
@@ -1803,7 +1820,7 @@ const getDetay = async () => {
 }
 
 const getMerkezler = async () => {
-  loadingVisible.value = true
+  await beginLoading('İş merkezleri yükleniyor…')
   try {
     const response = await axios.get('/api/merkezal')
 
@@ -1813,13 +1830,13 @@ const getMerkezler = async () => {
     console.error('Veri çekilirken hata oluştu: ', error)
   }
   finally {
-    loadingVisible.value = false
+    endLoading()
   }
 }
 
 const getIstasyonlar = async () => {
   istasyon.value = 0
-  loadingVisible.value = true
+  await beginLoading('İstasyonlar yükleniyor…')
   try {
     const response = await axios.get('/api/istasyonal', {
       params: {
@@ -1833,7 +1850,7 @@ const getIstasyonlar = async () => {
     console.error('Veri çekilirken hata oluştu: ', error)
   }
   finally {
-    loadingVisible.value = false
+    endLoading()
   }
 }
 
@@ -1989,7 +2006,7 @@ function groupByWeek(): void {
 }
 
 const RalKodlariGuncelle = async () => {
-  loadingVisible.value = true
+  await beginLoading('RAL kodları güncelleniyor…')
   const userID = userData.value.id
   try {
     const response = await axios.post('/api/ralguncelle', { userID })
@@ -2000,7 +2017,7 @@ const RalKodlariGuncelle = async () => {
   catch (error) {
     console.error('Güncelleme sırasında hata oluştu:', error)
   }
-  loadingVisible.value = false
+  endLoading()
 }
 
 

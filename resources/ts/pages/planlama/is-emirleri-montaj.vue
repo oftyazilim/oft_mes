@@ -149,7 +149,8 @@
                   return formattedDate.replace(/\//g, '.');
                 },
               }" />
-            <DxLoadPanel v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true" :shading="true" />
+            <DxGridLoadPanel :enabled="true" :text="loadingMessage || 'Yükleniyor...'" :show-indicator="true"
+              :show-pane="true" :shading="true" />
             <DxSelection mode="multiple" select-all-mode="page" show-check-boxes-mode="onClick" />
             <DxGrouping :auto-expand-all="expandAll" />
             <DxGroupPanel :visible="true" />
@@ -321,6 +322,8 @@
               </template>
             </template>
           </DxDataGrid>
+          <DxLoadPanel v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true" :shading="true"
+            :message="loadingMessage || 'Yükleniyor...'" :position="position" />
         </div>
       </VCol>
     </VCardText>
@@ -587,7 +590,7 @@
                     <VRow>
                       <VCol cols="12" class="mt-2 pa-0 ps-2 pe-3 text-center">
                         <h4>Malzeme Listesi ({{ gridDataMalzemeler.length }} parça) (Depo ID: {{ selectedRow.CIKIS_DEPO
-                        }})</h4>
+                          }})</h4>
                         <div style="block-size: 613px;">
                           <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataMalzemeler"
                             key-expr="item_id" :show-borders="true" :min-width="400" :column-auto-width="false"
@@ -738,7 +741,6 @@ import { useAbility } from "@casl/vue";
 import { computed, nextTick, onMounted, ref } from "vue";
 
 // import { DxTooltip } from 'devextreme-vue/tooltip';
-import { staticPrimaryColor } from '@/plugins/vuetify/theme';
 import { usePageTitleStore } from '@/stores/pageTitle';
 import axios from "axios";
 import { DxButton } from 'devextreme-vue/button';
@@ -855,11 +857,24 @@ const dataGridRefD = ref<DxDataGrid | null>(null)
 const dataGridRefM = ref<DxDataGrid | null>(null)
 const goster = ref(true)
 const loadingVisible = ref<boolean>(false)
+const loadingMessage = ref<string>('')
 const position = { of: 'window' }
 const totalGroupCount = ref(0)
 const totalRecord = ref(0)
 const activeGroupField = ref<string | null>(null)
 const grupVisible = ref(false)
+
+// Yükleme panelini anında göstermek için yardımcılar
+async function beginLoading(message: string) {
+  loadingMessage.value = message
+  loadingVisible.value = true
+  await nextTick()
+  await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+}
+function endLoading() {
+  loadingVisible.value = false
+  loadingMessage.value = ''
+}
 
 // const selectedRow = ref<any | null>(null);
 const selectedRows = ref<any[]>([])
@@ -1677,8 +1692,9 @@ const onContentReady = (e: any): void => {
 }
 
 const handleOptionChanged = (e: any): void => {
-  if (e.fullName === 'dataSource')
-    e.component.option('loadPanel.enabled', false) // Yükleme panelini kapat
+  // Grid içi loadPanel mesajını göstermek için devre dışı bırakmıyoruz
+  // if (e.fullName === 'dataSource')
+  //   e.component.option('loadPanel.enabled', false)
 }
 
 const getGroupCount = (groupField: string) => query(gridData.value)
@@ -1752,7 +1768,7 @@ const AksesuarGoster = (): void => {
 
 const getData = async () => {
   try {
-    loadingVisible.value = true
+    await beginLoading('Veriler yükleniyor...')
     const response = await axios.get('/api/data', {
       params: {
         tablo: 'DETAY',
@@ -1777,7 +1793,7 @@ const getData = async () => {
     console.error('Veri çekilirken hata oluştu: ', error)
   }
   finally {
-    loadingVisible.value = false
+    endLoading()
 
     // const now1 = new Date();
     // console.log(now1.toLocaleTimeString());
@@ -1818,7 +1834,7 @@ const getDetay = async () => {
 }
 
 const getMerkezler = async () => {
-  loadingVisible.value = true
+  await beginLoading('İş merkezleri yükleniyor...')
   try {
     const response = await axios.get('/api/merkezal')
 
@@ -1828,13 +1844,13 @@ const getMerkezler = async () => {
     console.error('Veri çekilirken hata oluştu: ', error)
   }
   finally {
-    loadingVisible.value = false
+    endLoading()
   }
 }
 
 const getIstasyonlar = async () => {
   istasyon.value = 0
-  loadingVisible.value = true
+  await beginLoading('İstasyonlar yükleniyor...')
   try {
     const response = await axios.get('/api/istasyonal', {
       params: {
@@ -1848,7 +1864,7 @@ const getIstasyonlar = async () => {
     console.error('Veri çekilirken hata oluştu: ', error)
   }
   finally {
-    loadingVisible.value = false
+    endLoading()
   }
 }
 
@@ -2051,6 +2067,15 @@ const RalKodlariGuncelle = async () => {
 .custom-col {
   flex: 0 0 12.5%;
 
+  /* DevExtreme LoadPanel message visibility tweaks */
+  .dx-loadpanel-content .dx-loadpanel-message {
+    color: #fff !important;
+    font-weight: 600;
+  }
+
+  .dx-loadpanel-content {
+    background-color: rgba(0, 0, 0, 65%) !important;
+  }
   /* 1.5 sütun genişliği */
   max-inline-size: 12.5%;
 }

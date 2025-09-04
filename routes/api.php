@@ -10,6 +10,7 @@ use App\Http\Controllers\planlama\EmirlerController;
 use App\Http\Controllers\planlama\KapasiteController;
 use App\Http\Controllers\planlama\IhtiyacController;
 use App\Http\Controllers\planlama\UretimMontajController;
+use App\Http\Controllers\planlama\UretimRollFormController;
 use App\Http\Controllers\satis\SatisController;
 use App\Http\Controllers\satinalma\SatinalmaController;
 use App\Http\Controllers\depo\DepoMamulController;
@@ -144,6 +145,11 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/kontrolGerekKaydet', [UretimMontajController::class, 'KontrolGerekKaydet']);
 
   Route::put('/aktif-ekipler/kapat', [UretimMontajController::class, 'EkipleriKapat']);
+});
+
+// uretim-rollform
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/kapasite-works-info', [UretimRollFormController::class, 'getWorksInfo']);
 });
 
 // satis

@@ -3,25 +3,32 @@
     <div class="rollform-header">
       <!-- Üst satır: Gauge | Durum Bilgileri | Üretim Rakamları | Operatör -->
       <VRow class="match-height">
+
         <VCol cols="12" md="3" sm="6">
           <VCard class="pa-3">
             <!-- Sol: OEE Gauge ve saat/tarih/KPI -->
             <section>
-              <header class="panel-title">OEE %</header>
+              <VCardTitle class="durum-title" :style="{ backgroundColor: statusColor }">{{ worksInfo?.statu_id === 0 ?
+                'KAPALI' : worksInfo?.statu_id === 1 ?
+                  'DURUYOR' : 'ÇALIŞIYOR' }}</VCardTitle>
               <hr>
               <div class="gauge-wrap">
-                <DxCircularGauge class="oee-gauge" :value="oee" :subvalues="oeeSubvalues" :tooltip="gaugeTooltip"
-                  :size="gaugeSize">
+                <div class="badge-left">{{ pageName }}</div>
+                <DxCircularGauge class="oee-gauge" :value="worksInfo?.speed" :subvalues="worksInfo?.speed_target"
+                  :tooltip="gaugeTooltip" :size="gaugeSize">
                   <DxGeometry :start-angle="225" :end-angle="-45" />
-                  <DxScale :start-value="0" :end-value="100" :tick-interval="10" :minor-tick-interval="5">
+                  <DxScale :start-value="0" :end-value="worksInfo?.speed_max" :tick-interval="10"
+                    :minor-tick-interval="5">
                     <DxTick :length="8" color="#666" />
                     <DxMinorTick :length="4" color="#444" />
                     <DxLabel :use-range-colors="true" :font="gaugeLabelFont" />
                   </DxScale>
                   <DxRangeContainer background-color="#20252b" :offset="10" :width="10">
-                    <DxRange :start-value="0" :end-value="40" color="#ce6978" />
-                    <DxRange :start-value="40" :end-value="70" color="#caa93b" />
-                    <DxRange :start-value="70" :end-value="100" color="#1e8e3e" />
+                    <DxRange :start-value="0" :end-value="0.40 * worksInfo?.speed_max" color="#ce6978" />
+                    <DxRange :start-value="0.40 * worksInfo?.speed_max" :end-value="0.70 * worksInfo?.speed_max"
+                      color="#caa93b" />
+                    <DxRange :start-value="0.70 * worksInfo?.speed_max" :end-value="worksInfo?.speed_max"
+                      color="#1e8e3e" />
                   </DxRangeContainer>
                   <DxValueIndicator type="triangleNeedle" :spindle-size="18" :spindle-gap-size="9" :offset="10"
                     :width="8" />
@@ -29,8 +36,8 @@
                   <DxExport :enabled="false" />
                 </DxCircularGauge>
 
-                <div class="gauge-center-value">
-                  {{ Math.round(oee) }}
+                <div class="gauge-center-value " style="color: goldenrod;">
+                  {{ worksInfo?.speed }}
                   <!-- <span class="unit">%</span> -->
                 </div>
               </div>
@@ -57,31 +64,32 @@
             </section>
           </VCard>
         </VCol>
+
         <VCol cols="12" md="3" sm="6">
           <VCard class="pa-3">
+            <VCardTitle class="panel-title pa-0">DURUM BİLGİLERİ</VCardTitle>
+            <hr>
             <!-- Orta: Durum Bilgileri -->
             <section class="panel status-panel">
-              <header class="panel-title">DURUM BİLGİLERİ</header>
-              <hr>
               <div class="form-row mt-2">
-                <label>Duruş Sebebi (F1–Yeni Drs)</label>
+                <label>Duruş Sebebi (F10 – Yeni Duruş)</label>
                 <AppSelect v-model="selectedSebep" :items="durusSebepleri" item-title="description"
                   item-value="break_reason_code" return-object single-line placeholder="Seçiniz..."
                   variant="outlined" />
-                <AppTextarea v-model="durusAciklamasi" placeholder="Açıklama..." />
+                <AppTextarea v-model="durusAciklamasi" placeholder="Açıklama..." disabled />
               </div>
 
               <div class="status-actions justify-between">
-                <VBtn color="error" size="small">Açıklama Gir</VBtn>
+                <VBtn variant="tonal" color="error" size="small">Açıklama Gir</VBtn>
                 <VSwitch color="error" v-model="arizali" label="Arızalı" value="false" :height="10" />
               </div>
 
               <div class="status-actions justify-between">
-                <VBtn color="warning" size="small" width="48%">
+                <VBtn variant="tonal" color="warning" size="small" width="48%">
                   Çay Molası
                   <VIcon end icon="tabler-mug" />
                 </VBtn>
-                <VBtn color="warning" size="small" width="48%">
+                <VBtn variant="tonal" color="warning" size="small" width="48%">
                   Yemek Molası
                   <VIcon end icon="tabler-bowl-spoon" />
                 </VBtn>
@@ -89,53 +97,54 @@
 
               <div class="status-metrics mt-3 text-center">
                 <div>
-                  <div>Durum Süresi</div>
-                  <div class="metric-time warn">04:58:54</div>
+                  <div class="label">Durum Süresi</div>
+                  <div class="metric-time">{{ durumSuresi }}</div>
                 </div>
                 <div>
-                  <div>Vardiya</div>
-                  <div class="metric-time">04:59</div>
+                  <div class="label">Vardiya</div>
+                  <div class="metric-time">{{ vardiyaSuresi }}</div>
                 </div>
               </div>
 
               <div class="uclu text-center mt-3">
                 <div>
-                  <div>Çalışma</div>
+                  <div class="label">Çalışma</div>
                   <div class="metric-time ok">00:00</div>
                 </div>
                 <div>
-                  <div>Duruş</div>
+                  <div class="label">Duruş</div>
                   <div class="metric-time warn">00:00</div>
                 </div>
                 <div>
-                  <div>Boşta</div>
+                  <div class="label">Boşta</div>
                   <div class="metric-time">02:00</div>
                 </div>
               </div>
             </section>
           </VCard>
         </VCol>
+
         <VCol cols="12" md="6" sm="6">
           <VCard class="pa-3">
+            <VCardTitle class="panel-title pa-0">ÜRETİM RAKAMLARI</VCardTitle>
+            <hr>
             <!-- Sağ: Üretim Rakamları -->
-            <section class="panel production-panel">
-              <header class="panel-title">ÜRETİM RAKAMLARI</header>
-              <hr>
+            <section class="panel status-panel">
 
               <VRow>
                 <VCol cols="9">
                   <div class="uclu text-center mt-3">
                     <div class="ms-4 me-4" width="60%">
-                      <div>İş Emri Miktarı</div>
-                      <div class="metric-time tum digit">4000</div>
+                      <div class="label">İş&nbsp;Emri&nbsp;Miktarı</div>
+                      <div class="metric-time digit">{{ worksInfo?.order_qty }}</div>
                     </div>
                     <div>
-                      <div>Üretilen Net</div>
-                      <div class="metric-time ok digit">2000</div>
+                      <div class="label">Üretilen Net</div>
+                      <div class="metric-time digit">{{ worksInfo?.net_qty }}</div>
                     </div>
                     <div>
-                      <div>Kalan</div>
-                      <div class="metric-time kalan digit">2000</div>
+                      <div class="label">Kalan</div>
+                      <div class="metric-time digit">{{ worksInfo?.order_qty - worksInfo?.net_qty }}</div>
                     </div>
                   </div>
                 </VCol>
@@ -143,35 +152,41 @@
                 <VCol cols="3">
                   <div class="ikili text-center mt-3">
                     <div>
-                      <div>Hurda</div>
-                      <div class="metric-time warn digit">23</div>
+                      <div class="label">Hurda</div>
+                      <div class="metric-time warn digit">{{ worksInfo?.scrap_qty }}</div>
                     </div>
                     <div>
-                      <div>OA%</div>
-                      <div class="metric-time digit">98</div>
+                      <div class="label">O.A.%</div>
+                      <div class="metric-time digit">{{ worksInfo?.net_qty === 0 ? 0 : (worksInfo?.net_qty /
+                        worksInfo?.order_qty * 100).toFixed(0) }}
+                      </div>
                     </div>
                   </div>
                 </VCol>
               </VRow>
 
-    <VProgressLinear
-      model-value="20"
-      color="primary"
-      height="20"
-      :rounded="false"
-      class="my-4"
-    />
+              <VProgressLinear :model-value="(worksInfo?.net_qty / worksInfo?.order_qty * 100) ?? 0" color="warning"
+                height="10" :rounded="true" class="my-4" />
 
+              <VRow>
+                <VCol cols="3">
+                  <div class="mt-0 label">İş Emri No:</div>
+                  <div class="mt-2 label">Ürün Kodu:</div>
+                  <div class="mt-2 label">Ürün Adı:</div>
+                  <div class="mt-2 label">Ürün Boyu:</div>
+                </VCol>
+                <VCol cols="9" class="input-like">
+                  <div>{{ worksInfo?.worder_no }}</div>
+                  <div>{{ worksInfo?.item_code }}</div>
+                  <div>{{ worksInfo?.item_name }}</div>
+                  <div>{{ worksInfo?.item_length }}</div>
+                </VCol>
+              </VRow>
 
-
-              <div class="prod-foot">
-                <div class="input-like">{{ urun.urunKodu }}</div>
-                <div class="input-like">{{ urun.urunAdi }}</div>
-                <div class="input-like strong">{{ urun.isEmriNo }}</div>
-              </div>
             </section>
           </VCard>
         </VCol>
+
       </VRow>
     </div>
 
@@ -228,6 +243,7 @@
 
 <script setup lang="ts">
 import { usePageTitleStore } from '@/stores/pageTitle';
+import axios from 'axios';
 import DxCircularGauge, {
   DxExport,
   DxGeometry,
@@ -237,21 +253,12 @@ import DxCircularGauge, {
   DxRangeContainer,
   DxScale,
   DxTick,
-  DxTitle,
   DxValueIndicator
 } from 'devextreme-vue/circular-gauge';
 import DxDataGrid, { DxColumn } from 'devextreme-vue/data-grid';
-import DxLinearGauge, {
-  DxRange as DxLRRange,
-  DxRangeContainer as DxLRRangeContainer,
-  DxScale as DxLRScale,
-  DxValueIndicator as DxLRValueIndicator,
-} from 'devextreme-vue/linear-gauge';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onActivated, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const pageTitleStore = usePageTitleStore();
-const pageName = '1201'
-const pageAlias = 'TRUMABEND CNC BÜKÜM'
 
 const selectedSebep = ref<{
   break_reason_code: string;
@@ -266,9 +273,98 @@ const format = {
   precision: 1,
 };
 const customizeText = ({ valueText }: { valueText: string }) => `${valueText} °C`;
+const worksInfo = ref<{
+  station_id: number;
+  statu_id: number;
+  speed: number;
+  speed_max: number;
+  speed_target: number;
+  counter: number;
+  worder_id: number;
+  worder_no: string;
+  item_id: number;
+  item_code: string;
+  item_name: string;
+  item_length: number;
+  order_qty: number;
+  net_qty: number;
+  scrap_qty: number;
+  wstation_code?: string;
+  wstation_name: string;
+  // API statu_time: ISO string | epoch(ms/sec) | elapsed seconds
+  statu_time?: number | string | Date | null;
+} | null>(null)
 
-pageTitleStore.setTitle(`${pageName} (${pageAlias})`)
-document.title = `OFT - ${pageName} | ${pageAlias}`
+// Başlık: istasyon bilgilerine bağla
+const pageName = computed(() => worksInfo.value?.wstation_code ?? '...')
+const pageAlias = computed(() => worksInfo.value?.wstation_name ?? '...')
+
+const statusColor = computed(() => {
+  const id = worksInfo.value?.statu_id
+  if (id === 0) return 'rgba(192, 167, 167, 0.30)'
+  if (id === 1) return 'rgba(180, 50, 50, 1.00)'
+  if (id === 2) return 'green'
+  return '#4b7027' // varsayılan (eski stil)
+})
+
+pageTitleStore.setTitle(`${pageName.value} (${pageAlias.value})`)
+document.title = `OFT - ${pageName.value} | ${pageAlias.value}`
+
+// Başlık her zaman görünsün: aktif olduğunda ve başlık değiştiğinde geri set et
+const desiredTitle = computed(() => `${pageName.value} (${pageAlias.value})`)
+const applyPageTitle = () => {
+  pageTitleStore.setTitle(desiredTitle.value)
+  document.title = `OFT - ${pageName.value} | ${pageAlias.value}`
+}
+
+onMounted(async () => {
+  await nextTick()
+  applyPageTitle()
+  // statu_time bazlı Durum Süresi'ni ilk anda hesapla
+  computeDurumSuresi()
+
+  // Demo: zamanı canlı akıt ve worksInfo'yu periyodik çek
+  timer = setInterval(() => {
+    const now = new Date()
+    const hh = String(now.getHours()).padStart(2, '0')
+    const mm = String(now.getMinutes()).padStart(2, '0')
+    const ss = String(now.getSeconds()).padStart(2, '0')
+    time.value = `${hh}:${mm}:${ss}`
+
+    const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
+    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+    dateText.value = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} ${days[now.getDay()]}`
+
+    // statu_time'a bağlı Durum Süresi'ni her saniye güncelle
+    computeDurumSuresi()
+  }, 1000)
+
+  info = setInterval(() => {
+    fetchWorksInfo()
+  }, 1000)
+})
+
+onActivated(() => {
+  applyPageTitle()
+})
+
+const stopTitleWatch = watch(
+  () => (pageTitleStore as any).title,
+  (t: string) => {
+    if (t !== desiredTitle.value)
+      applyPageTitle()
+  },
+  { flush: 'post' }
+)
+
+onUnmounted(() => {
+  stopTitleWatch()
+})
+
+// worksInfo değişince başlığı ve Durum Süresi'ni güncelle
+watch(() => worksInfo.value, () => { applyPageTitle(); computeDurumSuresi() })
+
+const userData = useCookie<any>("userData");
 
 // Gauge ve diğer bileşenlere verilen obje tipindeki sabit props'lar.
 // Bunları template içinde inline tanımlamak her render'da yeni referans oluşturur ve
@@ -278,24 +374,57 @@ const gaugeTooltip = { enabled: false }
 const gaugeSize = { width: 300, height: 300 }
 const gaugeLabelFont = { color: '#9aa4b2', size: 14 }
 const levelGaugeSize = { width: 70, height: 160 }
-const oeeSubvalues: number[] = [85]
+const hizSubvalues: number[] = [85]
 const levelGaugeTooltip = { enabled: false }
 const levelSubvalues: number[] = []
 
-// Üst gauge (OEE)
-const oee = ref(0)
-const time = ref('16:38:42')
-const dateText = ref('23 Haziran 2023 Cuma')
+// Üst gauge (HIZ)
+const statu = ref(0)
+const hiz = ref(0)
+const isEmriMiktari = ref(0)
+const uretilen = ref(0)
+const kalan = ref(0)
+const durumSuresi = ref('00:00:00')
+const vardiyaSuresi = ref('00:00')
+const time = ref('00:00:00')
+const dateText = ref('...')
+
+// statu_time -> HH:mm:ss hesaplama
+function toHHMMSS(totalSeconds: number): string {
+  const sec = Math.max(0, Math.floor(totalSeconds || 0))
+  const h = Math.floor(sec / 3600)
+  const m = Math.floor((sec % 3600) / 60)
+  const s = sec % 60
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(h)}:${pad(m)}:${pad(s)}`
+}
+function computeDurumSuresi() {
+  const v = worksInfo.value?.statu_time as unknown
+  if (v == null) { durumSuresi.value = '00:00:00'; return }
+  let seconds = 0
+  if (typeof v === 'number') {
+    if (v > 1e12) {
+      // epoch ms
+      seconds = Math.max(0, Math.floor((Date.now() - v) / 1000))
+    } else if (v > 1e9) {
+      // epoch sec
+      seconds = Math.max(0, Math.floor(Date.now() / 1000 - v))
+    } else {
+      // already elapsed seconds
+      seconds = Math.max(0, Math.floor(v))
+    }
+  } else if (typeof v === 'string') {
+    const t = Date.parse(v)
+    if (!Number.isNaN(t)) seconds = Math.max(0, Math.floor((Date.now() - t) / 1000))
+  } else if (v instanceof Date) {
+    seconds = Math.max(0, Math.floor((Date.now() - v.getTime()) / 1000))
+  }
+  durumSuresi.value = toHHMMSS(seconds)
+}
 
 // Durum bilgileri
 const durusSebebi = ref('uretim-disi')
 const kpi = ref({ kilinlik: 0, urunluk: 0, kalite: 0 })
-
-// Üretim rakamları
-const uretim = ref({ netMiktar: 155, kalanMiktar: 4855 })
-
-// Ürün satırı
-const urun = ref({ urunKodu: 'O40334P00', urunAdi: 'S70S 42U 19 TAŞIYICI DİKME', isEmriNo: 'IEN-24056890' })
 
 // Grid satırları (örnek)
 type Row = {
@@ -318,25 +447,26 @@ const rows = ref<Row[]>([
 ])
 
 let timer: ReturnType<typeof setInterval> | null = null
+let info: ReturnType<typeof setInterval> | null = null
 
-onMounted(() => {
-  // Demo: zamanı canlı akıt
-  timer = setInterval(() => {
-    const now = new Date()
-    const hh = String(now.getHours()).padStart(2, '0')
-    const mm = String(now.getMinutes()).padStart(2, '0')
-    const ss = String(now.getSeconds()).padStart(2, '0')
-    time.value = `${hh}:${mm}:${ss}`
 
-    oee.value = now.getSeconds() * 1.5
-    const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
-    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
-    dateText.value = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} ${days[now.getDay()]}`
-  }, 1000)
-})
+async function fetchWorksInfo() {
+  try {
+    if (!userData.value.istasyon_id) { worksInfo.value = null; return }
+    const res = await axios.get('/api/kapasite-works-info', { params: { station_id: userData.value.istasyon_id } })
+    const arr = Array.isArray(res.data) ? res.data : []
+    worksInfo.value = arr.length > 0 ? arr[0] : null
+    computeDurumSuresi()
+  } catch (e) {
+    console.error('WorksInfo alınamadı', e)
+    worksInfo.value = null
+  }
+}
+
 
 onUnmounted(() => {
   if (timer) clearInterval(timer)
+  if (info) clearInterval(info)
 })
 </script>
 
@@ -350,31 +480,41 @@ onUnmounted(() => {
   padding-inline: 10px;
 }
 
-/* .panel {
-  border-radius: 10px;
-  background: #171b29;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 4%);
-  color: #cfd8dc;
-  padding-block: 10px;
-  padding-inline: 10px;
-} */
-
 .panel-title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
 
   /* color: #c8cbd6; */
   font-weight: 700;
   margin-block-end: 8px;
 }
 
-.badge-left {
-  transform: rotate(-40deg);
+.durum-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px 10px 0 0;
+  border-style: 3px yellow solid;
+  background-color: #4b7027;
+  font-weight: 700;
+  font-size: 20px;
+  margin-block-end: 8px;
+  padding: 1%;
+  margin: 0%;
+  text-align: center;
+}
 
-  /* color: #ffd54f; */
+.badge-left {
+  position: absolute;
+  inset-block-start: 10px;
+  inset-inline-start: 6px;
+  z-index: 2;
+
+  /* transform: rotate(-45deg); */
+  color: rgb(217, 185, 5);
   font-weight: 800;
-  font-size: 30px;
+  font-size: 24px;
 }
 
 .top-grid {
@@ -422,21 +562,16 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  margin-block-start: -10px;
+  margin-block-start: -20px;
 }
 
 .digital-clock {
   font-family: Verdana, monospace;
-  /* font-family: DS-Digital, monospace; */
-
-  /* background: #0a0f14; */
   font-size: 22px;
   font-weight: 700;
   padding-block: 4px;
   padding-inline: 15px;
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 60%), 0 0 6px rgba(112, 225, 255, 30%);
-
-  /* color: #70e1ff; */
   border-radius: 6px;
 }
 
@@ -456,9 +591,6 @@ onUnmounted(() => {
   text-align: center;
 }
 
-/* .kpi-title { color: #9aa4b2; font-size: 12px; }
-.kpi-value { color: #c8cbd6; font-weight: 700; } */
-
 /* Durum Paneli */
 .status-panel .form-row {
   display: flex;
@@ -467,9 +599,6 @@ onUnmounted(() => {
 }
 
 .select-dark {
-  /* background: #101521;
-  color: #e6eaf2;
-  border: 1px solid #2a3142; */
   border-radius: 8px;
   padding: 8px;
 }
@@ -485,34 +614,6 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
 }
-
-/* .btn {
-  background: #2a3142;
-  border: none;
-  cursor: pointer;
-  color: #e6eaf2;
-  border-radius: 6px;
-  padding-block: 6px;
-  padding-inline: 10px;
-}
-
-.btn-sm {
-  font-size: 12px;
-  padding-block: 4px;
-  padding-inline: 8px;
-}
-
-.btn-primary {
-  background: #3a6ff7;
-}
-
-.btn-warn {
-  background: #f0623a;
-} */
-
-/* .btn.icon {
-  font-size: 14px;
-} */
 
 .status-metrics {
   display: grid;
@@ -534,7 +635,7 @@ onUnmounted(() => {
 }
 
 .metric-time {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   margin: -9px;
 }
@@ -556,7 +657,7 @@ onUnmounted(() => {
 }
 
 .digit {
-  font-size: 50px;
+  font-size: 40px;
 }
 
 .uclu {
@@ -579,6 +680,15 @@ onUnmounted(() => {
   border-radius: 8px;
   padding: 8px;
   text-align: center;
+}
+
+.kare {
+  background: #4fe96d;
+  inline-size: 50px;
+  block-size: 30px;
+  border: 1px solid #80848e;
+  border-radius: 8px;
+  padding: 8px;
 }
 
 .timer-title {
@@ -681,23 +791,21 @@ onUnmounted(() => {
 
 .prod-foot {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: 1fr 4fr 2fr;
   gap: 8px;
   margin-block-start: 8px;
 }
 
 .input-like {
-  background: #d2b200;
-  color: #161616;
+  /* background: #d2b200; */
+
+  /* color: #161616; */
   border-radius: 8px;
   padding-block: 8px;
   padding-inline: 10px;
+  font-size: 20px;
   font-weight: bold;
-  text-align: center;
-}
-
-.input-like.strong {
-  background: #fc0;
+  text-align: start;
 }
 
 /* Operatör Paneli */
@@ -773,5 +881,16 @@ onUnmounted(() => {
   .top-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.label {
+  /* text-decoration-line: underline;   */
+
+  /* text-decoration-style: solid;       solid | double | dotted | dashed | wavy */
+
+  /* text-decoration-color: rgb(206, 190, 190);        çizgi rengi */
+
+  /* text-decoration-thickness: 2px;  */
+  margin-block-end: 5px;
 }
 </style>

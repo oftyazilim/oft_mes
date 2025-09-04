@@ -3,7 +3,7 @@ export default [
     title: "Üretim",
     icon: { icon: "tabler-building-factory-2" },
     action: "read",
-    subject: "montaj",
+    subject: ["montaj", "mekanik"],
     children: [
       {
         title: "Montaj",
@@ -12,7 +12,7 @@ export default [
         action: "read",
         subject: ["montaj"],
       },
-            {
+      {
         title: "Rollform",
         to: "uretim-uretim-rollform",
         icon: { icon: "tabler-brand-bebo" },

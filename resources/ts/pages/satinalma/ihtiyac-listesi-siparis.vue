@@ -2,7 +2,7 @@
   <VCard class="mt-0 pa-0">
     <VCardText class="mt-0 pa-2 ">
       <VCol cols="12" class="mt-2 pa-1 pe-2 pt-0">
-        <div id="liste" style="margin-block-end: 10px; margin-block-start: -10px">
+        <div id="liste" style="margin-block: -10px 10px;">
           <DxContextMenu :data-source="menuItems" :width="200" target="#gridM" @item-click="itemClick" />
           <DxDataGrid id="gridM" ref="dataGridRefM" :key="gridKeyM" class="grid" :data-source="gridDataM"
             key-expr="item_id" :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true"
@@ -19,8 +19,8 @@
             <DxColumn data-field="stok_adi" caption="STOK ADI" data-type="string" :visible="true" :width="400" />
             <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MİKTARI" data-type="number" :visible="true"
               :width="100" :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="kalan" caption="KALAN" data-type="number" :visible="true"
-              :width="100" :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
+            <DxColumn data-field="kalan" caption="KALAN" data-type="number" :visible="true" :width="100"
+              :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
             <DxColumn data-field="ihtiyac" caption="İHTİYAÇ" data-type="number" :visible="true" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
             <DxColumn data-field="stok" caption="STOK" data-type="number" :visible="true" :width="100"
@@ -76,7 +76,7 @@
               <DxItem location="after" locate-in-menu="auto" template="filtreGosterTemplate"
                 menu-item-template="menuFiltreGosterTemplate" @click="toggleGosterM" />
               <DxItem name="exportButton" />
-              <DxItem name="searchPanel"/>
+              <DxItem name="searchPanel" />
             </DxToolbar>
 
             <DxSummary>
@@ -87,49 +87,49 @@
             </DxSummary>
 
             <template #filtreTarih1>
-              <div style="margin-top: -10px;">
+              <div style="margin-block-start: -10px;">
                 <DxDateBox label="Başlangıç Tarihi" width="150" label-mode="floating" v-model:value="filterValue"
                   type="date" />
               </div>
             </template>
 
             <template #filtreTarih2>
-              <div style="margin-top: -10px; margin-left: 5px;">
+              <div style="margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxDateBox label="Bitiş Tarihi" width="150" label-mode="floating" v-model:value="filterValue1"
                   type="date" />
               </div>
             </template>
 
             <template #filtreMerkez>
-              <div style="inline-size: 200px; margin-top: -10px; margin-left: 5px;">
+              <div style="inline-size: 200px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="merkezler" v-model:value="merkez" :show-clear-button="true"
                   label="İş Merkezi" label-mode="floating" display-expr="mrk_adi" value-expr="is_merkezi_id"
-                  @value-changed="getIstasyonlar()" style="inline-size: 100%" search-mode="contains"
+                  @value-changed="getIstasyonlar()" style="inline-size: 100%;" search-mode="contains"
                   search-expr="mrk_adi" :search-timeout="200" :search-enabled="true" />
               </div>
             </template>
 
             <template #filtreIstasyon>
-              <div style="inline-size: 200px; margin-top: -10px; margin-left: 5px;">
+              <div style="inline-size: 200px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="istasyonlar" v-model:value="istasyon" label="İstasyon" label-mode="floating"
-                  display-expr="ist_adi" value-expr="istasyon_id" style="inline-size: 100%" search-mode="contains"
+                  display-expr="ist_adi" value-expr="istasyon_id" style="inline-size: 100%;" search-mode="contains"
                   search-expr="ist_adi" :search-timeout="200" :search-enabled="true" />
               </div>
             </template>
 
             <template #filtreSiparis>
-              <div style="inline-size: 160px; margin-top: -10px; margin-left: 5px;">
+              <div style="inline-size: 160px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="siparisler" v-model:value="siparis" label="Sipariş" label-mode="floating"
-                  display-expr="siparis_belge_no" value-expr="siparis_belge_no" style="inline-size: 100%"
+                  display-expr="siparis_belge_no" value-expr="siparis_belge_no" style="inline-size: 100%;"
                   :show-clear-button="true" search-mode="contains" search-expr="siparis_belge_no" :search-timeout="200"
                   :search-enabled="true" />
               </div>
             </template>
 
             <template #filtreCari>
-              <div style="inline-size: 200px; margin-top: -10px; margin-left: 5px;">
+              <div style="inline-size: 200px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="cariler" v-model:value="cari" label="Cari" label-mode="floating"
-                  display-expr="cari_ad" value-expr="cari_ad" style="inline-size: 100%" :show-clear-button="true"
+                  display-expr="cari_ad" value-expr="cari_ad" style="inline-size: 100%;" :show-clear-button="true"
                   search-mode="contains" search-expr="cari_ad" :search-timeout="200" :search-enabled="true" />
               </div>
             </template>
@@ -167,28 +167,27 @@
 
           </DxDataGrid>
         </div>
-        <div id="liste" style="margin-block-end: 10px; margin-block-start: -10px">
+        <div id="liste" style="margin-block: -10px 10px;">
           <DxContextMenu :data-source="menuItemsS" :width="200" target="#gridSA" @item-click="itemClickS" />
 
           <DxDataGrid id="gridSA" ref="dataGridRefSA" :key="gridKeySA" class="grid" :data-source="gridDataSA"
             key-expr="item_id" :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true"
             :min-width="200" :allow-column-reordering="true" :column-auto-width="true" :allow-column-resizing="true"
             @contextMenuPreparing="onContextMenuPreparingS" column-resizing-mode="widget"
-            :auto-navigate-to-focused-row="true" width="100%"
-            >
+            :auto-navigate-to-focused-row="true" width="100%" @exporting="onExportingSA">
 
             <DxColumn data-field="tipi" caption="TİPİ" data-type="string" :visible="true" :width="65"
               :cell-template="tipCellTemplate" />
-                            <DxColumn data-field="item_id" caption="STOK ID" data-type="number" :visible="true" :width="80" />
+            <DxColumn data-field="item_id" caption="STOK ID" data-type="number" :visible="true" :width="80" />
             <DxColumn data-field="item_code" caption="STOK KODU" data-type="string" :visible="true" :width="180" />
             <DxColumn data-field="belge_no" caption="SPR. NO" :visible="true" :width="80" />
             <DxColumn data-field="item_name" caption="STOK ADI" data-type="string" :visible="true" :width="400" />
-            <DxColumn data-field="miktar" caption="SİPARİŞ MİKTARI" data-type="number" :visible="true"
-              :width="100" :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="rezerv" caption="REZERV MİKTARI" data-type="number" :visible="true"
-              :width="100" :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="kalan" caption="KALAN" data-type="number" :visible="true"
-              :width="100" :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
+            <DxColumn data-field="miktar" caption="SİPARİŞ MİKTARI" data-type="number" :visible="true" :width="100"
+              :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
+            <DxColumn data-field="rezerv" caption="REZERV MİKTARI" data-type="number" :visible="true" :width="100"
+              :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
+            <DxColumn data-field="kalan" caption="KALAN" data-type="number" :visible="true" :width="100"
+              :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
             <DxColumn data-field="ana_depo" caption="ANA DEPO" data-type="number" :visible="true" :width="120"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
             <DxColumn data-field="diger_depo" caption="DİĞER DEPO" data-type="number" :visible="true" :width="120"
@@ -227,7 +226,7 @@
               <DxItem location="after" locate-in-menu="auto" template="filtreGosterTemplate"
                 menu-item-template="menuFiltreGosterTemplate" @click="toggleGosterM" />
               <DxItem name="exportButton" />
-              <DxItem name="searchPanel"/>
+              <DxItem name="searchPanel" />
             </DxToolbar>
 
             <DxSummary>
@@ -238,32 +237,31 @@
             </DxSummary>
 
             <template #filtreTarih1>
-              <div style="margin-top: -10px;">
+              <div style="margin-block-start: -10px;">
                 <DxDateBox label="Başlangıç Tarihi" width="150" label-mode="floating" v-model:value="filterValue"
                   type="date" />
               </div>
             </template>
 
             <template #filtreTarih2>
-              <div style="margin-top: -10px; margin-left: 5px;">
+              <div style="margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxDateBox label="Bitiş Tarihi" width="150" label-mode="floating" v-model:value="filterValue1"
                   type="date" />
               </div>
             </template>
 
             <template #filtreSiparis>
-              <div style="inline-size: 160px; margin-top: -10px; margin-left: 5px;">
+              <div style="inline-size: 160px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="siparisler" v-model:value="siparis" label="Sipariş" label-mode="floating"
-                  display-expr="BELGE_NO" value-expr="BELGE_NO" style="inline-size: 100%"
-                  :show-clear-button="true" search-mode="contains" search-expr="BELGE_NO" :search-timeout="200"
-                  :search-enabled="true" />
+                  display-expr="BELGE_NO" value-expr="BELGE_NO" style="inline-size: 100%;" :show-clear-button="true"
+                  search-mode="contains" search-expr="BELGE_NO" :search-timeout="200" :search-enabled="true" />
               </div>
             </template>
 
             <template #filtreCari>
-              <div style="inline-size: 200px; margin-top: -10px; margin-left: 5px;">
+              <div style="inline-size: 200px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="cariler" v-model:value="cari" label="Cari" label-mode="floating"
-                  display-expr="CARI_AD" value-expr="CARI_AD" style="inline-size: 100%" :show-clear-button="true"
+                  display-expr="CARI_AD" value-expr="CARI_AD" style="inline-size: 100%;" :show-clear-button="true"
                   search-mode="contains" search-expr="CARI_AD" :search-timeout="200" :search-enabled="true" />
               </div>
             </template>
@@ -302,7 +300,7 @@
           </DxDataGrid>
         </div>
 
-        
+
       </VCol>
     </VCardText>
   </VCard>
@@ -353,37 +351,37 @@
 
           <DxColumn data-field="talep_no" caption="TALEP NO" :width="100" />
           <DxColumn data-field="talep_tarihi" caption="TALEP TARİHİ" data-type="date" :width="110" :visible="true"
-          :format="{
-            formatter: (date) => {
-              const formattedDate = new Intl.DateTimeFormat('tr-TR', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-              }).format(new Date(date));
-              
-              return formattedDate.replace(/\//g, '.');
-            },
-          }" alignment="left" />
-          <DxColumn data-field="onay_tarihi" caption="ONAY TARİHİ" data-type="date" :width="120" :visible="true"
-          :format="{
-            formatter: (date) => {
-              const formattedDate = new Intl.DateTimeFormat('tr-TR', {
+            :format="{
+              formatter: (date) => {
+                const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                   year: 'numeric',
                   month: '2-digit',
                   day: '2-digit',
                 }).format(new Date(date));
-                
+
                 return formattedDate.replace(/\//g, '.');
               },
             }" alignment="left" />
-            <DxColumn data-field="kaynak" caption="KAYNAK" :width="150" />
-            <DxColumn data-field="tipi" caption="TİPİ" :width="100" />
+          <DxColumn data-field="onay_tarihi" caption="ONAY TARİHİ" data-type="date" :width="120" :visible="true"
+            :format="{
+              formatter: (date) => {
+                const formattedDate = new Intl.DateTimeFormat('tr-TR', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                }).format(new Date(date));
+
+                return formattedDate.replace(/\//g, '.');
+              },
+            }" alignment="left" />
+          <DxColumn data-field="kaynak" caption="KAYNAK" :width="150" />
+          <DxColumn data-field="tipi" caption="TİPİ" :width="100" />
           <DxColumn data-field="miktar" caption="MİKTAR" :width="110" data-type="number" :format="{
             type: 'fixedPoint',
             precision: 0,
             thousandsSeparator: ',',
           }" />
-        
+
           <DxGroupPanel :visible="false" />
           <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
 
@@ -419,8 +417,8 @@
               },
             }" alignment="left" />
           <DxColumn data-field="satici_adi" caption="SATICI" :width="100" />
-          <DxColumn data-field="sip_olusturan" caption="OLUŞTURAN":width="100"  />
-          <DxColumn data-field="CARI_AD" caption="CARİ ADI" :width="280"/>
+          <DxColumn data-field="sip_olusturan" caption="OLUŞTURAN" :width="100" />
+          <DxColumn data-field="CARI_AD" caption="CARİ ADI" :width="280" />
           <DxColumn data-field="sevk_tarihi" caption="SEVK TARİHİ" data-type="date" :width="100" :visible="true"
             :format="{
               formatter: (date) => {
@@ -466,8 +464,8 @@
     </VRow>
   </DxPopup>
 
-  <DxPopup v-model:visible="popupAcilmisIsEmirleriGosterVisible" :hide-on-outside-click="true" title='Açılmış İş Emirleri'
-    :show-close-button="false" :show-title="true" :width="1000" :height="600">
+  <DxPopup v-model:visible="popupAcilmisIsEmirleriGosterVisible" :hide-on-outside-click="true"
+    title='Açılmış İş Emirleri' :show-close-button="false" :show-title="true" :width="1000" :height="600">
     <VCol class="text-center">
       <h2>{{ eksikStokKodu }}</h2>
       <h2>{{ eksikStokAdi }}</h2>
@@ -484,20 +482,20 @@
           <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="100" :visible="false" />
           <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" />
           <DxColumn data-field="stok_id" caption="STOK ID" :width="100" :visible="false" />
-          <DxColumn data-field="stok_kodu" caption="STOK KODU"  :width="120" :visible="false"/>
-          <DxColumn data-field="stok_adi" caption="STOK ADI"  :visible="false"/>
-          <DxColumn data-field="planlanan_bitis_tarihi" caption="PLN BTŞ" data-type="date" :width="110"
-              :visible="true" :format="{
-                formatter: (date) => {
-                  const formattedDate = new Intl.DateTimeFormat('tr-TR', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                  }).format(new Date(date));
+          <DxColumn data-field="stok_kodu" caption="STOK KODU" :width="120" :visible="false" />
+          <DxColumn data-field="stok_adi" caption="STOK ADI" :visible="false" />
+          <DxColumn data-field="planlanan_bitis_tarihi" caption="PLN BTŞ" data-type="date" :width="110" :visible="true"
+            :format="{
+              formatter: (date) => {
+                const formattedDate = new Intl.DateTimeFormat('tr-TR', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                }).format(new Date(date));
 
-                  return formattedDate.replace(/\//g, '.');
-                },
-              }" alignment="left" />
+                return formattedDate.replace(/\//g, '.');
+              },
+            }" alignment="left" />
           <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MKTRI" :width="120" data-type="number" :format="{
             type: 'fixedPoint',
             precision: 0,
@@ -508,13 +506,13 @@
             precision: 0,
             thousandsSeparator: ',',
           }" />
-           
-           <DxSummary>
-              <DxTotalItem :align-by-column="true" column="isemri_miktari" summary-type="sum" display-format=" Tpl: {0}"
-                :alignment="right" :customize-text="formatSummaryText"/>
-              <DxTotalItem :align-by-column="true" column="kalan_miktar" summary-type="sum" display-format=" Tpl: {0}"
-                :alignment="right" :customize-text="formatSummaryText"/>
-            </DxSummary>
+
+          <DxSummary>
+            <DxTotalItem :align-by-column="true" column="isemri_miktari" summary-type="sum" display-format=" Tpl: {0}"
+              :alignment="right" :customize-text="formatSummaryText" />
+            <DxTotalItem :align-by-column="true" column="kalan_miktar" summary-type="sum" display-format=" Tpl: {0}"
+              :alignment="right" :customize-text="formatSummaryText" />
+          </DxSummary>
 
           <DxGroupPanel :visible="false" />
           <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
@@ -572,7 +570,10 @@ definePage({
   meta: { action: ['read'], subject: ['planlama', 'satinalma'] }
 })
 
+import { usePageTitleStore } from '@/stores/pageTitle'
 import axios from 'axios'
+import { DxButton } from 'devextreme-vue/button'
+import DxContextMenu, { DxContextMenuTypes } from 'devextreme-vue/context-menu'
 import type { DxDataGridTypes } from 'devextreme-vue/data-grid'
 import {
   DxColumn,
@@ -589,19 +590,15 @@ import {
   DxToolbar,
   DxTotalItem,
 } from 'devextreme-vue/data-grid'
-import { DxButton } from 'devextreme-vue/button'
-import DxSelectBox from 'devextreme-vue/select-box'
+import DxDateBox from "devextreme-vue/date-box"
 import { DxLoadPanel } from 'devextreme-vue/load-panel'
-import { exportDataGrid } from 'devextreme/excel_exporter'
+import { DxPopup } from 'devextreme-vue/popup'
+import DxSelectBox from 'devextreme-vue/select-box'
 import { DxItem } from 'devextreme-vue/tabs'
-import { ref } from 'vue'
+import { exportDataGrid } from 'devextreme/excel_exporter'
 import { Workbook } from 'exceljs'
 import { saveAs } from 'file-saver-es'
-import DxContextMenu, { DxContextMenuTypes } from 'devextreme-vue/context-menu'
-import { usePageTitleStore } from '@/stores/pageTitle'
-import notify from "devextreme/ui/notify";
-import DxDateBox from "devextreme-vue/date-box";
-import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup'
+import { ref } from 'vue'
 
 const formatDate = date => {
   if (!date)
@@ -625,7 +622,7 @@ const loadingVisible = ref<boolean>(false)
 const gridDataAcilmislar = ref([])
 const gridDataM = ref([])
 const gridDataSA = ref([])
-const gridDataDagilim = ref([])
+const gridDataDagilim = ref<any[]>([])
 const gridSatinalma = ref([])
 const gridTalepler = ref([])
 const gridKeyM = ref(Date.now())
@@ -945,6 +942,26 @@ const onExportingM = (e: DxDataGridTypes.ExportingEvent) => {
   e.cancel = true
 }
 
+const onExportingSA = (e: DxDataGridTypes.ExportingEvent) => {
+  const workbook = new Workbook()
+  const worksheet = workbook.addWorksheet('SiparisIhtiyacListesi')
+
+  exportDataGrid({
+    component: e.component,
+    worksheet,
+    autoFilterEnabled: true,
+  }).then(() => {
+    workbook.xlsx.writeBuffer().then(buffer => {
+      saveAs(
+        new Blob([buffer], { type: 'application/octet-stream' }),
+        'SiparisIhtiyacListesi.xlsx',
+      )
+    })
+  })
+
+  e.cancel = true
+}
+
 const convertToISODate = (dateString: string | null | undefined) => {
   if (!dateString || typeof dateString !== 'string')
     return null
@@ -1029,7 +1046,7 @@ const tipCellTemplate = (cellElement: HTMLElement, cellInfo: any): void => {
     return icon
   }
 
-  let renk
+  let renk: string = 'gray'
 
   switch (tip) {
     case 'Hammadde':
@@ -1074,12 +1091,12 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
         eksikStokAdi.value = selectedRow.value.stok_adi
         popupIsEmirleriGosterVisible.value = true
         break;
-        case 'Açılmış İş Emirleri':
-          stokId.value = selectedRow.value.item_id
-          eksikStokKodu.value = selectedRow.value.stok_kodu
-          eksikStokAdi.value = selectedRow.value.stok_adi
-          gridDataAcilmislar.value=[]
-          getAcilmisEmirler(selectedRow.value.item_id)
+      case 'Açılmış İş Emirleri':
+        stokId.value = selectedRow.value.item_id
+        eksikStokKodu.value = selectedRow.value.stok_kodu
+        eksikStokAdi.value = selectedRow.value.stok_adi
+        gridDataAcilmislar.value = []
+        getAcilmisEmirler(selectedRow.value.item_id)
         popupAcilmisIsEmirleriGosterVisible.value = true
         break;
       case 'Stok Detayları':
@@ -1177,15 +1194,14 @@ function itemClickS({ itemData }: DxContextMenuTypes.ItemClickEvent) {
   }
 }
 
-const formatNumber = number => {
-  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(
-    number,
-  )
+const formatNumber = (n: number): string => {
+  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(n)
 }
 
-const filtrelenmisEmirler = () => {
-  return gridDataDagilim.value.filter(item => item.item_id === stokId.value);
-};
+type DagilimRow = { item_id: number;[key: string]: any }
+const filtrelenmisEmirler = (): DagilimRow[] => {
+  return gridDataDagilim.value.filter((item: DagilimRow) => item.item_id === stokId.value)
+}
 
 const onCellClick = (e: any) => {
   if (e.rowType === 'data' && e.column.dataField === 'diger_depo') {

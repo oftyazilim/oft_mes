@@ -192,4 +192,5 @@ class KapasiteController extends Controller
 
     return response()->json(['status' => 'ok']);
   }
+
 }
