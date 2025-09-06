@@ -8,9 +8,13 @@
           <VCard class="pa-3">
             <!-- Sol: OEE Gauge ve saat/tarih/KPI -->
             <section>
-              <VCardTitle class="durum-title" :style="{ backgroundColor: statusColor }">{{ worksInfo?.statu_id === 0 ?
-                'KAPALI' : worksInfo?.statu_id === 1 ?
-                  'DURUYOR' : 'ÇALIŞIYOR' }}</VCardTitle>
+              <VCardTitle class="durum-title" :style="{ backgroundColor: statusColor }">
+                {{ worksInfo?.statu_id === 0
+                ? 'KAPALI'
+                : worksInfo?.statu_id === 1
+                ? 'DURUYOR'
+                : 'ÇALIŞIYOR' }}
+              </VCardTitle>
               <hr>
               <div class="gauge-wrap">
                 <div class="badge-left">{{ pageName }}</div>
@@ -36,7 +40,7 @@
                   <DxExport :enabled="false" />
                 </DxCircularGauge>
                 <div class="gauge-center-value ">
-                  <div class="label" style="font-size: 16px; margin-bottom: -10px; margin-top: -10px;">Hız</div>
+                  <div class="label" style="font-size: 16px; margin-block: -10px;">Hız</div>
                   <div style="color: goldenrod;"> {{ worksInfo?.speed }} </div>
                   <!-- <span class="unit">%</span> -->
                 </div>
@@ -65,7 +69,7 @@
           </VCard>
         </VCol>
 
-        <VCol cols="12" md="3" sm="6">
+        <VCol cols="12" md="4" sm="6">
           <VCard class="pa-3">
             <VCardTitle class="panel-title pa-0">DURUM BİLGİLERİ</VCardTitle>
             <hr>
@@ -74,8 +78,8 @@
               <div class="form-row mt-2">
                 <label>Duruş Sebebi (F10 – Yeni Duruş)</label>
                 <AppSelect v-model="selectedSebep" :items="durusSebepleri" item-title="description"
-                  item-value="break_reason_code" return-object single-line placeholder="Seçiniz..."
-                  variant="outlined" />
+                  item-value="break_reason_code" return-object single-line placeholder="Seçiniz..." variant="outlined"
+                  :disabled="!isDurusModu" :class="{ 'app-select--force-disabled': !isDurusModu }" />
                 <AppTextarea v-model="durusAciklamasi" placeholder="Açıklama..." disabled />
               </div>
 
@@ -95,7 +99,7 @@
                 </VBtn>
               </div>
 
-              <div class="status-metrics mt-3 text-center">
+              <div class="status-metrics mt-4 text-center">
                 <div>
                   <div class="label">Durum Süresi</div>
                   <div class="metric-time">{{ durumSuresi }}</div>
@@ -106,7 +110,7 @@
                 </div>
               </div>
 
-              <div class="uclu text-center mt-3">
+              <div class="uclu text-center mt-4">
                 <div>
                   <div class="label">Çalışma</div>
                   <div class="metric-time ok">00:00</div>
@@ -124,26 +128,25 @@
           </VCard>
         </VCol>
 
-        <VCol cols="12" md="6" sm="6">
+        <VCol cols="12" md="5" sm="6">
           <VCard class="pa-3">
             <VCardTitle class="panel-title pa-0">ÜRETİM RAKAMLARI</VCardTitle>
             <hr>
             <!-- Sağ: Üretim Rakamları -->
             <section class="panel status-panel">
               <VProgressLinear
-                :model-value="((worksInfo?.net_qty + + worksInfo?.counter) / worksInfo?.order_qty * 100) ?? 0"
+                :model-value="((worksInfo?.net_qty + worksInfo?.counter) / worksInfo?.order_qty * 100) ?? 0"
                 color="warning" height="10" :rounded="true" class="my-4" />
 
               <VRow>
                 <VCol cols="5">
-                  <!-- <div class="uclu text-center mt-3"> -->
                   <div>
                     <div width="60%">
                       <div class="label">İş&nbsp;Emri&nbsp;Miktarı</div>
                       <div class="sayac siparis digit">{{ fmt0(worksInfo?.order_qty) }}</div>
                     </div>
                     <div width="60%">
-                      <div class="label">Üretilen Net (uyumsoft)</div>
+                      <div class="label">Üretilen (uyumsoft)</div>
                       <div class="sayac siparis digit">{{ fmt0(worksInfo?.net_qty) }}</div>
                     </div>
                     <div width="60%">
@@ -151,15 +154,14 @@
                       <div class="sayac net digit">{{ fmt0(worksInfo?.counter) }}</div>
                     </div>
                     <div width="60%">
-                      <div class="label">Üretilen Net (uyum + sayaç)</div>
+                      <div class="label">Üretilen (uyum + sayaç)</div>
                       <div class="sayac net digit">{{ fmt0(worksInfo?.net_qty + worksInfo?.counter) }}</div>
                     </div>
 
                     <div width="60%">
                       <div class="label">Kalan</div>
                       <div class="sayac kalan digit">{{ fmt0((worksInfo?.order_qty ?? 0) - worksInfo?.counter -
-                        (worksInfo?.net_qty ?? 0)) }}
-                      </div>
+                        (worksInfo?.net_qty ?? 0)) }}</div>
                     </div>
 
                   </div>
@@ -173,19 +175,17 @@
                         <div class="label">Hurda</div>
                         <div class="sayac hurda digit">{{ fmt0(worksInfo?.scrap_qty) }}</div>
                       </VCol>
-                      <VCol cols="3.5">
+                      <VCol cols="6">
                         <div class="label">O.A.%</div>
                         <div class="sayac net digit">{{ worksInfo?.net_qty === 0 || worksInfo?.order_qty === 0 ? 0 :
-                          (worksInfo?.net_qty /
-                            worksInfo?.order_qty * 100).toFixed(0) }}
-                        </div>
+                          (worksInfo?.net_qty / worksInfo?.order_qty * 100).toFixed(0) }}</div>
                       </VCol>
                     </VRow>
 
 
 
 
-                    <div>
+                    <div class="mt-10">
                       <div>İş Emri No:</div>
                       <div class="info">{{ worksInfo?.worder_no }}</div>
                     </div>
@@ -312,8 +312,29 @@
         </VCardActions>
       </VCard>
     </VDialog>
+
+    <!-- Duruş Sebebi Seçim Popup (ProductionCard akışı) -->
+    <DxPopup v-model:visible="popupDurusSecGosterVisible" :width="500" :height="240" :hide-on-outside-click="false"
+      :show-close-button="false" :drag-enabled="false" :close-on-back-button="false" :defer-rendering="false"
+      :focus-state-enabled="false" :shading="true" :shading-color="'rgba(0,0,0,0.5)'" :on-hiding="onPopupHiding"
+      titleTemplate="title">
+      <template #content>
+        <VRow class="pa-4">
+          <AppSelect v-model="selectedSebep" :items="durusSebepleri" item-title="description"
+            item-value="break_reason_code" return-object label="Duruş Sebebi" single-line placeholder="Seçiniz..."
+            variant="outlined" :disabled="!isDurusModu" :class="{ 'app-select--force-disabled': !isDurusModu }" />
+        </VRow>
+      </template>
+      <template #title>
+        <p class="popup-title">Duruş Sebebini Giriniz</p>
+      </template>
+      <DxToolbarItem widget="dxButton" toolbar="bottom" location="center"
+        :options="{ ...kaydetOptions, onClick: durusSebebiKaydet, disabled: durusKayitLoading }" />
+      <br />
+    </DxPopup>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { usePageTitleStore } from '@/stores/pageTitle';
@@ -330,6 +351,8 @@ import DxCircularGauge, {
   DxValueIndicator
 } from 'devextreme-vue/circular-gauge';
 import DxDataGrid, { DxColumn } from 'devextreme-vue/data-grid';
+import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup';
+import notify from 'devextreme/ui/notify';
 import { computed, nextTick, onActivated, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const pageTitleStore = usePageTitleStore();
@@ -365,8 +388,8 @@ const worksInfo = ref<{
   scrap_qty: number;
   wstation_code?: string;
   wstation_name: string;
-  // API statu_time: ISO string | epoch(ms/sec) | elapsed seconds
-  statu_time?: number | string | Date | null;
+  // API statu_time: ISO string | epoch(ms/sec) | elapsed seconds;APIstatu_time
+  statu_time?: number | string | Date | null
 } | null>(null)
 
 // Başlık: istasyon bilgilerine bağla
@@ -380,6 +403,9 @@ const statusColor = computed(() => {
   if (id === 2) return 'green'
   return '#4b7027' // varsayılan (eski stil)
 })
+
+// Duruş modu: sadece statu_id === 1 iken seçim yapılabilsin
+const isDurusModu = computed(() => worksInfo.value?.statu_id === 1)
 
 pageTitleStore.setTitle(`${pageName.value} (${pageAlias.value})`)
 document.title = `OFT - ${pageName.value} | ${pageAlias.value}`
@@ -418,6 +444,8 @@ onMounted(async () => {
 
   // Sayfa yüklenince iş emirlerini getir
   fetchIsEmirleri()
+  // Duruş sebeplerini de ilk yüklemede al
+  durusSebepleriniAl()
 })
 
 onActivated(() => {
@@ -449,24 +477,6 @@ function fmt0(v: unknown): string {
   return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(Math.floor(n))
 }
 
-// Gauge ve diğer bileşenlere verilen obje tipindeki sabit props'lar.
-// Bunları template içinde inline tanımlamak her render'da yeni referans oluşturur ve
-// DevExtreme bileşeninde yeniden-init'e yol açarak ibrenin 0'a düşüp tekrar hedefe gitmesine sebep olabilir.
-
-// const gaugeTooltip = { enabled: false }
-// const gaugeSize = { width: 300, height: 300 }
-// const gaugeLabelFont = { color: '#9aa4b2', size: 14 }
-// const levelGaugeSize = { width: 70, height: 160 }
-// const hizSubvalues: number[] = [85]
-// const levelGaugeTooltip = { enabled: false }
-// const levelSubvalues: number[] = []
-
-// Üst gauge (HIZ)
-// const statu = ref(0)
-// const hiz = ref(0)
-// const isEmriMiktari = ref(0)
-// const uretilen = ref(0)
-// const kalan = ref(0)
 const durumSuresi = ref('00:00:00')
 const vardiyaSuresi = ref('00:00')
 const time = ref('00:00:00')
@@ -574,6 +584,7 @@ async function confirmActivate() {
 
 let timer: ReturnType<typeof setInterval> | null = null
 let info: ReturnType<typeof setInterval> | null = null
+let selectedSebepSaveTimer: ReturnType<typeof setTimeout> | null = null
 
 
 async function fetchWorksInfo() {
@@ -593,6 +604,7 @@ async function fetchWorksInfo() {
 onUnmounted(() => {
   if (timer) clearInterval(timer)
   if (info) clearInterval(info)
+  if (selectedSebepSaveTimer) clearTimeout(selectedSebepSaveTimer)
 })
 
 async function fetchIsEmirleri() {
@@ -618,6 +630,115 @@ async function fetchIsEmirleri() {
     console.error('İş emirleri alınamadı', e)
   }
 }
+
+// --- Duruş Sebepleri Akışı (ProductionCard'dan port) ---
+const popupDurusSecGosterVisible = ref(false)
+const durusKayitLoading = ref(false)
+const allowPopupClose = ref(true)
+
+const kaydetOptions = {
+  width: 100,
+  marginBottom: 30,
+  type: 'success',
+  text: 'Kaydet',
+  stylingMode: 'contained',
+}
+
+function durusSebepleriniAl() {
+  if (!userData.value?.istasyon_id) return
+  axios.get('/api/durus-sebepleri-al', { params: { istasyon: userData.value.istasyon_id } })
+    .then(r => { durusSebepleri.value = r.data?.durusSebepleri || [] })
+    .catch(err => { console.error('Duruş sebepleri alınamadı', err) })
+}
+
+function durusSebebiGir() {
+  // Varsayılan placeholder
+  selectedSebep.value = { break_reason_code: '000', description: 'GİRİLMEDİ' }
+  popupDurusSecGosterVisible.value = true
+}
+
+async function durusSebebiKaydet() {
+  if (durusKayitLoading.value) return
+  if (!selectedSebep.value) {
+    notify({ message: 'Lütfen bir duruş sebebi seçiniz.', type: 'error', displayTime: 3000 })
+    return
+  }
+  if (!worksInfo.value?.worder_id) {
+    notify({ message: 'Aktif iş emri yok.', type: 'warning', displayTime: 2500 })
+    popupDurusSecGosterVisible.value = false
+    return
+  }
+  try {
+    durusKayitLoading.value = true
+    allowPopupClose.value = false
+    await axios.post('/api/duruskaydet-mekanik', {
+      istasyonID: userData.value.istasyon_id,
+      selectedDurus: selectedSebep.value,
+    })
+    notify({ message: 'Duruş kaydedildi.', type: 'success', displayTime: 2000 })
+  } catch (err) {
+    console.error('Duruş kaydedilemedi', err)
+    notify({ message: 'Duruş kaydedilemedi.', type: 'error', displayTime: 3000 })
+  } finally {
+    durusKayitLoading.value = false
+    allowPopupClose.value = true
+    popupDurusSecGosterVisible.value = false
+    fetchWorksInfo()
+  }
+}
+
+function onPopupHiding(e: any) {
+  if (!allowPopupClose.value) e.cancel = true
+}
+
+// Popup kapanınca sebep seçildiyse (ProductionCard emit karşılığı) ekstra refresh
+watch(popupDurusSecGosterVisible, (y, o) => { if (o && !y) fetchWorksInfo() })
+
+// (İkinci onMounted kaldırıldı; yukarıda birleşik çağrı var)
+
+// Statu 1 (DURUYOR) olduğunda popup'ı otomatik aç (tekrar tekrar açmayı engelle)
+const lastStatuId = ref<number | null>(null)
+watch(() => worksInfo.value?.statu_id, async (nv, ov) => {
+  // statu 1'e yeni geçiş -> popup aç
+  if (nv === 1 && lastStatuId.value !== 1) {
+    if (!popupDurusSecGosterVisible.value) durusSebebiGir()
+  } else if (nv !== 1) {
+    // statu 1 dışına çıktıysa ve popup açıksa otomatik kaydet + kapat
+    if (popupDurusSecGosterVisible.value) {
+      if (selectedSebep.value) {
+        try {
+          await durusSebebiKaydet()
+        } catch (e) {
+          // Kaydetme hata verirse en azından popup'ı kapatalım (isteğe göre iptal edilebilir)
+          popupDurusSecGosterVisible.value = false
+        }
+      } else {
+        popupDurusSecGosterVisible.value = false
+      }
+    }
+    // Ardından seçimi sıfırla
+    selectedSebep.value = null
+  }
+  lastStatuId.value = nv ?? null
+})
+
+// Seçilen duruş sebebi değiştiğinde otomatik kaydet (debounce 250ms)
+watch(selectedSebep, (nv, ov) => {
+  if (selectedSebepSaveTimer) clearTimeout(selectedSebepSaveTimer)
+  if (!nv) return
+  selectedSebepSaveTimer = setTimeout(async () => {
+    // Koşulları timer anında tekrar doğrula
+    if (!selectedSebep.value) return
+    if (worksInfo.value?.statu_id !== 1) return
+    if (durusKayitLoading.value) return
+    if (selectedSebep.value.break_reason_code === '000') return
+    try {
+      await durusSebebiKaydet()
+    } catch (e) {
+      /* sessiz */
+    }
+  }, 250)
+})
 </script>
 
 <style scoped>
@@ -716,7 +837,7 @@ async function fetchIsEmirleri() {
 }
 
 .digital-clock {
-  font-family: Verdana, monospace;
+  font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
   font-size: 22px;
   font-weight: 700;
   padding-block: 4px;
@@ -785,9 +906,12 @@ async function fetchIsEmirleri() {
 }
 
 .metric-time {
-  background-color: #2a3142;
-  font-size: 24px;
+  /* background-color: #2a3142; */
+  font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
+  font-size: 28px;
   font-weight: 800;
+  border: 1px solid;
+  border-radius: 8px;
 }
 
 .metric-time.warn {
@@ -936,6 +1060,7 @@ async function fetchIsEmirleri() {
   font-weight: 800;
   text-align-last: left;
   block-size: 30px;
+
   /* border-bottom: 2px solid hsl(0, 38%, 88%); */
 }
 
@@ -1078,5 +1203,12 @@ async function fetchIsEmirleri() {
 
   /* margin-block-end: 5px; */
   text-align-last: center;
+}
+
+/* AppSelect zorlama disable görünümü */
+.app-select--force-disabled {
+  opacity: 0.55;
+  pointer-events: none !important;
+  filter: grayscale(0.4);
 }
 </style>

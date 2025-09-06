@@ -107,4 +107,35 @@ class UretimRollFormController extends Controller
 
     return response()->json(['message' => 'Aktif iş emri güncellendi']);
   }
+
+
+  public function DurusKaydet(Request $request)
+  {
+    // Log::info($request->all());
+
+    $islem = DB::connection('pgsql_oft')
+      ->table('oftt_works_info')
+      ->where('wstation_id', $request->istasyonID)
+      ->update([
+        'break_description' => $request->selectedDurus['description'] ?? 'GİRİLMEDİ',
+      ]);
+
+    $kayit = DB::connection('pgsql_oft')
+      ->table('machine_events')
+      ->where('wstation_id', $request->istasyonID)
+      ->where('state', 'DOWN')
+      ->orderBy('id', 'desc')
+      ->first();
+
+    if ($kayit) {
+      DB::connection('pgsql_oft')
+        ->table('machine_events')
+        ->where('id', $kayit->id)
+        ->update([
+          'break_description' => $request->selectedDurus['description'] ?? 'GİRİLMEDİ',
+          'break_reason_code' => $request->selectedDurus['break_reason_code'] ?? '0000',
+        ]);
+    }
+    return response()->json(['message' => 'Güncelleme başarılı'], 200);
+  }
 }
