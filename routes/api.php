@@ -151,6 +151,8 @@ Route::middleware('auth:sanctum')->group(function () {
 // uretim-rollform
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/kapasite-works-info', [UretimRollFormController::class, 'getWorksInfo']);
+  Route::get('/uretim-rollform/is-emirleri', [UretimRollFormController::class, 'isEmirleri']);
+  Route::post('/uretim-rollform/activate-workorder', [UretimRollFormController::class, 'activateWorkorder']);
 });
 
 // satis

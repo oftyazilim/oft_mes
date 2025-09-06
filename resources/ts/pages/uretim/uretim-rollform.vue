@@ -35,9 +35,9 @@
                   <!-- <DxTitle text="OEE %" /> -->
                   <DxExport :enabled="false" />
                 </DxCircularGauge>
-
-                <div class="gauge-center-value " style="color: goldenrod;">
-                  {{ worksInfo?.speed }}
+                <div class="gauge-center-value ">
+                  <div class="label" style="font-size: 16px; margin-bottom: -10px; margin-top: -10px;">Hız</div>
+                  <div style="color: goldenrod;"> {{ worksInfo?.speed }} </div>
                   <!-- <span class="unit">%</span> -->
                 </div>
               </div>
@@ -49,12 +49,12 @@
 
               <div class="kpi-row">
                 <div class="kpi">
-                  <div class="kpi-title">Kılınlık</div>
-                  <div class="kpi-value">%{{ kpi.kilinlik }}</div>
+                  <div class="kpi-title">Kalınlık</div>
+                  <div class="kpi-value">%{{ kpi.kalinlik }}</div>
                 </div>
                 <div class="kpi">
-                  <div class="kpi-title">Ürünlük</div>
-                  <div class="kpi-value">%{{ kpi.urunluk }}</div>
+                  <div class="kpi-title">Üretkenlik</div>
+                  <div class="kpi-value">%{{ kpi.uretkenlik }}</div>
                 </div>
                 <div class="kpi">
                   <div class="kpi-title">Kalite</div>
@@ -130,56 +130,78 @@
             <hr>
             <!-- Sağ: Üretim Rakamları -->
             <section class="panel status-panel">
+              <VProgressLinear
+                :model-value="((worksInfo?.net_qty + + worksInfo?.counter) / worksInfo?.order_qty * 100) ?? 0"
+                color="warning" height="10" :rounded="true" class="my-4" />
 
               <VRow>
-                <VCol cols="9">
-                  <div class="uclu text-center mt-3">
-                    <div class="ms-4 me-4" width="60%">
+                <VCol cols="5">
+                  <!-- <div class="uclu text-center mt-3"> -->
+                  <div>
+                    <div width="60%">
                       <div class="label">İş&nbsp;Emri&nbsp;Miktarı</div>
-                      <div class="metric-time digit">{{ worksInfo?.order_qty }}</div>
+                      <div class="sayac siparis digit">{{ fmt0(worksInfo?.order_qty) }}</div>
                     </div>
-                    <div>
-                      <div class="label">Üretilen Net</div>
-                      <div class="metric-time digit">{{ worksInfo?.net_qty }}</div>
+                    <div width="60%">
+                      <div class="label">Üretilen Net (uyumsoft)</div>
+                      <div class="sayac siparis digit">{{ fmt0(worksInfo?.net_qty) }}</div>
                     </div>
-                    <div>
-                      <div class="label">Kalan</div>
-                      <div class="metric-time digit">{{ worksInfo?.order_qty - worksInfo?.net_qty }}</div>
+                    <div width="60%">
+                      <div class="label">Sayaç</div>
+                      <div class="sayac net digit">{{ fmt0(worksInfo?.counter) }}</div>
                     </div>
-                  </div>
-                </VCol>
+                    <div width="60%">
+                      <div class="label">Üretilen Net (uyum + sayaç)</div>
+                      <div class="sayac net digit">{{ fmt0(worksInfo?.net_qty + worksInfo?.counter) }}</div>
+                    </div>
 
-                <VCol cols="3">
-                  <div class="ikili text-center mt-3">
-                    <div>
-                      <div class="label">Hurda</div>
-                      <div class="metric-time warn digit">{{ worksInfo?.scrap_qty }}</div>
-                    </div>
-                    <div>
-                      <div class="label">O.A.%</div>
-                      <div class="metric-time digit">{{ worksInfo?.net_qty === 0 ? 0 : (worksInfo?.net_qty /
-                        worksInfo?.order_qty * 100).toFixed(0) }}
+                    <div width="60%">
+                      <div class="label">Kalan</div>
+                      <div class="sayac kalan digit">{{ fmt0((worksInfo?.order_qty ?? 0) - worksInfo?.counter -
+                        (worksInfo?.net_qty ?? 0)) }}
                       </div>
                     </div>
+
                   </div>
                 </VCol>
-              </VRow>
 
-              <VProgressLinear :model-value="(worksInfo?.net_qty / worksInfo?.order_qty * 100) ?? 0" color="warning"
-                height="10" :rounded="true" class="my-4" />
+                <VCol cols="7">
+                  <div>
 
-              <VRow>
-                <VCol cols="3">
-                  <div class="mt-0 label">İş Emri No:</div>
-                  <div class="mt-2 label">Ürün Kodu:</div>
-                  <div class="mt-2 label">Ürün Adı:</div>
-                  <div class="mt-2 label">Ürün Boyu:</div>
-                </VCol>
-                <VCol cols="9" class="input-like">
-                  <div>{{ worksInfo?.worder_no }}</div>
-                  <div>{{ worksInfo?.item_code }}</div>
-                  <div>{{ worksInfo?.item_name }}</div>
-                  <div>{{ worksInfo?.item_length }}</div>
+                    <VRow>
+                      <VCol cols="6">
+                        <div class="label">Hurda</div>
+                        <div class="sayac hurda digit">{{ fmt0(worksInfo?.scrap_qty) }}</div>
+                      </VCol>
+                      <VCol cols="3.5">
+                        <div class="label">O.A.%</div>
+                        <div class="sayac net digit">{{ worksInfo?.net_qty === 0 || worksInfo?.order_qty === 0 ? 0 :
+                          (worksInfo?.net_qty /
+                            worksInfo?.order_qty * 100).toFixed(0) }}
+                        </div>
+                      </VCol>
+                    </VRow>
+
+
+
+
+                    <div>
+                      <div>İş Emri No:</div>
+                      <div class="info">{{ worksInfo?.worder_no }}</div>
+                    </div>
+                    <div width="60%">
+                      <div>Ürün Kodu:</div>
+                      <div class="info">{{ worksInfo?.item_code }}</div>
+                    </div>
+                    <div width="60%">
+                      <div>Ürün Adı:</div>
+                      <div class="info">{{ worksInfo?.item_name }}</div>
+                    </div>
+                  </div>
+                  <div width="60%">
+                    <div>Ürün Boyu:</div>
+                    <div class="info">{{ fmt0(worksInfo?.item_length) }}</div>
+                  </div>
                 </VCol>
               </VRow>
 
@@ -213,20 +235,50 @@
     </div>
 
     <section class="panel grid-panel">
-      <DxDataGrid class="orders-grid" :data-source="rows" :hover-state-enabled="true" :row-alternation-enabled="false"
-        :show-borders="false" :column-auto-width="true" :column-resizing-mode="'nextColumn'" :column-min-width="80"
-        height="360">
-        <DxColumn data-field="grp" caption="GRP" width="60" />
+      <DxDataGrid class="orders-grid" :data-source="isEmirleri" :hover-state-enabled="true"
+        :row-alternation-enabled="false" :show-borders="false" :column-auto-width="true"
+        :column-resizing-mode="'nextColumn'" :column-min-width="80" height="360">
+        <DxColumn type="buttons" width="30" :buttons="actionButtons" />
+        <DxColumn data-field="grp" caption="GRP" width="60" :visible="false" />
+        <DxColumn data-field="isEmriID" caption="İŞ EMRİ ID" width="140" />
         <DxColumn data-field="isEmriNo" caption="İŞ EMRİ NO" width="140" />
         <DxColumn data-field="stokKodu" caption="STOK KODU" width="120" />
         <DxColumn data-field="stokAdi" caption="STOK ADI" />
-        <DxColumn data-field="plnAd" caption="PLN.AD" width="90" data-type="number" format=",#" />
-        <DxColumn data-field="ilvAd" caption="İLV.AD" width="90" data-type="number" format=",#" />
-        <DxColumn data-field="klnAd" caption="KLN.AD" width="90" data-type="number" format=",#" />
-        <DxColumn data-field="urtAd" caption="ÜRT.AD" width="90" data-type="number" format=",#" />
-        <DxColumn data-field="hurda" caption="HURDA" width="90" data-type="number" format=",#" />
-        <DxColumn data-field="plnSure" caption="PLN.SÜRE" width="100" data-type="number" />
-        <DxColumn data-field="grcSure" caption="GRÇ.SÜRE" width="100" data-type="number" />
+        <DxColumn data-field="plnAd" caption="PLN.AD" width="90" data-type="number" :format="{
+          type: 'fixedPoint',
+          precision: 0,
+          thousandsSeparator: ',',
+        }" />
+        <DxColumn data-field="ilvAd" caption="İLV.AD" width="90" data-type="number" :format="{
+          type: 'fixedPoint',
+          precision: 0,
+          thousandsSeparator: ',',
+        }" />
+        <DxColumn data-field="klnAd" caption="KLN.AD" width="90" data-type="number" :format="{
+          type: 'fixedPoint',
+          precision: 0,
+          thousandsSeparator: ',',
+        }" />
+        <DxColumn data-field="urtAd" caption="ÜRT.AD" width="90" data-type="number" :format="{
+          type: 'fixedPoint',
+          precision: 0,
+          thousandsSeparator: ',',
+        }" />
+        <DxColumn data-field="hurda" caption="HURDA" width="90" data-type="number" :format="{
+          type: 'fixedPoint',
+          precision: 0,
+          thousandsSeparator: ',',
+        }" />
+        <DxColumn data-field="plnSure" caption="PLN.SÜRE" width="100" data-type="number" :format="{
+          type: 'fixedPoint',
+          precision: 0,
+          thousandsSeparator: ',',
+        }" />
+        <DxColumn data-field="grcSure" caption="GRÇ.SÜRE" width="100" data-type="number" :format="{
+          type: 'fixedPoint',
+          precision: 0,
+          thousandsSeparator: ',',
+        }" />
       </DxDataGrid>
     </section>
 
@@ -238,6 +290,28 @@
       <button class="tab">Ölçümler</button>
       <button class="tab">Kısayollar</button>
     </div>
+
+    <!-- İş Emri Aktivasyon Diyaloğu -->
+    <VDialog v-model="activateDialog" max-width="420" @keydown.esc.prevent.stop="activateDialog = false">
+      <VCard>
+        <VCardTitle>İş Emrini Aktif Et</VCardTitle>
+        <VCardText>
+          <form @submit.prevent="confirmActivate">
+            <div class="mb-2"><strong>{{ activateRow?.isEmriNo }}</strong> – {{ activateRow?.stokKodu }}</div>
+            <div class="mb-2">{{ activateRow?.stokAdi }}</div>
+            <VTextField ref="activateLengthInput" v-model.number="activateLength" type="number" label="Ürün Boyu (mm)"
+              variant="outlined" density="compact" autofocus @keydown.enter.prevent="confirmActivate"
+              @keydown.esc.prevent.stop="activateDialog = false" />
+            <button type="submit" style="display: none;"></button>
+          </form>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn variant="text" @click="activateDialog = false">İptal</VBtn>
+          <VBtn color="primary" variant="flat" @click="confirmActivate" :disabled="!activateLength">Onayla</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
   </div>
 </template>
 
@@ -316,7 +390,6 @@ const applyPageTitle = () => {
   pageTitleStore.setTitle(desiredTitle.value)
   document.title = `OFT - ${pageName.value} | ${pageAlias.value}`
 }
-
 onMounted(async () => {
   await nextTick()
   applyPageTitle()
@@ -342,6 +415,9 @@ onMounted(async () => {
   info = setInterval(() => {
     fetchWorksInfo()
   }, 1000)
+
+  // Sayfa yüklenince iş emirlerini getir
+  fetchIsEmirleri()
 })
 
 onActivated(() => {
@@ -366,24 +442,31 @@ watch(() => worksInfo.value, () => { applyPageTitle(); computeDurumSuresi() })
 
 const userData = useCookie<any>("userData");
 
+// Basit sayı biçimlendirme: binlik ayraç ve 0 ondalık (tr-TR)
+function fmt0(v: unknown): string {
+  const n = Number(v ?? 0)
+  if (!Number.isFinite(n)) return '0'
+  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(Math.floor(n))
+}
+
 // Gauge ve diğer bileşenlere verilen obje tipindeki sabit props'lar.
 // Bunları template içinde inline tanımlamak her render'da yeni referans oluşturur ve
 // DevExtreme bileşeninde yeniden-init'e yol açarak ibrenin 0'a düşüp tekrar hedefe gitmesine sebep olabilir.
 
-const gaugeTooltip = { enabled: false }
-const gaugeSize = { width: 300, height: 300 }
-const gaugeLabelFont = { color: '#9aa4b2', size: 14 }
-const levelGaugeSize = { width: 70, height: 160 }
-const hizSubvalues: number[] = [85]
-const levelGaugeTooltip = { enabled: false }
-const levelSubvalues: number[] = []
+// const gaugeTooltip = { enabled: false }
+// const gaugeSize = { width: 300, height: 300 }
+// const gaugeLabelFont = { color: '#9aa4b2', size: 14 }
+// const levelGaugeSize = { width: 70, height: 160 }
+// const hizSubvalues: number[] = [85]
+// const levelGaugeTooltip = { enabled: false }
+// const levelSubvalues: number[] = []
 
 // Üst gauge (HIZ)
-const statu = ref(0)
-const hiz = ref(0)
-const isEmriMiktari = ref(0)
-const uretilen = ref(0)
-const kalan = ref(0)
+// const statu = ref(0)
+// const hiz = ref(0)
+// const isEmriMiktari = ref(0)
+// const uretilen = ref(0)
+// const kalan = ref(0)
 const durumSuresi = ref('00:00:00')
 const vardiyaSuresi = ref('00:00')
 const time = ref('00:00:00')
@@ -424,10 +507,11 @@ function computeDurumSuresi() {
 
 // Durum bilgileri
 const durusSebebi = ref('uretim-disi')
-const kpi = ref({ kilinlik: 0, urunluk: 0, kalite: 0 })
+const kpi = ref({ kalinlik: 0, uretkenlik: 0, kalite: 0 })
 
 // Grid satırları (örnek)
 type Row = {
+  isEmriID: number
   grp: number
   isEmriNo: string
   stokKodu: string
@@ -440,11 +524,53 @@ type Row = {
   plnSure: number
   grcSure: number
 }
-const rows = ref<Row[]>([
-  { grp: 0, isEmriNo: 'IEN-24056890', stokKodu: '040334P00', stokAdi: 'S70S 42U 19 TAŞIYICI DİKME', plnAd: 5000, ilvAd: 10, klnAd: 4855, urtAd: 155, hurda: 2, plnSure: 360, grcSure: 1260 },
-  { grp: 0, isEmriNo: 'IEN-25016653', stokKodu: '040322P01', stokAdi: 'S70S 26U BOY PROFİLİ', plnAd: 1000, ilvAd: 5000, klnAd: 3311, urtAd: 2689, hurda: 0, plnSure: 360, grcSure: 1260 },
-  { grp: 0, isEmriNo: 'IEN-25023926', stokKodu: '040334P00', stokAdi: 'S70S 42U 19 TAŞIYICI DİKME', plnAd: 2000, ilvAd: 20000, klnAd: 1400, urtAd: 2000, hurda: 15, plnSure: 1400, grcSure: 5081 },
-])
+const isEmirleri = ref<Row[]>([])
+
+// Grid 'Aktif Et' aksiyon butonu
+const actionButtons = [{
+  hint: 'Aktif Et',
+  text: 'Aktif Et',
+  icon: 'login',
+  onClick: (e: any) => openActivateDialog(e?.row?.data as Row),
+}]
+
+// Aktivasyon diyaloğu state
+const activateDialog = ref(false)
+const activateLength = ref<number | null>(null)
+const activateRow = ref<Row | null>(null)
+
+function openActivateDialog(row: Row) {
+  activateRow.value = row
+  activateLength.value = null
+  activateDialog.value = true
+}
+
+async function confirmActivate() {
+  if (!activateRow.value) return
+  const length = Number(activateLength.value ?? 0)
+  const stationId = userData.value?.istasyon_id
+  if (!stationId) return
+  const payload = {
+    wstation_id: stationId,
+    worder_id: Number(activateRow.value.isEmriID ?? 0),
+    worder_no: activateRow.value.isEmriNo,
+    item_id: 0,
+    item_code: activateRow.value.stokKodu,
+    item_name: activateRow.value.stokAdi,
+    item_length: length,
+    order_qty: Number(activateRow.value.plnAd ?? 0),
+    net_qty: Number(activateRow.value.urtAd ?? 0),
+    scrap_qty: Number(activateRow.value.hurda ?? 0),
+  }
+  try {
+    await axios.post('/api/uretim-rollform/activate-workorder', payload)
+    activateDialog.value = false
+    // Aktif iş emri ve sayıları tazele
+    fetchWorksInfo()
+  } catch (e) {
+    console.error('Aktivasyon hatası', e)
+  }
+}
 
 let timer: ReturnType<typeof setInterval> | null = null
 let info: ReturnType<typeof setInterval> | null = null
@@ -468,6 +594,30 @@ onUnmounted(() => {
   if (timer) clearInterval(timer)
   if (info) clearInterval(info)
 })
+
+async function fetchIsEmirleri() {
+  try {
+    const istasyon = userData.value?.istasyon_kodu ?? '1511'
+    const { data } = await axios.get('/api/uretim-rollform/is-emirleri', { params: { istasyon } })
+    const mapped: Row[] = (data || []).map((r: any) => ({
+      grp: 0,
+      isEmriID: r.isemri_id,
+      isEmriNo: r.isemri_no,
+      stokKodu: r.stok_kodu,
+      stokAdi: r.stok_adi,
+      plnAd: Number(r.siparis_miktari ?? 0),
+      ilvAd: 0,
+      klnAd: Number(r.kalan_miktar ?? 0),
+      urtAd: Number(r.uretilen_net_miktar ?? 0),
+      hurda: Number(r.toplam_hurda_miktari ?? 0),
+      plnSure: Number(r.operasyon_suresi ?? 0),
+      grcSure: 0,
+    }))
+    isEmirleri.value = mapped
+  } catch (e) {
+    console.error('İş emirleri alınamadı', e)
+  }
+}
 </script>
 
 <style scoped>
@@ -635,9 +785,9 @@ onUnmounted(() => {
 }
 
 .metric-time {
+  background-color: #2a3142;
   font-size: 24px;
   font-weight: 800;
-  margin: -9px;
 }
 
 .metric-time.warn {
@@ -753,6 +903,40 @@ onUnmounted(() => {
 .prod-value.remain {
   font-size: 54px;
   color: #ffd54f;
+}
+
+.sayac {
+  /* background-color: #2a3142; */
+  font-size: 40px;
+  font-weight: 800;
+  text-align-last: center;
+  border-radius: 10px;
+  border: rgb(131, 114, 23) solid 1px;
+}
+
+.sayac.net {
+  color: #14d417;
+}
+
+.sayac.hurda {
+  color: #ff7043;
+}
+
+.sayac.siparis {
+  color: #437bff;
+}
+
+.sayac.kalan {
+  color: #ffc400;
+}
+
+.info {
+  /* background-color: #2a3142; */
+  font-size: 16px;
+  font-weight: 800;
+  text-align-last: left;
+  block-size: 30px;
+  /* border-bottom: 2px solid hsl(0, 38%, 88%); */
 }
 
 .vr-counters {
@@ -884,13 +1068,15 @@ onUnmounted(() => {
 }
 
 .label {
-  /* text-decoration-line: underline;   */
+  /* text-decoration-line: underline; */
 
-  /* text-decoration-style: solid;       solid | double | dotted | dashed | wavy */
+  /* text-decoration-style: solid; */
 
-  /* text-decoration-color: rgb(206, 190, 190);        çizgi rengi */
+  /* text-decoration-color: rgb(206, 190, 190); */
 
-  /* text-decoration-thickness: 2px;  */
-  margin-block-end: 5px;
+  /* text-decoration-thickness: 2px; */
+
+  /* margin-block-end: 5px; */
+  text-align-last: center;
 }
 </style>
