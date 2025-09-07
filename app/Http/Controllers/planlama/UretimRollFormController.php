@@ -13,6 +13,243 @@ use Carbon\Carbon;
 class UretimRollFormController extends Controller
 {
 
+  /**
+   * Mevcut zamana göre (.env SHIFT_SLICES) aktif vardiyayı bulur
+   * Örn: SHIFT_SLICES = "23:30-08:00, 08:00-18:00, 18:00-23:30"
+   * Geri dönüş: [ 'id' => 'N', 'start' => Carbon, 'end' => Carbon ]
+   */
+  protected function resolveCurrentShift(): array
+  {
+    $tz = config('app.timezone', 'Europe/Istanbul');
+    $now = Carbon::now($tz);
+    $sliceStr = env('SHIFT_SLICES', '08:00-18:00, 18:00-23:30, 23:30-08:00');
+    $raw = array_values(array_filter(array_map('trim', explode(',', $sliceStr))));
+    // Varsayılan etiketler: G (Gündüz), A (Akşam), N (Gece) – uzunluk eşleşmezse indeks kullan.
+    $labels = ['G', 'A', 'N'];
+    foreach ($raw as $i => $span) {
+      if (!str_contains($span, '-')) continue;
+      [$s, $e] = array_map('trim', explode('-', $span));
+      if (!$s || !$e) continue;
+      // Start ve end için baz tarih
+      $start = Carbon::createFromTimeString($s, $tz)->setDate($now->year, $now->month, $now->day);
+      $endSameDay = Carbon::createFromTimeString($e, $tz)->setDate($now->year, $now->month, $now->day);
+      $overnight = $s > $e; // gece devri
+      if ($overnight) {
+        // Örn 23:30-08:00 -> eğer now 00:30 ise start bir önceki gün.
+        if ($now->format('H:i') < $e) {
+          $start->subDay();
+        }
+        $end = (clone $start)->addDay()->setTimeFromTimeString($e);
+      } else {
+        $end = $endSameDay;
+      }
+      $inSlice = $now->betweenIncluded($start, $end);
+      if ($inSlice) {
+        $id = $labels[$i] ?? (string)$i;
+        return [
+          'id' => $id,
+          'start' => $start,
+          'end' => $end,
+        ];
+      }
+    }
+    // Hiçbiri bulunamazsa ilkini varsayalım
+    if (count($raw)) {
+      [$s, $e] = array_map('trim', explode('-', $raw[0]));
+      $start = Carbon::createFromTimeString($s, $tz)->setDate($now->year, $now->month, $now->day);
+      $end = Carbon::createFromTimeString($e, $tz)->setDate($now->year, $now->month, $now->day);
+      if ($s > $e) {
+        $end->addDay();
+      }
+      return ['id' => $labels[0] ?? '0', 'start' => $start, 'end' => $end];
+    }
+    // Tamamen fallback
+    return ['id' => 'NA', 'start' => $now->copy()->startOfHour(), 'end' => $now->copy()->endOfHour()];
+  }
+
+  /**
+   * KPI (availability, performance, quality, oee) değerlerini direkt machine_events & works_info üzerinden üretir.
+   * İstek: station_id (query param) zorunlu.
+   * Çıktı yüzdelik değil 0-1 arası oran döner; frontend çarpar.
+   */
+  public function kpi(Request $request)
+  {
+    $stationId = $request->query('station_id');
+    if (!$stationId) {
+      return response()->json(['error' => 'station_id gerekli'], 422);
+    }
+
+    $shift = $this->resolveCurrentShift();
+    $start = $shift['start'];
+    $end = $shift['end'];
+
+    $good = 0;
+    $scrap = 0;
+
+    try {
+      // Durum (UP/DOWN) süreleri – created_at / updated_at kullandığımız varsayım.
+      $rows = DB::connection('pgsql_oft')
+        ->table('machine_events')
+        ->selectRaw("state, SUM(good_count_inc) as good, SUM(scrap_count_inc) as scrap, SUM(EXTRACT(EPOCH FROM (LEAST(COALESCE(end_ts, now()), ?) - GREATEST(event_ts, ?)))) AS seconds", [$end, $start])
+        ->where('wstation_id', $stationId)
+        ->where('event_ts', '<', $end) // overlap koşulları
+        ->whereRaw('COALESCE(end_ts, now()) > ?', [$start])
+        ->groupBy('state')
+        ->get();
+
+      $secondsByState = [];
+      foreach ($rows as $r) {
+        $secondsByState[$r->state] = (float)$r->seconds;
+        $good += (float)$r->good ?? 0;
+        $scrap += (float)$r->scrap ?? 0;
+      }
+
+      // Çalışma süreleri: UP / RUN / CALISMA etiketlerinden biri varsa çalışma kabul.
+      $upSeconds = 0;
+      foreach (['UP', 'RUN', 'CALISMA', 'WORK', 'RUNNING'] as $tag) {
+        $upSeconds += $secondsByState[$tag] ?? 0;
+      }
+      // DOWN + diğerleri -> duruş.
+      $downSeconds = 0;
+      foreach ($secondsByState as $state => $secs) {
+        if (in_array($state, ['DOWN', 'DUR', 'DURUŞ'])) {
+          $downSeconds += $secs;
+        }
+      }
+      $totalTracked = $upSeconds + $downSeconds;
+      $availability = $totalTracked > 0 ? ($upSeconds / $totalTracked) : 0.0;
+
+      // Log::info('KPI zaman hesaplama', [
+      //   'station_id' => $stationId,
+      //   'shift' => $shift,
+      //   'upSeconds' => $upSeconds,
+      //   'downSeconds' => $downSeconds,
+      //   'totalTracked' => $totalTracked,
+      //   'availability' => $availability,
+      // ]);
+
+      // Üretim bilgileri
+      $w = DB::connection('pgsql_oft')
+        ->table('oftt_works_info')
+        ->select('speed_target', 'scrap_qty', 'item_length')
+        ->where('wstation_id', $stationId)
+        ->first();
+
+      $speedTarget = (float)($w->speed_target ?? 0);
+      // $good = (float)($rows->good ?? 0);
+      // $counter = (float)($rows->good ?? 0);
+      // $scrap = (float)($rows->scrap ?? 0);
+      $actualUnits = $good + $scrap; // mevcut kullanım şekline uyum
+
+      $itemLength = (float)(($w->item_length / 1000) ?? 0);
+      $runtimeHours = $upSeconds / 3600.0;
+      $theoretical = (float)(($speedTarget / $itemLength * 60 * $runtimeHours) ?? 0);
+      $performance = $theoretical > 0 ? ($actualUnits / $theoretical) : 0.0;
+      if ($performance < 0) $performance = 0; // güvenlik
+
+      // Log::info('KPI hesaplama', [
+      //   'station_id' => $stationId,
+      //   'shift' => $shift,
+      //   'upSeconds' => $upSeconds,
+      //   'downSeconds' => $downSeconds,
+      //   'speedTarget' => $speedTarget,
+      //   'itemLength' => $itemLength,
+      //   'actualUnits' => $actualUnits,
+      //   'goodUnits' => $good,
+      //   'scrapUnits' => $scrap,
+      //   'runtimeHours' => $runtimeHours,
+      //   'theoretical' => $theoretical,
+      //   'availability' => $availability,
+      //   'performance' => $performance,
+      // ]);
+      $denQuality = max($good + $scrap, 0.000001);
+      $quality = $denQuality > 0 ? ($good / $denQuality) : 0.0;
+
+      // OEE
+      $oee = $availability * $performance * $quality;
+
+      return response()->json([
+        'shift' => [
+          'id' => $shift['id'],
+          'start' => $start->toDateTimeString(),
+          'end' => $end->toDateTimeString(),
+        ],
+        'kpi' => [
+          'availability' => $availability,
+          'performance' => $performance,
+          'quality' => $quality,
+          'oee' => $oee,
+        ],
+        'raw' => [
+          'upSeconds' => $upSeconds,
+          'downSeconds' => $downSeconds,
+          'speedTarget' => $speedTarget,
+          'actualUnits' => $actualUnits,
+          'goodUnits' => $good,
+          'scrapUnits' => $scrap,
+          'runtimeHours' => $runtimeHours,
+        ],
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('KPI hesaplama hatası', ['err' => $e->getMessage()]);
+      return response()->json(['error' => 'KPI hesaplanamadı'], 500);
+    }
+  }
+
+  /**
+   * Hurda giriş popup kaydı.
+   * İstek: station_id, qty (pozitif sayı)
+   * Etkiler: oftt_works_info.counter -= qty, scrap_qty += qty
+   *          machine_events (aktif satır: end_ts IS NULL) good_count_inc -= qty, scrap_count_inc += qty
+   */
+  public function hurdaGir(Request $request)
+  {
+    $validated = $request->validate([
+      'station_id' => 'required|numeric',
+      'qty' => 'required|numeric|min:0.0001',
+    ]);
+    $sid = (int)$validated['station_id'];
+    $qty = (float)$validated['qty'];
+    try {
+      DB::connection('pgsql_oft')->transaction(function () use ($sid, $qty) {
+        // works info güncelle
+        $row = DB::connection('pgsql_oft')
+          ->table('oftt_works_info')
+          ->where('wstation_id', $sid)
+          ->lockForUpdate()
+          ->first(['counter', 'scrap_qty']);
+        if ($row) {
+          $counter = max(0, (float)$row->counter - $qty);
+          $scrap = (float)$row->scrap_qty + $qty;
+          DB::connection('pgsql_oft')
+            ->table('oftt_works_info')
+            ->where('wstation_id', $sid)
+            ->update(['counter' => $counter, 'scrap_qty' => $scrap]);
+        }
+        // aktif event güncelle
+        $event = DB::connection('pgsql_oft')
+          ->table('machine_events')
+          ->where('wstation_id', $sid)
+          ->whereNull('end_ts')
+          ->orderByDesc('id')
+          ->lockForUpdate()
+          ->first(['id', 'good_count_inc', 'scrap_count_inc']);
+        if ($event) {
+          $good = max(0, (float)$event->good_count_inc - $qty);
+          $scrap2 = (float)$event->scrap_count_inc + $qty;
+          DB::connection('pgsql_oft')
+            ->table('machine_events')
+            ->where('id', $event->id)
+            ->update(['good_count_inc' => $good, 'scrap_count_inc' => $scrap2]);
+        }
+      });
+      return response()->json(['ok' => true]);
+    } catch (\Throwable $e) {
+      Log::error('Hurda giriş hatası', ['err' => $e->getMessage()]);
+      return response()->json(['error' => 'Hurda kaydedilemedi'], 500);
+    }
+  }
+
   public function getWorksInfo(Request $request)
   {
     // Log::info('Fetching works info', ['request' => $request->all()]);

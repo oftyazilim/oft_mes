@@ -10,10 +10,10 @@
             <section>
               <VCardTitle class="durum-title" :style="{ backgroundColor: statusColor }">
                 {{ worksInfo?.statu_id === 0
-                  ? 'KAPALI'
-                  : worksInfo?.statu_id === 1
-                    ? 'DURUYOR'
-                    : 'ÇALIŞIYOR' }}
+                ? 'KAPALI'
+                : worksInfo?.statu_id === 1
+    ? 'DURUYOR'
+    : 'ÇALIŞIYOR' }}
               </VCardTitle>
               <hr>
               <div class="gauge-wrap">
@@ -53,21 +53,34 @@
 
               <div class="kpi-row">
                 <div class="kpi">
-                  <div >Kalınlık %</div>
-                  <div class="kpi-value">{{ kpi.kalinlik }}</div>
+                  <div>Meço %</div>
+                  <div class="kpi-value">
+                    {{ kpi.availability }}
+                    <div class="pb-1 ms-1 me-1">
+                      <VProgressLinear :model-value="kpi.availability ?? 0" color="info" height="4" :rounded="true" />
+                    </div>
+                  </div>
                 </div>
                 <div class="kpi">
-                  <div >Üretkenlik %</div>
-                  <div class="kpi-value">{{ kpi.uretkenlik }}</div>
+                  <div>Performans %</div>
+                  <div class="kpi-value">{{ kpi.performance }}
+                    <div class="pb-1 ms-1 me-1">
+                      <VProgressLinear :model-value="kpi.performance ?? 0" color="success" height="4" :rounded="true" />
+                    </div>
+                  </div>
                 </div>
                 <div class="kpi">
-                  <div >Kalite %</div>
-                  <div class="kpi-value">{{ kpi.kalite }}</div>
+                  <div>Kalite %</div>
+                  <div class="kpi-value">{{ kpi.quality }}
+                    <div class="pb-1 ms-1 me-1">
+                      <VProgressLinear :model-value="kpi.quality ?? 0" color="error" height="4" :rounded="true" />
+                    </div>
+                  </div>
                 </div>
               </div>
               <VRow>
                 <VCol cols="12" class="text-center">
-                  <div class="oee-title">OEE % <span class="kpi-oee">{{ kpi.oee }}</span></div>
+                  <div class="oee-title">OEE % <span class="kpi-oee" :class="oeeColorClass">{{ kpi.oee }}</span></div>
                 </VCol>
               </VRow>
             </section>
@@ -95,11 +108,11 @@
 
               <div class="status-actions justify-between">
                 <VBtn variant="tonal" color="warning" size="small" width="48%">
-                  Çay Molası
+                  F9 - Çay Molası
                   <VIcon end icon="tabler-mug" />
                 </VBtn>
                 <VBtn variant="tonal" color="warning" size="small" width="48%">
-                  Yemek Molası
+                  F10 - Yemek Molası
                   <VIcon end icon="tabler-bowl-spoon" />
                 </VBtn>
               </div>
@@ -183,7 +196,7 @@
                       <VCol cols="6">
                         <div class="label">O.A.%</div>
                         <div class="sayac net digit">{{ worksInfo?.net_qty === 0 || worksInfo?.order_qty === 0 ? 0 :
-                          (worksInfo?.net_qty / worksInfo?.order_qty * 100).toFixed(0) }}</div>
+                          ((worksInfo?.net_qty + worksInfo?.counter) / worksInfo?.order_qty * 100).toFixed(0) }}</div>
                       </VCol>
                     </VRow>
 
@@ -207,7 +220,16 @@
                     <div>Ürün Boyu:</div>
                     <div class="info">{{ fmt0(worksInfo?.item_length) }}</div>
                   </div>
+
+                  <div class="status-actions mt-11 mb-0">
+                    <VBtn id="hurdaGir" variant="outlined" color="error" width="100%" @click="openHurdaDialog">
+                      F8 - Hurda Girişi
+                      <VIcon end icon="tabler-trash" />
+                    </VBtn>
+                  </div>
+
                 </VCol>
+
               </VRow>
 
             </section>
@@ -216,6 +238,23 @@
 
       </VRow>
     </div>
+
+    <!-- Hurda Giriş Dialog -->
+    <VDialog v-model="hurdaDialog" max-width="400">
+      <VCard>
+        <VCardTitle>Hurda Girişi</VCardTitle>
+        <VCardText>
+          <VTextField ref="hurdaInputRef" v-model="hurdaInput" label="Hurda Miktarı" type="number" hide-details
+            autofocus @keydown.enter.prevent="kaydetHurda" @keydown.esc.prevent="cancelHurda" />
+          <div class="text-caption mt-2">Enter = Kaydet, Esc = İptal</div>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn variant="text" color="grey" @click="cancelHurda">İptal (Esc)</VBtn>
+          <VBtn variant="elevated" color="error" @click="kaydetHurda">Kaydet (Enter)</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
 
 
 
@@ -319,7 +358,7 @@
     </VDialog>
 
     <!-- Duruş Sebebi Seçim Popup (ProductionCard akışı) -->
-    <DxPopup v-model:visible="popupDurusSecGosterVisible" :width="500" :height="240" :hide-on-outside-click="false"
+    <DxPopup v-model:visible="popupDurusSecGosterVisible" :width="500" :height="200" :hide-on-outside-click="false"
       :show-close-button="false" :drag-enabled="false" :close-on-back-button="false" :defer-rendering="false"
       :focus-state-enabled="false" :shading="true" :shading-color="'rgba(0,0,0,0.5)'" :on-hiding="onPopupHiding"
       titleTemplate="title">
@@ -335,7 +374,7 @@
       </template>
       <DxToolbarItem widget="dxButton" toolbar="bottom" location="center"
         :options="{ ...kaydetOptions, onClick: durusSebebiKaydet, disabled: durusKayitLoading }" />
-      <br />
+
     </DxPopup>
   </div>
 </template>
@@ -417,6 +456,14 @@ document.title = `OFT - ${pageName.value} | ${pageAlias.value}`
 
 // Başlık her zaman görünsün: aktif olduğunda ve başlık değiştiğinde geri set et
 const desiredTitle = computed(() => `${pageName.value} (${pageAlias.value})`)
+// OEE renk sınıfı
+const oeeColorClass = computed(() => {
+  const v = Number(kpi.value.oee || 0)
+  if (v < 50) return 'oee-low'
+  if (v < 70) return 'oee-mid'
+  if (v < 85) return 'oee-high'
+  return 'oee-top'
+})
 const applyPageTitle = () => {
   pageTitleStore.setTitle(desiredTitle.value)
   document.title = `OFT - ${pageName.value} | ${pageAlias.value}`
@@ -426,6 +473,9 @@ onMounted(async () => {
   applyPageTitle()
   // statu_time bazlı Durum Süresi'ni ilk anda hesapla
   computeDurumSuresi()
+  // İlk KPI
+  fetchKpiDirect()
+  kpiTimer = setInterval(fetchKpiDirect, 10000)
 
   // Demo: zamanı canlı akıt ve worksInfo'yu periyodik çek
   timer = setInterval(() => {
@@ -451,6 +501,8 @@ onMounted(async () => {
   fetchIsEmirleri()
   // Duruş sebeplerini de ilk yüklemede al
   durusSebepleriniAl()
+  window.addEventListener('keydown', handleShortcut)
+  window.addEventListener('keydown', handleHurdaShortcut)
 })
 
 onActivated(() => {
@@ -468,6 +520,8 @@ const stopTitleWatch = watch(
 
 onUnmounted(() => {
   stopTitleWatch()
+  window.removeEventListener('keydown', handleShortcut)
+  window.removeEventListener('keydown', handleHurdaShortcut)
 })
 
 // worksInfo değişince başlığı ve Durum Süresi'ni güncelle
@@ -520,9 +574,86 @@ function computeDurumSuresi() {
   durumSuresi.value = toHHMMSS(seconds)
 }
 
+function findSebepByDescription(substr: string) {
+  const lower = substr.toLowerCase()
+  return (durusSebepleri.value as any[]).find(s => String(s.description || '').toLowerCase().includes(lower))
+}
+
+function handleShortcut(e: KeyboardEvent) {
+  if (!isDurusModu.value) return
+  if (e.key === 'F9') {
+    const tea = findSebepByDescription('çay ve yemek') || findSebepByDescription('cay ve yemek') || findSebepByDescription('çay & yemek')
+    if (tea) {
+      selectedSebep.value = { break_reason_code: tea.break_reason_code, description: tea.description }
+      e.preventDefault()
+    }
+  } else if (e.key === 'F10') {
+    const combo = findSebepByDescription('çay ve yemek') || findSebepByDescription('cay ve yemek') || findSebepByDescription('çay & yemek')
+    if (combo) {
+      selectedSebep.value = { break_reason_code: combo.break_reason_code, description: combo.description }
+      e.preventDefault()
+    }
+  }
+}
+
+// Hurda popup state ve işlemleri
+const hurdaDialog = ref(false)
+const hurdaInput = ref('')
+const hurdaInputRef = ref<HTMLInputElement | null>(null)
+
+function openHurdaDialog() {
+  hurdaInput.value = ''
+  hurdaDialog.value = true
+  nextTick(() => hurdaInputRef.value?.focus())
+}
+
+async function kaydetHurda() {
+  const qty = Number(hurdaInput.value)
+  if (!Number.isFinite(qty) || qty <= 0) { cancelHurda(); return }
+  try {
+    await axios.post('/api/uretim-rollform/hurda-gir', { station_id: userData.value?.istasyon_id, qty })
+    hurdaDialog.value = false
+    fetchWorksInfo()
+    fetchKpiDirect()
+  } catch (e) { console.error('hurda kayıt hata', e) }
+}
+
+function cancelHurda() { hurdaInput.value = ''; hurdaDialog.value = false }
+function handleHurdaShortcut(e: KeyboardEvent) { if (e.key === 'F8') { openHurdaDialog(); e.preventDefault() } }
+
 // Durum bilgileri
 const durusSebebi = ref('uretim-disi')
-const kpi = ref({ kalinlik: 0, uretkenlik: 0, kalite: 0, oee: 0 })
+// Yeni KPI alanları
+const kpiLoaded = ref(false)
+const kpi = ref({ availability: 0, performance: 0, quality: 0, oee: 0 })
+const shiftInfo = ref<{ id: string; start: string; end: string } | null>(null)
+
+async function fetchKpiDirect() {
+  try {
+    const stationId = userData.value?.istasyon_id
+    if (!stationId) return
+    const { data } = await axios.get('/api/uretim-rollform/kpi', { params: { station_id: stationId } })
+    if (data?.kpi) {
+      const pct = (v: any) => Math.round(Number(v || 0) * 100)
+      kpi.value = {
+        availability: pct(data.kpi.availability),
+        performance: pct(data.kpi.performance),
+        quality: pct(data.kpi.quality),
+        oee: pct(data.kpi.oee),
+      }
+      if (data.shift) {
+        shiftInfo.value = {
+          id: data.shift.id,
+          start: data.shift.start.substring(11, 16),
+          end: data.shift.end.substring(11, 16)
+        }
+      }
+      kpiLoaded.value = true
+    }
+  } catch (err) {
+    console.error('fetchKpiDirect error', err)
+  }
+}
 
 // Grid satırları (örnek)
 type Row = {
@@ -589,8 +720,8 @@ async function confirmActivate() {
 
 let timer: ReturnType<typeof setInterval> | null = null
 let info: ReturnType<typeof setInterval> | null = null
+let kpiTimer: ReturnType<typeof setInterval> | null = null
 let selectedSebepSaveTimer: ReturnType<typeof setTimeout> | null = null
-
 
 async function fetchWorksInfo() {
   try {
@@ -605,10 +736,10 @@ async function fetchWorksInfo() {
   }
 }
 
-
 onUnmounted(() => {
   if (timer) clearInterval(timer)
   if (info) clearInterval(info)
+  if (kpiTimer) clearInterval(kpiTimer)
   if (selectedSebepSaveTimer) clearTimeout(selectedSebepSaveTimer)
 })
 
@@ -860,7 +991,7 @@ watch(selectedSebep, (nv, ov) => {
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(3, 1fr);
-  margin-block-start: 0px;
+  margin-block-start: 0;
 }
 
 .kpi {
@@ -873,7 +1004,7 @@ watch(selectedSebep, (nv, ov) => {
   /* background-color: #2a3142; */
   font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
   font-size: 28px;
-  font-weight: 500;
+  font-weight: 600;
   border: 1px solid;
   border-radius: 8px;
 }
@@ -885,13 +1016,27 @@ watch(selectedSebep, (nv, ov) => {
   font-weight: 600;
 }
 
+.oee-low {
+  color: #d32f2f !important;
+}
+
+.oee-mid {
+  color: #caa93b !important;
+}
+
+.oee-high {
+  color: #ff9800 !important;
+}
+
+.oee-top {
+  color: #4cb651 !important;
+}
 .oee-title {
   /* background-color: #2a3142; */
   font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
   font-size: 18px;
   font-weight: 600;
-  margin-block-start: 10px;
-  margin-block-end: -20px;
+  margin-block: 5px -20px;
 }
 
 /* Durum Paneli */
