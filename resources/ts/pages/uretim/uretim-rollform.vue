@@ -10,10 +10,10 @@
             <section>
               <VCardTitle class="durum-title" :style="{ backgroundColor: statusColor }">
                 {{ worksInfo?.statu_id === 0
-                ? 'KAPALI'
-                : worksInfo?.statu_id === 1
-                ? 'DURUYOR'
-                : 'ÇALIŞIYOR' }}
+                  ? 'KAPALI'
+                  : worksInfo?.statu_id === 1
+                    ? 'DURUYOR'
+                    : 'ÇALIŞIYOR' }}
               </VCardTitle>
               <hr>
               <div class="gauge-wrap">
@@ -53,18 +53,23 @@
 
               <div class="kpi-row">
                 <div class="kpi">
-                  <div class="kpi-title">Kalınlık</div>
-                  <div class="kpi-value">%{{ kpi.kalinlik }}</div>
+                  <div >Kalınlık %</div>
+                  <div class="kpi-value">{{ kpi.kalinlik }}</div>
                 </div>
                 <div class="kpi">
-                  <div class="kpi-title">Üretkenlik</div>
-                  <div class="kpi-value">%{{ kpi.uretkenlik }}</div>
+                  <div >Üretkenlik %</div>
+                  <div class="kpi-value">{{ kpi.uretkenlik }}</div>
                 </div>
                 <div class="kpi">
-                  <div class="kpi-title">Kalite</div>
-                  <div class="kpi-value">%{{ kpi.kalite }}</div>
+                  <div >Kalite %</div>
+                  <div class="kpi-value">{{ kpi.kalite }}</div>
                 </div>
               </div>
+              <VRow>
+                <VCol cols="12" class="text-center">
+                  <div class="oee-title">OEE % <span class="kpi-oee">{{ kpi.oee }}</span></div>
+                </VCol>
+              </VRow>
             </section>
           </VCard>
         </VCol>
@@ -517,7 +522,7 @@ function computeDurumSuresi() {
 
 // Durum bilgileri
 const durusSebebi = ref('uretim-disi')
-const kpi = ref({ kalinlik: 0, uretkenlik: 0, kalite: 0 })
+const kpi = ref({ kalinlik: 0, uretkenlik: 0, kalite: 0, oee: 0 })
 
 // Grid satırları (örnek)
 type Row = {
@@ -833,7 +838,7 @@ watch(selectedSebep, (nv, ov) => {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  margin-block-start: -20px;
+  margin-block-start: -25px;
 }
 
 .digital-clock {
@@ -855,11 +860,38 @@ watch(selectedSebep, (nv, ov) => {
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(3, 1fr);
-  margin-block-start: 10px;
+  margin-block-start: 0px;
 }
 
 .kpi {
   text-align: center;
+  padding: 0%;
+  margin-block: 5px -10px;
+}
+
+.kpi-value {
+  /* background-color: #2a3142; */
+  font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 500;
+  border: 1px solid;
+  border-radius: 8px;
+}
+
+.kpi-oee {
+  /* background-color: #2a3142; */
+  font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
+  font-size: 44px;
+  font-weight: 600;
+}
+
+.oee-title {
+  /* background-color: #2a3142; */
+  font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin-block-start: 10px;
+  margin-block-end: -20px;
 }
 
 /* Durum Paneli */
