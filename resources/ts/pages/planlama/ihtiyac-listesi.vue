@@ -27,6 +27,8 @@
             <DxColumn data-field="stok" caption="STOK" data-type="number" :visible="true" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
             <DxColumn data-field="ana_depo" caption="ANA DEPO" data-type="number" :visible="true" :width="100"
+            :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
+            <DxColumn data-field="depo_ihtiyaci" caption="DEPO İHTİYACI" data-type="number" :visible="true" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
             <DxColumn data-field="diger_depo" caption="DİĞER DEPO" data-type="number" :visible="true" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />

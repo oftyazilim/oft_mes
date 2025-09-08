@@ -12,8 +12,8 @@
                 {{ worksInfo?.statu_id === 0
                 ? 'KAPALI'
                 : worksInfo?.statu_id === 1
-    ? 'DURUYOR'
-    : 'ÇALIŞIYOR' }}
+                ? 'DURUYOR'
+                : 'ÇALIŞIYOR' }}
               </VCardTitle>
               <hr>
               <div class="gauge-wrap">
@@ -199,8 +199,6 @@
                           ((worksInfo?.net_qty + worksInfo?.counter) / worksInfo?.order_qty * 100).toFixed(0) }}</div>
                       </VCol>
                     </VRow>
-
-
 
 
                     <div class="mt-10">
@@ -405,6 +403,25 @@ const selectedSebep = ref<{
   break_reason_code: string;
   description: string;
 } | null>(null);
+// Duruş sebebini sayfa yenilemelerine karşı korumak için storage key helper
+function reasonStorageKey() {
+  try {
+    return `rollform:lastDurusReason:${userData?.value?.istasyon_id ?? 'unknown'}`
+  } catch { return 'rollform:lastDurusReason:unknown' }
+}
+function restoreLastReason(): boolean {
+  try {
+    const raw = localStorage.getItem(reasonStorageKey())
+    if (!raw) return false
+    const obj = JSON.parse(raw)
+    if (obj && obj.break_reason_code && obj.break_reason_code !== '000') {
+      // Sadece geçerli (placeholder olmayan) kodları geri yükle
+      selectedSebep.value = { break_reason_code: obj.break_reason_code, description: obj.description }
+      return true
+    }
+  } catch { /* ignore */ }
+  return false
+}
 const durusSebepleri = ref([]);
 const durusAciklamasi = ref('');
 const arizali = ref(false);
@@ -771,6 +788,8 @@ async function fetchIsEmirleri() {
 const popupDurusSecGosterVisible = ref(false)
 const durusKayitLoading = ref(false)
 const allowPopupClose = ref(true)
+// Sayfa yenilemesi ile gelen ilk statu değerlendirmesini ayırt etmek için
+const firstStatuEvaluation = ref(true)
 
 const kaydetOptions = {
   width: 100,
@@ -812,6 +831,8 @@ async function durusSebebiKaydet() {
       selectedDurus: selectedSebep.value,
     })
     notify({ message: 'Duruş kaydedildi.', type: 'success', displayTime: 2000 })
+    // Persist edileni güncelle
+    try { localStorage.setItem(reasonStorageKey(), JSON.stringify(selectedSebep.value)) } catch { /* ignore */ }
   } catch (err) {
     console.error('Duruş kaydedilemedi', err)
     notify({ message: 'Duruş kaydedilemedi.', type: 'error', displayTime: 3000 })
@@ -837,7 +858,14 @@ const lastStatuId = ref<number | null>(null)
 watch(() => worksInfo.value?.statu_id, async (nv, ov) => {
   // statu 1'e yeni geçiş -> popup aç
   if (nv === 1 && lastStatuId.value !== 1) {
-    if (!popupDurusSecGosterVisible.value) durusSebebiGir()
+    if (firstStatuEvaluation.value) {
+      // Sadece ilk değerlendirmede (sayfa yeni yüklendi) restore dene
+      const restored = restoreLastReason()
+      if (!restored && !popupDurusSecGosterVisible.value) durusSebebiGir()
+    } else {
+      // Runtime'da statu üretim->duruş geçti, her zaman kullanıcı seçsin
+      if (!popupDurusSecGosterVisible.value) durusSebebiGir()
+    }
   } else if (nv !== 1) {
     // statu 1 dışına çıktıysa ve popup açıksa otomatik kaydet + kapat
     if (popupDurusSecGosterVisible.value) {
@@ -856,6 +884,7 @@ watch(() => worksInfo.value?.statu_id, async (nv, ov) => {
     selectedSebep.value = null
   }
   lastStatuId.value = nv ?? null
+  if (firstStatuEvaluation.value) firstStatuEvaluation.value = false
 })
 
 // Seçilen duruş sebebi değiştiğinde otomatik kaydet (debounce 250ms)
@@ -870,6 +899,7 @@ watch(selectedSebep, (nv, ov) => {
     if (selectedSebep.value.break_reason_code === '000') return
     try {
       await durusSebebiKaydet()
+// Kaydet başarılı ise localStorage zaten durusSebebiKaydet içinde güncellendi
     } catch (e) {
       /* sessiz */
     }
@@ -1031,6 +1061,7 @@ watch(selectedSebep, (nv, ov) => {
 .oee-top {
   color: #4cb651 !important;
 }
+
 .oee-title {
   /* background-color: #2a3142; */
   font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
@@ -1232,6 +1263,16 @@ watch(selectedSebep, (nv, ov) => {
 }
 
 .info {
+  /* background-color: #2a3142; */
+  font-size: 24px;
+  font-weight: 800;
+  text-align-last: left;
+  block-size: 30px;
+
+  /* border-bottom: 2px solid hsl(0, 38%, 88%); */
+}
+
+.info-urun-adi {
   /* background-color: #2a3142; */
   font-size: 16px;
   font-weight: 800;

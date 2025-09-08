@@ -143,6 +143,7 @@ class IhtiyacController extends Controller
               'talepler' => 0,
               'bakiye' => 0,
               'dongu' => 1,
+              'depo_ihtiyaci' => 0,
             ];
           }
         }
@@ -188,6 +189,7 @@ class IhtiyacController extends Controller
         }
 
         $list['bakiye'] = ($list['ana_depo'] + $list['stok']) - $list['ihtiyac'];
+        $list['depo_ihtiyaci'] = ($list['ihtiyac'] - $list['stok']) > 0 ? ($list['ihtiyac'] - $list['stok']) : 0;
       }
       unset($list);
 
