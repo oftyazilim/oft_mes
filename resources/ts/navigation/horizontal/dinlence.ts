@@ -11,6 +11,7 @@ export default [
         icon: { icon: "tabler-list-tree" },
         action: "read",
         subject: "genel",
+        target: "_blank",
       },
       {
         title: "Adam Asmaca",
@@ -18,6 +19,7 @@ export default [
         icon: { icon: "tabler-device-gamepad-2" },
         action: "read",
         subject: "genel",
+        target: "_blank",
       },
       {
         title: "Yemek Mönüsü",

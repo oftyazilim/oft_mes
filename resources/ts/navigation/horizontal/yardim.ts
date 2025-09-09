@@ -11,6 +11,7 @@ export default [
         icon: { icon: "tabler-book" },
         action: "all",
         subject: ["manage"],
+        target: '_blank',
       },
       {
         title: "PDF Örneği",
@@ -18,6 +19,7 @@ export default [
         icon: { icon: "tabler-file" },
         action: "read",
         subject: ["genel"],
+        target: '_blank',
       },
       {
         title: "PDF Görüntüleyici",
@@ -25,6 +27,7 @@ export default [
         icon: { icon: "tabler-file-description" },
         action: "read",
         subject: ["genel"],
+        target: '_blank',
       },
       {
         title: "Video Örneği",
@@ -32,21 +35,24 @@ export default [
         icon: { icon: "tabler-video" },
         action: "read",
         subject: ["genel"],
+        target: '_blank',
       },
       {
         title: "Ses Örneği",
         to: { path: "/yardim/ses-ornek" },
         icon: { icon: "tabler-volume" },
         action: "manage",
+        target: '_blank',
         subject: "all",
       },
-      {
-        title: "Seri Port (CH340)",
-        to: { path: "/yardim/seri-port" },
-        icon: { icon: "tabler-usb" },
-        action: "read",
-        subject: ["genel"],
-      },
+      // {
+      //   title: "Seri Port (CH340)",
+      //   to: { path: "/yardim/seri-port" },
+      //   icon: { icon: "tabler-usb" },
+      //   action: "read",
+      //   subject: ["genel"],
+      //   target: '_blank',
+      // },
     ],
   },
 ];

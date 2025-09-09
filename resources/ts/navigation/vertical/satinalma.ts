@@ -11,7 +11,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["satinalma", "planlama"],
-        // target: '_blank',
+        target: '_blank',
       },
       {
         title: "Satınalma Talepleri",
@@ -19,7 +19,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["satinalma", "planlama"],
-        // target: '_blank',
+        target: '_blank',
       },
       {
         title: "Malzeme İhtiyaç Listesi",
@@ -27,7 +27,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["satinalma", "planlama"],
-        // target: '_blank',
+        target: '_blank',
       },
     ],
   },

@@ -33,7 +33,7 @@ if (typeof window !== "undefined") {
 
 export const { themeConfig, layoutConfig } = defineThemeConfig({
   app: {
-    title: "oft mes",
+    title: "oft - canovate",
     logo: h("div", {
       innerHTML: logo,
       style: "line-height:0; color: rgb(var(--v-global-theme-primary))",

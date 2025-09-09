@@ -26,7 +26,7 @@ const tip = ref<any>(null)
 const selectedRoles = ref<string[]>([]);
 // İş Merkezleri tek seçim: scalar değer tut
 const secimMerkezler = ref<number | string | null>(null);
-const secimIstasyonlar = ref<number[]>([]);
+const secimIstasyonlar = ref<Array<number | string>>([]);
 const merkezler = ref<{ is_merkezi_id: number | string; mrk_adi: any }[]>([])
 const istasyonlar = ref<{ istasyon_id: string | number; ist_adi: any }[]>([])
 const roles = ref('')
@@ -94,7 +94,7 @@ const items = ref([
 
 const getIstasyonlar = async () => {
   if (secimMerkezler.value === null || secimMerkezler.value === '') {
-    istasyonlar.value = []
+    istasyonlar.value = [{ istasyon_id: '', ist_adi: 'Seçim yok' }]
     return
   }
 
@@ -112,7 +112,7 @@ const getIstasyonlar = async () => {
     const rawList = Array.isArray(candidate) ? candidate : []
 
     // Verileri sayıya çevirerek at (eğer ID'ler string ise) ve alanları standardize et
-    istasyonlar.value = rawList.map((item: any) => {
+  istasyonlar.value = rawList.map((item: any) => {
       const idRaw = item?.istasyon_id ?? item?.id ?? item
       const idNum = typeof idRaw === 'number' ? idRaw : Number(idRaw)
       return {
@@ -120,6 +120,8 @@ const getIstasyonlar = async () => {
         ist_adi: item?.ist_adi ?? item?.name ?? String(idRaw ?? ''),
       }
     }).filter((i: any) => i.istasyon_id !== 0 || (typeof i.istasyon_id === 'string' && i.istasyon_id !== ''))
+  // Listenin başına boş seçenek ekle
+  istasyonlar.value.unshift({ istasyon_id: '', ist_adi: 'Seçim yok' })
 
     // Düzenleme modundaysa, istasyon seçimlerini yükle
     if (props.userData?.id && props.userData.istasyon) {
@@ -146,7 +148,7 @@ const getMerkezler = async () => {
     const root: any = data as any
     const candidate = root?.merkezler ?? root?.data?.merkezler ?? root
     const rawList = Array.isArray(candidate) ? candidate : []
-    merkezler.value = rawList.map((item: any) => {
+    const mapped = rawList.map((item: any) => {
       const idRaw = item?.is_merkezi_id ?? item?.id ?? item
       const idNum = typeof idRaw === 'number' ? idRaw : Number(idRaw)
       return {
@@ -154,6 +156,7 @@ const getMerkezler = async () => {
         mrk_adi: item?.mrk_adi ?? item?.name ?? String(idRaw ?? ''),
       }
     }).filter((i: any) => i.is_merkezi_id !== 0 || (typeof i.is_merkezi_id === 'string' && i.is_merkezi_id !== ''))
+    merkezler.value = [{ is_merkezi_id: '', mrk_adi: 'Seçim yok' }, ...mapped]
 
     if (props.userData?.id) {
       const first = (props.userData.ismerkezi || '')
@@ -228,9 +231,17 @@ watch(secimMerkezler, (yeniDeger) => {
     getIstasyonlar()
   }
   else {
-    istasyonlar.value = []
+    istasyonlar.value = [{ istasyon_id: '', ist_adi: 'Seçim yok' }]
     secimIstasyonlar.value = []
     istasyon.value = null
+  }
+})
+
+// Çoklu istasyon seçiminde "Seçim yok" (boş) ile diğer değerlerin birlikte seçilmesini engelle
+watch(secimIstasyonlar, (yeni) => {
+  if (Array.isArray(yeni) && yeni.includes('')) {
+    // 'Seçim yok' seçildiyse, diğerlerini temizleyip yalnızca boş bırak
+    secimIstasyonlar.value = ['']
   }
 })
 
@@ -358,7 +369,7 @@ const onMerkezChanged = (val: any) => {
 
 // Seçimleri CSV'ye çevir (tekil/multiple/Set korumalı)
 const toCsv = (val: any): string => {
-  if (Array.isArray(val)) return val.join(',')
+  if (Array.isArray(val)) return val.filter(v => v !== null && v !== '').join(',')
   if (val == null) return ''
   if (val instanceof Set) return Array.from(val).join(',')
   if (typeof val === 'object' && Array.isArray((val as any).value)) return (val as any).value.join(',')

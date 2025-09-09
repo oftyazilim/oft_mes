@@ -8,4 +8,7 @@
 <script setup lang="ts">
 import ProductionSlider from './ProductionSlider.vue';
 
+definePage({
+  meta: { action: ['manage', 'read'], subject: ['montaj', 'all'] }
+})
 </script>

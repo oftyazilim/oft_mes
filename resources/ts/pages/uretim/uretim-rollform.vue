@@ -397,6 +397,10 @@ import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup';
 import notify from 'devextreme/ui/notify';
 import { computed, nextTick, onActivated, onMounted, onUnmounted, ref, watch } from 'vue';
 
+definePage({
+  meta: { action: ['manage', 'read'], subject: ['mekanik', 'all'] }
+})
+
 const pageTitleStore = usePageTitleStore();
 
 const selectedSebep = ref<{
@@ -923,7 +927,7 @@ watch(selectedSebep, (nv, ov) => {
   justify-content: center;
 
   /* color: #c8cbd6; */
-  font-weight: 700;
+  font-weight: bold;
   margin-block-end: 8px;
 }
 
@@ -934,7 +938,7 @@ watch(selectedSebep, (nv, ov) => {
   border-radius: 10px 10px 0 0;
   border-style: 3px yellow solid;
   background-color: #4b7027;
-  font-weight: 700;
+  font-weight: bold;
   font-size: 20px;
   margin-block-end: 8px;
   padding: 1%;
@@ -950,7 +954,7 @@ watch(selectedSebep, (nv, ov) => {
 
   /* transform: rotate(-45deg); */
   color: rgb(217, 185, 5);
-  font-weight: 800;
+  font-weight: bold;
   font-size: 24px;
 }
 
@@ -982,7 +986,7 @@ watch(selectedSebep, (nv, ov) => {
 .gauge-center-value {
   position: absolute;
   font-size: 50px;
-  font-weight: 700;
+  font-weight: bold;
 
   /* text-shadow: 0 0 8px rgba(0, 0, 0, 60%); */
   inset-block-start: 200px;
@@ -1005,7 +1009,7 @@ watch(selectedSebep, (nv, ov) => {
 .digital-clock {
   font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: bold;
   padding-block: 4px;
   padding-inline: 15px;
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 60%), 0 0 6px rgba(112, 225, 255, 30%);
@@ -1034,7 +1038,7 @@ watch(selectedSebep, (nv, ov) => {
   /* background-color: #2a3142; */
   font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
   font-size: 28px;
-  font-weight: 600;
+  font-weight: bold;
   border: 1px solid;
   border-radius: 8px;
 }
@@ -1043,7 +1047,7 @@ watch(selectedSebep, (nv, ov) => {
   /* background-color: #2a3142; */
   font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
   font-size: 44px;
-  font-weight: 600;
+  font-weight: bold;
 }
 
 .oee-low {
@@ -1066,7 +1070,7 @@ watch(selectedSebep, (nv, ov) => {
   /* background-color: #2a3142; */
   font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
   font-size: 18px;
-  font-weight: 600;
+  font-weight: bold;
   margin-block: 5px -20px;
 }
 
@@ -1117,7 +1121,7 @@ watch(selectedSebep, (nv, ov) => {
   /* background-color: #2a3142; */
   font-family: "Segoe UI", Verdana, "Helvetica Neue", Arial, sans-serif;
   font-size: 28px;
-  font-weight: 800;
+  font-weight: bold;
   border: 1px solid;
   border-radius: 8px;
 }
@@ -1180,7 +1184,7 @@ watch(selectedSebep, (nv, ov) => {
 }
 
 .timer-value {
-  font-weight: 800;
+  font-weight: bold;
   color: #ffc107;
 }
 
@@ -1219,7 +1223,7 @@ watch(selectedSebep, (nv, ov) => {
 }
 
 .prod-value {
-  font-weight: 800;
+  font-weight: bold;
   font-size: 26px;
 }
 
@@ -1240,7 +1244,7 @@ watch(selectedSebep, (nv, ov) => {
 .sayac {
   /* background-color: #2a3142; */
   font-size: 40px;
-  font-weight: 800;
+  font-weight: bold;
   text-align-last: center;
   border-radius: 10px;
   border: rgb(131, 114, 23) solid 1px;
@@ -1265,7 +1269,7 @@ watch(selectedSebep, (nv, ov) => {
 .info {
   /* background-color: #2a3142; */
   font-size: 24px;
-  font-weight: 800;
+  font-weight: bold;
   text-align-last: left;
   block-size: 30px;
 
@@ -1275,7 +1279,7 @@ watch(selectedSebep, (nv, ov) => {
 .info-urun-adi {
   /* background-color: #2a3142; */
   font-size: 16px;
-  font-weight: 800;
+  font-weight: bold;
   text-align-last: left;
   block-size: 30px;
 
@@ -1296,7 +1300,7 @@ watch(selectedSebep, (nv, ov) => {
 }
 
 .vr-box span {
-  font-weight: 800;
+  font-weight: bold;
   margin-inline-start: 6px;
 }
 
@@ -1390,7 +1394,7 @@ watch(selectedSebep, (nv, ov) => {
   border: none;
   padding-block: 10px;
   padding-inline: 6px;
-  font-weight: 700;
+  font-weight: bold;
   cursor: pointer;
 }
 

@@ -197,7 +197,7 @@ import Swal from "sweetalert2";
 document.title = "OFT - Kullanıcılar";
 
 definePage({
-  meta: { action: ['manage', 'read'], subject: ['genel', 'montaj', 'all'] }
+  meta: { action: ['manage', 'read'], subject: ['genel', 'all'] }
 })
 
 const apiUrl = '/api/users'; // Backend API rotası

@@ -10,10 +10,9 @@ export default [
           {
             title: "Kullanıcı Listesi",
             to: "personel-kullanicilar",
-            icon: { icon: "tabler-users" },
             action: "manage",
             subject: "all",
-            // target: "_blank",
+            target: "_blank",
           },
           {
             title: "Yetki Yönetimi",
@@ -21,6 +20,7 @@ export default [
             icon: { icon: "tabler-shield-lock" },
             action: "manage",
             subject: "users",
+            target: "_blank",
           },
           {
             title: "Kullanıcı Logları",
@@ -28,6 +28,7 @@ export default [
             icon: { icon: "tabler-list-details" },
             action: "manage",
             subject: "all",
+            target: "_blank",
           },
         ],
       },

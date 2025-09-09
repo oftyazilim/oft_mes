@@ -12,7 +12,7 @@ export default [
         icon: { icon: "tabler-microscope" },
         action: "create",
         subject: ["Kalite"],
-        // target: '_blank',
+        target: '_blank',
       },
       {
         title: "Kontrol Listeleri",
@@ -20,7 +20,7 @@ export default [
         icon: { icon: "tabler-microscope" },
         action: "read",
         subject: ["Kalite"],
-        // target: '_blank',
+        target: '_blank',
       },
     ],
   },

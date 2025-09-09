@@ -11,7 +11,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama", "montaj"],
-        // target: '_blank',
+        target: '_blank',
       },
       {
         title: "İş Emirleri - Mekanik",
@@ -19,7 +19,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama", "mekanik"],
-        // target: '_blank',
+        target: '_blank',
       },
       {
         title: "Malzeme İhtiyaç Listesi",
@@ -27,7 +27,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama"],
-        // target: '_blank',
+        target: '_blank',
       },
       {
         title: "Kapasite Hesapla",
@@ -35,7 +35,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "create",
         subject: ["planlama"],
-        // target: '_blank',
+        target: '_blank',
       },
     ],
   },

@@ -11,7 +11,7 @@ export default [
         action: "read",
         icon: { icon: "tabler-list" },
         subject: ["users"],
-        // target: "_blank",
+        target: "_blank",
       },
       {
         title: "Ciro Özet Tablo",
@@ -19,7 +19,7 @@ export default [
         action: "read",
         icon: { icon: "tabler-table" },
         subject: ["Planlama"],
-        // target: '_blank',
+        target: '_blank',
       },
       {
         title: "Malzeme İhtiyaç Listesi",
@@ -27,7 +27,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["Satış", "Planlama"],
-        // target: '_blank',
+        target: '_blank',
       },
     ],
   },
