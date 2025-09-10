@@ -151,12 +151,17 @@ class UretimMontajController extends Controller
       $endDate   = $calismaTarih?->son_tarih ? Carbon::parse($calismaTarih->son_tarih) : Carbon::now();
 
       // 3) troc_workorder Ekle (idempotent updateOrInsert)
-      DB::connection('pgsql_oft')->table('Troc_WorkOrder')->updateOrInsert([
+      $woConnection = DB::connection('pgsql_oft');
+      $woTable = $woConnection->table('Troc_WorkOrder');
+      $compositeKey = [
         'wordermid'    => $isemri->isemri_id ?? null,
         'operationno'  => $isemri->operasyon_no ?? ($isemri->Operasyon_no ?? 0),
         'itemcode'     => $isemri->stok_kodu ?? '',
         'awstationcode' => $isemri->is_istasyonu_kodu ?? ($isemri->IS_ISTASYONU_KODU ?? ''),
-      ], [
+      ];
+      // Not: updateOrInsert yalnızca iki parametre alır: (eşsiz alanlar, güncellenecek alanlar)
+      // Önceki sürümde yanlışlıkla 3. dizi verildiği için değer alanları güncellenmedi ve null kaldı.
+      $woTable->updateOrInsert($compositeKey, [
         'guid'                       => $request->guid,
         'branchcode'                 => $isemri->firma_kodu ?? null,
         'worderno'                   => $isemri->isemri_no ?? null,
@@ -171,6 +176,27 @@ class UretimMontajController extends Controller
         'semiprdmtrwhousecode'       => $cikisDepo->whouse_code ?? null,
         'note1'                      => $isemri->sip_not1 ?? '',
       ]);
+
+      // Oluşan / var olan kaydın ID'sini al
+      $workOrderId = $woConnection->table('Troc_WorkOrder')
+        ->where($compositeKey)
+        ->value('id');
+
+      if ($workOrderId) {
+        // Troc_Info tablosunda aynı systems + systemsid zaten varsa eklemeyelim (idempotent)
+        $infoExists = $woConnection->table('Troc_Info')
+          ->where('systems', 'Uyumsoft')
+          ->where('systemsid', $workOrderId)
+          ->exists();
+        if (!$infoExists) {
+          $woConnection->table('Troc_Info')->insert([
+            'systems'    => 'Uyumsoft',
+            'transfer'   => false,
+            'isdeleted'  => false,
+            'systemsid'  => $workOrderId,
+          ]);
+        }
+      }
 
       // 4) troc_employeeruntime – aktif ekipler
       if (!empty($request->guid)) {

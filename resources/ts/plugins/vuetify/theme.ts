@@ -81,7 +81,7 @@ export const themes: Record<string, ThemeDefinition> = {
   dark: {
     dark: true,
     colors: {
-      'primary': '#FFB400',
+      'primary': staticPrimaryColor,
       'on-primary': '#fff',
       'primary-darken-1': '#675DD8',
       'secondary': '#808390',

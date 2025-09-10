@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { emailValidator, requiredValidator } from '@core/utils/validators';
 import axios from 'axios';
 import { nextTick, onMounted, reactive, ref, watch } from 'vue';
 import type { VForm } from 'vuetify/components/VForm';
