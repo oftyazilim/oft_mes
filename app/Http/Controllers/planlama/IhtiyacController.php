@@ -73,8 +73,8 @@ class IhtiyacController extends Controller
         ->when($request->cari, function ($query, $cari) {
           return $query->where('cari_ad', $cari);
         })
-        ->where('is_sub_worder', 0)
-        ->where('Rotadaki_Son_Operasyon', 1)
+        // ->where('is_sub_worder', 0)
+        // ->where('Rotadaki_Son_Operasyon', 1)
         ->groupBy('isemri_id', 'isemri_no', 'stok_id', 'stok_kodu', 'stok_adi', 'CIKIS_DEPO', 'siparis_belge_no', 'cari_ad', 'IS_MERKEZI_KODU', 'IS_MERKEZI_ADI')
         ->orderBy('stok', 'asc')
         ->distinct()
