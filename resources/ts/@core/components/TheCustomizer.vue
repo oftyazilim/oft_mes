@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { staticPrimaryColor, staticPrimaryDarkenColor } from '@/plugins/vuetify/theme'
+import { staticPrimaryColor, staticPrimaryDarkenColor, staticSecondaryColor, staticSecondaryDarkenColor } from '@/plugins/vuetify/theme'
 import { Direction, Layout, Skins, Theme } from '@core/enums'
 import { useConfigStore } from '@core/stores/config'
 import horizontalLight from '@images/customizer-icons/horizontal-light.svg'

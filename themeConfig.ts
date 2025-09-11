@@ -38,7 +38,7 @@ export const { themeConfig, layoutConfig } = defineThemeConfig({
       innerHTML: logo,
       style: "line-height:0; color: rgb(var(--v-global-theme-primary))",
     }),
-    contentWidth: ContentWidth.Boxed,
+    contentWidth: ContentWidth.Fluid,
     contentLayoutNav: savedLayout || AppContentLayoutNav.Horizontal,
     overlayNavFromBreakpoint: breakpointsVuetifyV3.lg - 1, // 1 for matching with vuetify breakpoint. Docs: https://next.vuetifyjs.com/en/features/display-and-platform/
     i18n: {
@@ -62,7 +62,7 @@ export const { themeConfig, layoutConfig } = defineThemeConfig({
         },
       ],
     },
-    theme: "system",
+    theme: "dark",
     skin: Skins.Default,
     iconRenderer: VIcon,
   },

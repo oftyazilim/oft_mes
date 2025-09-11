@@ -4,14 +4,14 @@ export default [
     title: "Kalite",
     icon: { icon: "tabler-microscope" },
     action: "read",
-    subject: ["Kalite"],
+    subject: ["kalite"],
     children: [
       {
         title: "Ürün Kontrolü",
         to: "kalite-uretim-kontrol",
         icon: { icon: "tabler-microscope" },
         action: "create",
-        subject: ["Kalite"],
+        subject: ["kalite"],
         target: '_blank',
       },
       {
@@ -19,7 +19,7 @@ export default [
         to: "kalite-kontroller",
         icon: { icon: "tabler-microscope" },
         action: "read",
-        subject: ["Kalite"],
+        subject: ["kalite"],
         target: '_blank',
       },
     ],

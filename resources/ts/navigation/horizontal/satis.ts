@@ -3,14 +3,14 @@ export default [
     title: "Satış",
     icon: { icon: "tabler-calendar-dollar" },
     action: "read",
-    subject: ["users"],
+    subject: ["satis", 'planlama'],
     children: [
       {
         title: "Müşteri Siparişleri",
         to: "satis-musteri-siparisleri",
         action: "read",
         icon: { icon: "tabler-list" },
-        subject: ["users"],
+        subject: ["satis", 'planlama'],
         target: "_blank",
       },
       {
@@ -18,7 +18,7 @@ export default [
         to: "satis-ciro-ozettablo",
         action: "read",
         icon: { icon: "tabler-table" },
-        subject: ["Planlama"],
+        subject: ["satis", 'planlama'],
         target: '_blank',
       },
       {
@@ -26,7 +26,7 @@ export default [
         to: "satis-ihtiyac-listesi-siparis",
         icon: { icon: "tabler-list" },
         action: "read",
-        subject: ["Satış", "Planlama"],
+        subject: ["satis", 'planlama'],
         target: '_blank',
       },
     ],

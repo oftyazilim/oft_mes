@@ -467,6 +467,10 @@ import { saveAs } from 'file-saver-es';
 import { ref } from 'vue';
 import { DxNumberBox } from 'devextreme-vue/number-box';
 
+definePage({
+  meta: { action: ['read'], subject: ['planlama', 'satis'] }
+})
+
 const formatDate = date => {
   if (!date)
     return null
@@ -803,17 +807,24 @@ const clearSelection = () => {
   dataGrid.clearSelection()
 }
 
-const menuItems = [
+const ability = useAbility()
+const canManagePlanlama = computed(() => ability.can('manage', 'planlama'))
+
+const baseMenuItems = [
   { text: 'Filtre Yenile' },
   { text: 'Açıklar' },
   { text: 'Kapalılar' },
   { text: 'Tümünü Yenile' },
-  { text: 'Teslim Tarihi Değiştir' },
-  { text: 'Not Gir' },
+  { text: 'Teslim Tarihi Değiştir', requiresManage: true  },
+  { text: 'Not Gir', requiresManage: true  },
   { text: 'Düzen Yükle' },
   { text: 'Düzen Kaydet' },
   { text: 'Düzen Sıfırla' },
 ]
+
+const menuItems = computed(() =>
+  baseMenuItems.filter(item => canManagePlanlama.value || !('requiresManage' in item))
+)
 
 function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
   if (!itemData?.items) {
