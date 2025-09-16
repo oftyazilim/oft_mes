@@ -4,6 +4,13 @@ export default [
     icon: { icon: "tabler-smart-home" },
     children: [
       {
+        title: "Büküm Dashboard",
+        to: "dashboards-dash-bukum",
+        icon: { icon: "tabler-chart-pie-2" },
+        action: ["manage", "read"],
+        subject: ["genel"],
+      },
+      {
         title: "Analytics",
         to: "dashboards-analytics",
         icon: { icon: "tabler-chart-pie-2" },

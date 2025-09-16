@@ -11,11 +11,15 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 
 class PhotoController extends Controller
 {
     // UNC ana dizin (sonunda tek ters slash olacak şekilde)
     private const BASE_NETWORK_DIR = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\kk-fotolari\\"; // ends with backslash
+    // Depo/Stok fotoğrafları için UNC kök
+    private const BASE_SK_NETWORK_DIR = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\sk-fotolari\\"; // ends with backslash
     private const DEFAULT_PUBLIC_PHOTO_BASE = 'http://192.6.2.110:8080/photos/';
 
     private function fotoBaseUrl(): string
@@ -36,6 +40,47 @@ class PhotoController extends Controller
     {
         return $this->buildDir($isEmriNo) . $filename;
     }
+
+    // ---- STOK/DEPO FOTO HELPERLARI (sk-fotolari) ----
+    private function cleanCode(string $code): string
+    {
+        $c = strtoupper($code);
+        // Sadece A-Z 0-9 _ - kalsın
+        $c = preg_replace('/[^A-Z0-9_-]+/', '-', $c);
+        return trim($c, '-_');
+    }
+
+    private function stockDirFor(string $code): string
+    {
+        return rtrim(self::BASE_SK_NETWORK_DIR, '\\') . '\\' . $this->cleanCode($code) . '\\';
+    }
+
+    private function nextSequentialNameStock(string $code, string $ext): string
+    {
+        $dir = $this->stockDirFor($code);
+        if (!File::exists($dir)) {
+            File::makeDirectory($dir, 0775, true, true);
+        }
+        $clean = $this->cleanCode($code);
+        // mevcut dosyaları tarayıp en büyük XXX'ı bul (CLEAN-XXX.ext)
+        $pattern = '/^' . preg_quote($clean, '/') . '-(\d{3})\.(?:jpe?g|png|webp)$/i';
+        $max = 0;
+        foreach (File::files($dir) as $f) {
+            if (preg_match($pattern, $f->getFilename(), $m)) {
+                $num = (int) $m[1];
+                if ($num > $max) $max = $num;
+            }
+        }
+        $next = $max + 1;
+        $base = $clean . '-' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+        $candidate = $base . '.' . $ext;
+        while (File::exists($dir . $candidate)) {
+            $next++;
+            $base = $clean . '-' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
+            $candidate = $base . '.' . $ext;
+        }
+        return $candidate;
+    }
     /**
      * Listeleme (opsiyonel itemID filtresi).
      */
@@ -52,17 +97,64 @@ class PhotoController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // Depo yüklemelerini sk-fotolari UNC paylaşımına yaz
+        // Büyük cihaz fotoğrafları için limiti artır (25MB)
         $validated = $request->validate([
-            'photo' => 'required|image|max:5120', // 5MB
+            'photo' => 'required|image|max:51200', // 50MB
             'itemID' => 'required|integer',
         ]);
 
-        $path = $request->file('photo')->store('', 'network_photos');
-        $filename = basename($path);
-        $url = $this->fotoBaseUrl() . $filename;
+        $itemId = (string) ((int) $validated['itemID']);
+        $file = $request->file('photo');
+        $ext = strtolower($file->getClientOriginalExtension());
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+            $ext = 'jpg';
+        }
+
+        $dir = $this->stockDirFor($itemId);
+        if (!File::exists($dir)) {
+            File::makeDirectory($dir, 0775, true, true);
+        }
+
+        $targetName = $this->nextSequentialNameStock($itemId, $ext);
+        $targetPath = $dir . $targetName;
+
+        try {
+            // Intervention Image ile yeniden boyutlandır/kalite düşürerek kaydet
+            $manager = new ImageManager(new GdDriver());
+            $image = $manager->read($file->getRealPath());
+            $maxDim = 1600;
+            $width = $image->width();
+            $height = $image->height();
+            if ($width > $maxDim || $height > $maxDim) {
+                $ratio = min($maxDim / $width, $maxDim / $height);
+                $newW = (int) round($width * $ratio);
+                $newH = (int) round($height * $ratio);
+                $image->resize($newW, $newH);
+            }
+
+            // PNG'yi JPG'e çevirerek boyut kazan
+            if ($ext === 'png') {
+                $ext = 'jpg';
+                $targetName = pathinfo($targetName, PATHINFO_FILENAME) . '.jpg';
+                $targetPath = $dir . $targetName;
+            }
+
+            if ($ext === 'webp') {
+                $encoded = $image->toWebp(70);
+            } else {
+                $encoded = $image->toJpeg(70);
+            }
+            $encoded->save($targetPath);
+        } catch (\Throwable $e) {
+            Log::error('Depo foto kaydetme hatası: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Kaydedilemedi'], 500);
+        }
+
+        $url = url('/api/stok-resimler/' . $this->cleanCode($itemId) . '/' . $targetName);
 
         $photo = Photo::create([
-            'file_path' => $path,
+            'file_path' => $targetPath, // tam UNC yolu sakla
             'url' => $url,
             'item_id' => (int) $validated['itemID'],
         ]);
@@ -76,7 +168,21 @@ class PhotoController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $photo = Photo::findOrFail($id);
-        Storage::delete($photo->file_path);
+        // Önce doğrudan dosya sisteminden silmeyi dene (UNC)
+        try {
+            if ($photo->file_path && File::exists($photo->file_path)) {
+                File::delete($photo->file_path);
+            } else {
+                // Eski kayıtlar Storage üzerinde olabilir
+                Storage::delete($photo->file_path);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Foto silerken hata, Storage fallback denenecek: ' . $e->getMessage());
+            try {
+                Storage::delete($photo->file_path);
+            } catch (\Throwable $e2) {
+            }
+        }
         $photo->delete();
         return response()->json(['success' => true]);
     }

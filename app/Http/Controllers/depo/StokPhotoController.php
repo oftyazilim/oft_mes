@@ -81,7 +81,7 @@ class StokPhotoController extends Controller
     public function upload(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'photo' => 'required|image|max:5120',
+            'photo' => 'required|image|max:51200',
             'itemCode' => 'required|string|max:120',
         ]);
         $itemCode = $validated['itemCode'];

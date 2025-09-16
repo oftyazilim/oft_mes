@@ -21,14 +21,8 @@
 
             </VCol>
             <VCol cols="6" class="d-flex pa-1 pe-2 pb-3">
-<DxSelectBox
-  :data-source="items"
-  :value="sonuc"
-  display-expr="title"
-  value-expr="value"
-  @value-changed="e => sonuc = e.value"
-  :height="37"
-/>
+              <DxSelectBox :data-source="items" :value="sonuc" display-expr="title" value-expr="value"
+                @value-changed="e => sonuc = e.value" :height="37" />
             </VCol>
           </VRow>
 

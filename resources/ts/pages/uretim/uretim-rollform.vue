@@ -916,7 +916,7 @@ watch(selectedSebep, (nv, ov) => {
 .page-rollform {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 5px;
   padding-block: 10px;
   padding-inline: 10px;
 }

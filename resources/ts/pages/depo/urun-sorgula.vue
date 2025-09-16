@@ -2,17 +2,15 @@
 import axios from 'axios'
 import {
   DxColumn,
-  DxDataGrid,
-  DxSummary,
-  DxTotalItem
+  DxDataGrid
 } from 'devextreme-vue/data-grid'
 import notify from 'devextreme/ui/notify'
-import { nextTick, onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { VCardText } from 'vuetify/components'
 
 // Barkod alanına otomatik odaklanmak için ref
 const barkodInput = ref<HTMLInputElement | null>(null)
-  document.title = 'OFT - Ürün Sorgula';
+document.title = 'OFT - Ürün Sorgula';
 
 // Ürün bilgilerini tutacak form verisi (artık bir obje!)
 const formDatam = ref({
@@ -116,9 +114,10 @@ const onCellPrepared = (e: any) => {
   }
 }
 
-const photo = ref(null)
-const photos = ref(null)
-const preview = ref('')
+// v-file-input bazen tek seçimde bile File yerine File[] döndürebilir
+const photo = ref<File | File[] | null>(null)
+const photos = ref<any[] | null>(null)
+const preview = ref<string>('')
 const raf = ref('')
 const fileInput = ref()
 
@@ -147,27 +146,48 @@ const rafKaydet = async (itemID: any) => {
 const uploadPhoto = async (itemID: any) => {
   if (!photo.value) return alert('Lütfen fotoğraf seçin.')
 
+  // Tek dosyayı belirle
+  const file: File | null = Array.isArray(photo.value)
+    ? (photo.value[0] ?? null)
+    : (photo.value as File)
+
+  if (!file) return alert('Geçerli bir fotoğraf bulunamadı.')
+
+  // 50MB sınırı (backend ile uyumlu)
+  const maxBytes = 50 * 1024 * 1024
+  if (file.size > maxBytes) {
+    notify('Dosya çok büyük (50MB üstü). Lütfen daha küçük bir fotoğraf seçin.', 'error', 2500)
+    return
+  }
+
   const formData = new FormData()
-  formData.append('photo', photo.value)
-  formData.append('itemID', itemID) // ← ya da item_id neyse
+  formData.append('photo', file)
+  formData.append('itemID', String(itemID))
 
   try {
-    const response = await axios.post('/api/photo-upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    alert('Fotoğraf yüklendi!')
+    // Content-Type'ı elle vermeyin; boundary'yi tarayıcı belirler
+    await axios.post('/api/photo-upload', formData)
+    notify('Fotoğraf yüklendi', 'success', 1500)
     fetchPhotos()
+    // bellek sızıntısını önlemek için eski objectURL varsa önce iptal et, sonra temizle
+    try { if (preview.value) URL.revokeObjectURL(preview.value) } catch { }
     preview.value = ''
-
-  } catch (error) {
-    console.error(error)
-    alert('Yükleme sırasında hata oluştu.')
+  } catch (error: any) {
+    console.error('Yükleme hatası:', error?.response ?? error)
+    const msg = error?.response?.data?.message || 'Yükleme sırasında hata oluştu.'
+    notify(msg, 'error', 2500)
   }
 }
 
 watch(photo, (newPhoto) => {
-  if (newPhoto) {
-    preview.value = URL.createObjectURL(newPhoto)
+  if (!newPhoto) { preview.value = ''; return }
+  const file: File | null = Array.isArray(newPhoto) ? (newPhoto[0] ?? null) : (newPhoto as File)
+  if (file) {
+    // önceki URL’i serbest bırak
+    try { if (preview.value) URL.revokeObjectURL(preview.value) } catch { }
+    preview.value = URL.createObjectURL(file)
+  } else {
+    preview.value = ''
   }
 })
 
@@ -179,7 +199,7 @@ const fetchPhotos = async () => {
   photos.value = response.data
 }
 
-const deletePhoto = async (id) => {
+const deletePhoto = async (id: number) => {
   await axios.delete(`/api/photos/${id}`)
   fetchPhotos()
 }
@@ -191,9 +211,9 @@ const previewPhoto = (url: string) => {
   previewDialog.value = true
 }
 
-const formatNumber = number => {
+const formatNumber = (num: number) => {
   return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 }).format(
-    number,
+    num,
   )
 }
 </script>
@@ -376,8 +396,8 @@ const formatNumber = number => {
 
           <v-row>
             <v-col v-for="photo in photos" :key="photo.id" cols="12" sm="4" md="3">
-              <v-img :src="photo.url" max-height="200" style="margin-left: -18px; cursor: pointer;" class="rounded-lg"
-                @click="previewPhoto(photo.url)" />
+              <v-img :src="photo.url" max-height="200" style="cursor: pointer; margin-inline-start: -18px;"
+                class="rounded-lg" @click="previewPhoto(photo.url)" />
               <VBtn icon="tabler-trash" color="error" rounded @click="deletePhoto(photo.id)" class="mt-1"></VBtn>
 
             </v-col>
@@ -412,13 +432,17 @@ const formatNumber = number => {
 
 <style>
 .toplam {
+  /* order/properties-order ve logical properties uyumu */
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgb(250, 174, 119);
+  border-radius: 5px;
   background-color: rgb(255, 249, 216);
-  padding: 0 5px 0 5px;
   color: black;
   font-weight: bold;
-  border-color: rgb(250, 174, 119);
-  border-style: solid;
-  border-width: 1px;
-  border-radius: 5px;
+
+  /* padding shorthand: 0 5px */
+  padding-block: 0;
+  padding-inline: 5px;
 }
 </style>

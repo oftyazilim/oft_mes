@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Dashboards\BukumDashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\kalite\KaliteController;
 use App\Http\Controllers\RolesController;
@@ -33,6 +34,11 @@ Route::group(['prefix' => 'auth'], function () {
     Route::get('user', [AuthController::class, 'user']);
     Route::get('debug/{id?}', [AuthController::class, 'debugUser']);
   });
+});
+
+// Dashboards - Büküm
+Route::middleware(['auth:sanctum'])->group(function () {
+  Route::get('/dash-bukum/overview', [BukumDashboardController::class, 'overview']);
 });
 
 // Roles API routes

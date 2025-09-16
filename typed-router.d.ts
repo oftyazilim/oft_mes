@@ -69,6 +69,7 @@ declare module 'vue-router/auto-routes' {
     'components-tooltip': RouteRecordInfo<'components-tooltip', '/components/tooltip', Record<never, never>, Record<never, never>>,
     'dashboards-analytics': RouteRecordInfo<'dashboards-analytics', '/dashboards/analytics', Record<never, never>, Record<never, never>>,
     'dashboards-crm': RouteRecordInfo<'dashboards-crm', '/dashboards/crm', Record<never, never>, Record<never, never>>,
+    'dashboards-dash-bukum': RouteRecordInfo<'dashboards-dash-bukum', '/dashboards/dash-bukum', Record<never, never>, Record<never, never>>,
     'dashboards-ecommerce': RouteRecordInfo<'dashboards-ecommerce', '/dashboards/ecommerce', Record<never, never>, Record<never, never>>,
     'debug-auth': RouteRecordInfo<'debug-auth', '/debug-auth', Record<never, never>, Record<never, never>>,
     'depo-stoklar': RouteRecordInfo<'depo-stoklar', '/depo/stoklar', Record<never, never>, Record<never, never>>,

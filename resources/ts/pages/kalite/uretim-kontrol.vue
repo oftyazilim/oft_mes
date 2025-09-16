@@ -240,7 +240,7 @@
         <VCardTitle style=" color: black; font-size: 16px;">Seri Kontroller</VCardTitle>
       </VCardItem>
 
-      <div class="pa-2 d-flex justify-center gap-8">
+      <div class="pa-2 d-flex justify-center gap-8">ttttt
         <VBtn variant="tonal" icon="tabler-trash" rounded @click="kontrolSil" />
         <VBtn variant="tonal" icon="tabler-photo" rounded @click="fotoGoster" />
 
