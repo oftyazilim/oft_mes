@@ -119,6 +119,34 @@ const onSubmit = () => {
       if (isValid) login()
     })
 }
+
+// ---- Giriş Intro Animasyonu ----
+const INTRO_KEY = 'loginIntroShownV1'
+const showIntro = ref(false)
+const prefersReducedMotion = ref(false)
+const titleChars = computed(() => (appTitle.value || '').split(''))
+
+function skipIntro() {
+  showIntro.value = false
+  try { localStorage.setItem(INTRO_KEY, '1') } catch (_) { /* ignore */ }
+}
+
+onMounted(() => {
+  try { prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)')?.matches } catch (_) { }
+  const already = (() => { try { return localStorage.getItem(INTRO_KEY) === '1' } catch (_) { return false } })()
+  if (already || prefersReducedMotion.value) {
+    showIntro.value = false
+    return
+  }
+  showIntro.value = true
+  // Otomatik kapanma süresi (karakter animasyonu + küçük aralık)
+  const base = 1800 + titleChars.value.length * 35
+  const timeout = Math.min(3500, base)
+  setTimeout(() => { if (showIntro.value) skipIntro() }, timeout)
+  // ESC ile geçme
+  const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { skipIntro(); window.removeEventListener('keydown', onKey) } }
+  window.addEventListener('keydown', onKey)
+})
 </script>
 
 
@@ -127,6 +155,23 @@ const onSubmit = () => {
 
 
 <template>
+  <!-- Intro Overlay -->
+  <div v-if="showIntro" class="login-intro" :class="{ 'reduced-motion': prefersReducedMotion }" aria-live="polite">
+    <div class="intro-bg" />
+    <div class="intro-noise" />
+    <div class="intro-content">
+      <div class="intro-title-wrapper">
+        <h1 class="intro-title" v-if="prefersReducedMotion">{{ appTitle }}</h1>
+        <h1 v-else class="intro-title-chars" :aria-label="appTitle">
+          <span v-for="(ch, i) in titleChars" :key="i" class="char" :style="{ animationDelay: (i * 35) + 'ms' }">{{ ch
+            === ' ' ? '\u00A0' : ch }}</span>
+        </h1>
+      </div>
+      <p class="intro-sub" v-if="!prefersReducedMotion">Üretimde yeni bir gün başlıyor...</p>
+      <button type="button" class="intro-skip" @click="skipIntro" aria-label="Animasyonu Geç">Geç</button>
+    </div>
+  </div>
+
   <RouterLink to="/">
     <div class="auth-logo d-flex align-center gap-x-3">
       <VNodeRenderer v-if="appLogo" :nodes="appLogo" />
@@ -203,4 +248,218 @@ const onSubmit = () => {
 
 <style lang="scss">
 @use "@core-scss/template/pages/page-auth";
+
+/* stylelint-disable order/properties-order, @stylistic/max-line-length */
+
+// Intro overlay (scoped olmadan çünkü sayfa blank layout)
+.login-intro {
+  position: fixed;
+  z-index: 15000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 30% 40%, #{rgba(#4b7bd1,0.18)}, #{rgba(#0a0f19,0.94)} 62%);
+  overflow: hidden;
+  animation: intro-fade-out 0.7s ease forwards;
+  animation-delay: 1.6s;
+
+  &.reduced-motion {
+    animation: none;
+  }
+}
+
+.intro-bg {
+  position: absolute;
+  inset: -20%;
+  background: conic-gradient(from 120deg, #0b1d33, #123b70, #0b1d33, #0b1d33);
+  filter: blur(80px) saturate(160%);
+  animation: intro-rotate 12s linear infinite;
+  opacity: 0.65;
+}
+
+.intro-noise {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 4%) 0 2px, transparent 2px 4px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 3%) 0 3px, transparent 3px 6px);
+  mix-blend-mode: overlay;
+  opacity: 0.35;
+  animation: noise-move 1.8s steps(8) infinite;
+  pointer-events: none;
+}
+
+.intro-content {
+  position: relative;
+  text-align: center;
+  padding-block: 32px 40px;
+  padding-inline: 48px;
+  border: 1px solid rgba(255, 255, 255, 12%);
+  border-radius: 28px;
+  backdrop-filter: blur(12px) brightness(1.2);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 8%), rgba(255, 255, 255, 2%));
+  box-shadow: 0 10px 40px -6px rgba(0, 0, 0, 55%), 0 0 0 1px rgba(255, 255, 255, 8%) inset;
+  animation: content-rise 0.9s cubic-bezier(0.55, 0.21, 0.17, 1.02);
+}
+
+.intro-title-chars,
+.intro-title {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: clamp(2.6rem, 6vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 1px;
+  margin: 0;
+  background: linear-gradient(92deg, #fff, #d8ebff 35%, #7fb3ff 55%, #fff);
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 35%));
+}
+
+.intro-title-chars .char {
+  display: inline-block;
+  transform: translateY(40px) scale(0.85) rotateX(65deg) rotateZ(-8deg);
+  opacity: 0;
+  animation: char-in 0.75s cubic-bezier(0.65, 0.12, 0.15, 1.1) forwards;
+}
+
+.intro-sub {
+  margin-block: 18px 6px;
+  margin-inline: 0;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  color: #d0e5ff;
+  opacity: 0.9;
+  animation: fade-in 0.8s ease 0.35s both;
+}
+
+.intro-skip {
+  margin-block-start: 18px;
+  background: linear-gradient(120deg, #2d5fa5, #3f7dd4 55%, #5fa0ff);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding-block: 10px;
+  padding-inline: 20px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 18px -4px rgba(0, 0, 0, 55%), 0 0 0 1px rgba(255, 255, 255, 18%) inset;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.34, 1), box-shadow 0.35s;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 22px -6px rgba(0, 0, 0, 60%), 0 0 0 1px rgba(255, 255, 255, 28%) inset;
+  }
+
+  &:active {
+    transform: translateY(-1px) scale(0.97);
+  }
+}
+
+@keyframes char-in {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.85) rotateX(65deg) rotateZ(-8deg);
+    filter: blur(6px);
+  }
+
+  55% {
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0) rotateZ(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes intro-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes noise-move {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  100% {
+    transform: translate(10px, 12px);
+  }
+}
+
+@keyframes content-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(60px) scale(0.96);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 0.9;
+    transform: translateY(0);
+  }
+}
+
+@keyframes intro-fade-out {
+  0% {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  100% {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+  }
+}
+
+@media (max-width: 700px) {
+  .intro-content {
+    padding-inline: 28px;
+    padding-block: 26px 34px;
+  }
+
+  .intro-title-chars,
+  .intro-title {
+    font-size: clamp(2.3rem, 9vw, 3rem);
+  }
+
+  .intro-skip {
+    margin-block-start: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .intro-bg,
+  .intro-noise,
+  .intro-title-chars .char,
+  .intro-content {
+    animation: none !important;
+  }
+
+  .login-intro {
+    animation: none !important;
+  }
+}
 </style>

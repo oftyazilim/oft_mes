@@ -1,4 +1,20 @@
 <template>
+  <!-- İlk yükleme overlay -->
+  <div v-if="!firstLoadDone" class="montaj-loading-overlay">
+    <div class="montaj-loading-content">
+      <div class="montaj-spinner" aria-label="Yükleniyor" />
+      <h2 class="montaj-loading-title">Montaj İş Emirleri Yükleniyor</h2>
+      <p class="montaj-loading-hint">
+        Kritik veriler alınıyor: <strong>{{ readinessProgress }}</strong>
+      </p>
+      <p class="montaj-loading-sub">
+        İlk listeleme tamamlandığında ekran otomatik açılacak.
+      </p>
+      <p class="montaj-loading-timeout" v-if="safetyTimeoutHit">
+        <span class="warn">Beklenen bazı veriler gecikti, yine de gösteriliyor...</span>
+      </p>
+    </div>
+  </div>
   <VCard class="mt-0 pa-0 pt-2">
     <VCardText class="mt-0 pa-0 ms-2 me-1">
       <VCol cols="12" class="mt-0 pa-1 pe-2">
@@ -863,6 +879,33 @@ const totalGroupCount = ref(0)
 const totalRecord = ref(0)
 const activeGroupField = ref<string | null>(null)
 const grupVisible = ref(false)
+
+// --- İlk yükleme overlay readiness ---
+const firstLoadDone = ref(false)
+const dataFetchDone = ref(false) // getData tamamlandı (başarılı veya hatalı)
+const stateRestored = ref(false) // grid state restore edildi
+const postMountIdle = ref(false) // ilk render sonrası bir frame
+const safetyTimeoutHit = ref(false)
+
+const allReady = computed(() => dataFetchDone.value && stateRestored.value && postMountIdle.value)
+watch(allReady, (v) => { if (v && !firstLoadDone.value) firstLoadDone.value = true })
+
+// Kullanıcıya durum metni
+const readinessProgress = computed(() => {
+  const steps: string[] = []
+  steps.push(dataFetchDone.value ? 'Veri ✓' : 'Veri...')
+  steps.push(stateRestored.value ? 'Düzen ✓' : 'Düzen...')
+  steps.push(postMountIdle.value ? 'Render ✓' : 'Render...')
+  return steps.join(' / ')
+})
+
+// Güvenlik timeout: 12sn sonra hala bitmediyse göster
+setTimeout(() => {
+  if (!firstLoadDone.value) {
+    safetyTimeoutHit.value = true
+    firstLoadDone.value = true
+  }
+}, 12000)
 
 // Yükleme panelini anında göstermek için yardımcılar
 async function beginLoading(message: string) {
@@ -1794,6 +1837,7 @@ const getData = async () => {
   }
   finally {
     endLoading()
+    dataFetchDone.value = true
 
     // const now1 = new Date();
     // console.log(now1.toLocaleTimeString());
@@ -1893,10 +1937,13 @@ const refreshGrid = (): void => {
 onMounted(async () => {
   await getData()
   loadGridState()
+  stateRestored.value = true
   nextTick(() => {
     if (dataGridRef.value && dataGridRef.value.instance) {
       dataGridRef.value.instance.clearSelection()
     }
+    // Bir frame sonra render tamam say
+    requestAnimationFrame(() => { postMountIdle.value = true })
   })
   console.log('Kullanıcı bilgileri:', userData.value)
 })
@@ -2040,6 +2087,127 @@ const RalKodlariGuncelle = async () => {
   inline-size: 100% !important;
 }
 
+/* İlk yükleme overlay stilleri */
+.montaj-loading-overlay {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: montaj-fade-in 0.4s ease;
+  backdrop-filter: blur(3px);
+  background: radial-gradient(circle at 35% 30%, rgba(90 130 200 / 12%), rgba(10 15 25 / 92%));
+  inset: 0;
+}
+
+.montaj-loading-content {
+  border: 1px solid rgba(255 255 255 / 8%);
+  border-radius: 18px;
+  animation: montaj-scale-in 0.5s cubic-bezier(0.4, 0.14, 0.3, 1.2);
+  background: rgba(20 28 40 / 70%);
+  box-shadow: 0 8px 32px -4px rgba(0 0 0 / 55%), 0 0 0 1px rgba(255 255 255 / 6%) inset;
+  max-inline-size: 520px;
+  padding-block: 32px 40px;
+  padding-inline: 36px;
+  text-align: center;
+}
+
+.montaj-spinner {
+  position: relative;
+  border: 5px solid rgba(255 255 255 / 12%);
+  border-radius: 50%;
+  animation: montaj-spin 1.05s linear infinite, montaj-pulse 2.2s ease-in-out infinite;
+  block-size: 68px;
+  border-block-start-color: #3b82f6;
+  box-shadow: 0 0 0 0 rgba(59 130 246 / 35%);
+  inline-size: 68px;
+  margin-block-end: 26px;
+  margin-inline: auto;
+}
+
+.montaj-loading-title {
+  background: linear-gradient(92deg, #fff, #d0e4ff 28%, #9fc5ff 67%, #fff);
+  background-clip: text;
+  color: transparent;
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: 0.5px;
+  margin-block: 0 14px;
+  margin-inline: 0;
+  text-shadow: 0 2px 12px rgba(30 55 105 / 35%);
+}
+
+.montaj-loading-hint {
+  color: #d6e1f2;
+  font-size: 15px;
+  font-weight: 400;
+  margin-block: 0 8px;
+  margin-inline: 0;
+}
+
+.montaj-loading-sub {
+  color: #95a6bc;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  margin-block: 0 6px;
+  margin-inline: 0;
+}
+
+.montaj-loading-timeout {
+  color: #f0c674;
+  font-size: 12px;
+  margin-block: 14px 0;
+  margin-inline: 0;
+}
+
+.montaj-loading-timeout .warn {
+  color: #ffc266;
+  font-weight: 600;
+}
+
+@keyframes montaj-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes montaj-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59 130 246 / 35%);
+  }
+
+  50% {
+    box-shadow: 0 0 0 12px rgba(59 130 246 / 0%);
+  }
+}
+
+@keyframes montaj-scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes montaj-fade-in {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
 #grid {
   display: flex;
   flex-direction: column;
@@ -2076,6 +2244,7 @@ const RalKodlariGuncelle = async () => {
   .dx-loadpanel-content {
     background-color: rgba(0, 0, 0, 65%) !important;
   }
+
   /* 1.5 sütun genişliği */
   max-inline-size: 12.5%;
 }

@@ -21,7 +21,7 @@
             <div class="kpi"><span>Perf.</span><strong>{{ fmtPct(daySummary.performance) }}</strong></div>
             <div class="kpi"><span>Kalite</span><strong>{{ fmtPct(daySummary.quality) }}</strong></div>
             <div class="kpi oee" :class="oeeClass(daySummary.oee)"><span>OEE</span><strong>{{ fmtPct(daySummary.oee)
-            }}</strong></div>
+                }}</strong></div>
           </div>
           <div class="dash-actions mt-3">
             <button class="refresh-btn" @click="manualRefresh" :disabled="refreshing || loading">
@@ -33,7 +33,7 @@
               title="API geçici boş yanıt verdi; önceki veriler gösteriliyor">Geçici boş yanıt</small>
             <small v-else-if="emptyData && !loading" class="warn">Veri yok</small>
             <small v-if="backoffMs > basePoll && !loading" class="hint">Bekleme: {{ Math.round(backoffMs / 1000)
-            }}sn</small>
+              }}sn</small>
           </div>
         </div>
       </div>
@@ -199,6 +199,15 @@
     <section class="charts-grid">
       <div class="chart-card">
         <h4>Duruş Sebepleri (Süre)</h4>
+        <div v-if="loadError" class="alert error mt-2">
+          <strong>Veri alınamadı:</strong>
+          <span class="msg">{{ loadError }}</span>
+          <button class="retry-btn" @click="manualRefresh">Tekrar Dene</button>
+        </div>
+        <div v-else-if="emptyData && !loading" class="alert empty mt-2">
+          <span>Henüz veri yok.</span>
+          <button class="retry-btn subtle" @click="manualRefresh">Yenile</button>
+        </div>
         <div v-if="loading" class="reason-bars mt-2">
           <div v-for="i in 5" :key="'rs-' + i" class="reason-row">
             <div class="row-label">
@@ -222,6 +231,24 @@
           </div>
         </div>
       </div>
+      <!-- Sağ boşluk: canlı ticker -->
+      <div class="chart-card ticker-card" aria-label="Bilgilendirme akışı">
+        <h4>Canlı Akış</h4>
+        <div class="ticker-shell" @mouseenter="pauseTicker = true" @mouseleave="pauseTicker = false">
+          <div class="ticker-track" :style="tickerStyle" ref="tickerTrackEl">
+            <span v-for="(msg, i) in tickerMessagesDoubled" :key="'tk-' + i" class="ticker-item">{{ msg }}</span>
+          </div>
+        </div>
+        <!-- <button class="ticker-pause" @click="pauseTicker = !pauseTicker"
+          :title="pauseTicker ? 'Devam Et' : 'Duraklat'">
+          {{ pauseTicker ? '▶' : 'Ⅱ' }}
+        </button> -->
+        <small class="ticker-hint" v-if="!pauseTicker">Üzerine gelince durur</small>
+        <div class="ticker-controls">
+          <button v-for="(sp, i) in speedOptions" :key="'sp-' + sp" class="speed-btn"
+            :class="{ active: speedIndex === i }" @click="speedIndex = i" :title="sp + ' px/sn'">{{ sp }}</button>
+        </div>
+      </div>
     </section>
   </div>
 </template>
@@ -229,6 +256,75 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+// --- Ticker (sağ boşluk) ---
+const baseTickerMessages = ref<string[]>([
+  'Üretimde süreklilik için proaktif bakım planı devrede',
+  'Operatör güvenliği: Koruyucu ekipman kontrolü yapılmalı',
+  'Enerji verimliliği izleniyor – gereksiz duruşları azaltın',
+  'Kalite ilk seferde doğru üretimle başlar',
+  'Anlık OEE analizi ile darboğazları tespit edin'
+])
+// Sonsuz akış illüzyonu için iki kez katla
+const tickerMessagesDoubled = computed(() => [...baseTickerMessages.value, ...baseTickerMessages.value])
+const tickerPos = ref(0)
+const pauseTicker = ref(false)
+let tickerRaf: number | null = null
+// Ticker hız seçenekleri (px/sn)
+const speedOptions = [60, 100, 140, 200]
+const speedIndex = ref(2) // varsayılan 140
+const tickerSpeed = computed(() => speedOptions[speedIndex.value] || 140)
+const tickerTrackEl = ref<HTMLElement | null>(null)
+const tickerInnerWidth = ref(0)
+const firstCycleWidth = ref(0)
+let lastTs = 0
+
+const tickerStyle = computed(() => ({ transform: `translateX(${tickerPos.value}px)`, inlineSize: tickerInnerWidth.value + 'px' }))
+
+function measureTicker() {
+  const el = tickerTrackEl.value
+  if (!el) return
+  const children = el.querySelectorAll('.ticker-item')
+  if (!children.length) return
+  // İlk setin gerçek genişliğini, ilk öğenin left'i + sonraki ilk öğenin left farkı üzerinden değil;
+  // yarı uzunluk indeksine kadar offsetWidth + gap toplayarak ölç.
+  const half = Math.floor(children.length / 2)
+  let sum = 0
+  for (let i = 0; i < half; i++) {
+    const c = children[i] as HTMLElement
+    sum += c.offsetWidth
+    // Son eleman değilse gap ekle (gap = 42px)
+    if (i < half - 1) sum += 42
+  }
+  firstCycleWidth.value = sum
+  tickerInnerWidth.value = sum * 2
+  // Pozisyon yarım genişliği aştıysa düzgün devam etsin diye mod al
+  if (tickerPos.value < -firstCycleWidth.value) {
+    tickerPos.value = ((tickerPos.value % firstCycleWidth.value) + firstCycleWidth.value) % firstCycleWidth.value * -1
+  }
+}
+
+function stepTicker(ts: number) {
+  if (!lastTs) lastTs = ts
+  const delta = (ts - lastTs) / 1000
+  lastTs = ts
+  if (!pauseTicker.value && tickerInnerWidth.value) {
+    tickerPos.value -= tickerSpeed.value * delta
+    if (firstCycleWidth.value && tickerPos.value <= -firstCycleWidth.value) {
+      tickerPos.value += firstCycleWidth.value
+    }
+  }
+  tickerRaf = requestAnimationFrame(stepTicker)
+}
+
+onMounted(() => {
+  requestAnimationFrame(() => {
+    measureTicker()
+    tickerRaf = requestAnimationFrame(stepTicker)
+  })
+  window.addEventListener('resize', measureTicker)
+})
+onBeforeUnmount(() => { if (tickerRaf) cancelAnimationFrame(tickerRaf) })
+onBeforeUnmount(() => { window.removeEventListener('resize', measureTicker) })
 
 type MachineStatus = 'running' | 'stopped' | 'offline';
 
@@ -370,6 +466,7 @@ function getSegmentTooltip(seg: Segment & { code?: string }, m: MachineCard) {
 }
 
 let slowTimer: number | null = null;
+const loadError = ref<string | null>(null);
 async function loadData(signal?: AbortSignal) {
   try {
     const firstLoad = machines.value.length === 0;
@@ -380,7 +477,8 @@ async function loadData(signal?: AbortSignal) {
     }
     if (slowTimer) { clearTimeout(slowTimer); slowTimer = null; }
     slowTimer = window.setTimeout(() => { isSlow.value = true; }, 2500);
-    const { data } = await axios.get('/api/dash-bukum/overview', { signal, timeout: 6500 });
+    loadError.value = null;
+    const { data } = await axios.get('/api/dash-bukum/overview', { signal, timeout: 10000 });
     const newMachines = (data?.machines || []).map((m: any) => ({
       id: Number(m.id),
       name: String(m.name ?? ''),
@@ -424,10 +522,24 @@ async function loadData(signal?: AbortSignal) {
     // Başarılı yükleme -> backoff resetle
     errorCount.value = 0;
     backoffMs.value = basePoll;
-  } catch (e) {
+  } catch (e: any) {
     errorCount.value += 1;
     // Üstel backoff (maks 60s)
     backoffMs.value = Math.min(basePoll * Math.pow(2, errorCount.value), 60000);
+    const status = e?.response?.status;
+    if (status === 401) {
+      loadError.value = 'Yetki hatası (401).';
+    } else if (status === 404) {
+      loadError.value = 'Endpoint bulunamadı (404).';
+    } else if (status === 500) {
+      loadError.value = 'Sunucu hatası (500).';
+    } else if (e?.code === 'ECONNABORTED') {
+      loadError.value = 'Zaman aşımı.';
+    } else if (e?.name === 'CanceledError' || e?.message === 'canceled') {
+      // abort gösterme
+    } else {
+      loadError.value = 'Beklenmeyen hata.';
+    }
   } finally {
     loading.value = false;
     refreshing.value = false;
@@ -574,7 +686,7 @@ onBeforeUnmount(() => {
   background: rgb(var(--v-theme-surface));
   padding-block: 12px;
   padding-inline: 12px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 24%), 0 2px 8px rgba(0, 0, 0, 10%);
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 24%), 0 2px 4px rgba(0, 0, 0, 10%);
 }
 
 .weekly-vertical {
@@ -671,7 +783,7 @@ onBeforeUnmount(() => {
   background: rgb(var(--v-theme-surface));
   padding-block: 12px;
   padding-inline: 12px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 24%), 0 2px 8px rgba(0, 0, 0, 10%);
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 24%), 0 2px 4px rgba(0, 0, 0, 10%);
 }
 
 .wvc-bars {
@@ -747,7 +859,7 @@ onBeforeUnmount(() => {
   min-inline-size: 250px;
   padding-block: 14px;
   padding-inline: 16px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 24%), 0 2px 8px rgba(0, 0, 0, 10%);
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 24%), 0 2px 4px rgba(0, 0, 0, 10%);
 }
 
 .summary-title {
@@ -810,7 +922,7 @@ onBeforeUnmount(() => {
 
 .last-updated {
   color: #9ca3af;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .warn {
@@ -839,7 +951,7 @@ onBeforeUnmount(() => {
   background: rgb(var(--v-theme-surface));
   padding-block: 12px;
   padding-inline: 12px;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 26%), 0 3px 10px rgba(0, 0, 0, 12%);
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 26%), 0 3px 10px rgba(0, 0, 0, 12%);
 }
 
 .card-top {
@@ -1062,16 +1174,230 @@ onBeforeUnmount(() => {
 
 .charts-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: 25% 74.4%;
+  gap: 10px;
+  align-items: stretch;
 }
 
+/* Ticker */
+.ticker-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ticker-shell {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--v-theme-outline-variant, #2a2a2a);
+  border-radius: 8px;
+  background: var(--v-theme-surface-variant, #2a2a2a);
+  padding-block: 12px;
+  padding-inline: 20px 56px;
+  min-block-size: 100px;
+  display: flex;
+  align-items: center;
+  max-inline-size: 100%;
+}
+
+/* Fade mask */
+.ticker-shell::before,
+.ticker-shell::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inline-size: 120px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ticker-shell::before {
+  inset-inline-start: 0;
+  background: linear-gradient(90deg, #1a1b1b, #1a1b1b00);
+}
+
+.ticker-shell::after {
+  inset-inline-end: 0;
+  background: linear-gradient(270deg, #1a1b1b, #1a1b1b00);
+}
+
+.ticker-track {
+  display: inline-flex;
+  gap: 42px;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.ticker-item {
+  font-size: 60px;
+  line-height: 1.02;
+  letter-spacing: 1.5px;
+  color: rgba(68 157 65 / 100%);
+  opacity: 0.9;
+  position: relative;
+  font-weight: 600;
+  text-shadow: 4px 4px 10px rgba(0 0 0 / 55%);
+}
+
+.ticker-item::after {
+  content: "•";
+  margin-inline-start: 48px;
+  color: #334155;
+  opacity: 0.35;
+  text-shadow: none;
+}
+
+.ticker-item:last-child::after {
+  content: "";
+}
+
+.ticker-pause {
+  position: absolute;
+  inset-block: 8px auto;
+  inset-inline-end: 8px;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255 255 255 / 15%);
+  background: rgba(255 255 255 / 6%);
+  backdrop-filter: blur(4px);
+  color: #e2e8f0;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s, transform 0.3s;
+  z-index: 3;
+}
+
+.ticker-pause:hover {
+  background: rgba(255 255 255 / 12%);
+  transform: translateY(-2px);
+}
+
+.ticker-pause:active {
+  transform: translateY(0);
+}
+
+.ticker-hint {
+  font-size: 11px;
+  opacity: 0.55;
+  letter-spacing: 0.5px;
+}
+
+.ticker-controls {
+  position: absolute;
+  inset-block-end: 6px;
+  inset-inline-end: 48px;
+  display: flex;
+  gap: 4px;
+  z-index: 3;
+}
+
+.speed-btn {
+  background: rgba(255 255 255 / 8%);
+  border: 1px solid rgba(255 255 255 / 18%);
+  color: #e2f0e5;
+  font-size: 11px;
+  padding-block: 4px;
+  padding-inline: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  min-inline-size: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.25s, transform 0.25s;
+}
+
+.speed-btn:hover {
+  background: rgba(255 255 255 / 14%);
+}
+
+.speed-btn:active {
+  transform: scale(0.9);
+}
+
+.speed-btn.active {
+  background: rgba(127 204 94 / 16.9%);
+  border-color: rgba(105 241 75 / 56.1%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-controls {
+    display: none !important;
+  }
+}
+
+/* Veri / hata uyarıları */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--v-theme-outline-variant, #444);
+  border-radius: 8px;
+  padding-block: 8px;
+  padding-inline: 10px;
+  font-size: 14px;
+  background: linear-gradient(90deg, rgba(255 255 255 / 4%), rgba(255 255 255 / 2%));
+}
+
+.alert.error {
+  border-color: #dc2626;
+  color: #fda4a4;
+}
+
+.alert.empty {
+  border-color: #64748b;
+  color: #cbd5e1;
+}
+
+.alert .msg {
+  flex: 1;
+  opacity: 0.85;
+}
+
+.retry-btn {
+  background: var(--v-theme-primary, #2563eb);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding-block: 6px;
+  padding-inline: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.retry-btn.subtle {
+  background: rgba(255 255 255 / 10%);
+  color: #e2e8f0;
+}
+
+.retry-btn:hover {
+  filter: brightness(1.12);
+}
+
+.retry-btn:active {
+  filter: brightness(0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    transform: none !important;
+  }
+}
 .chart-card {
   background: rgb(var(--v-theme-surface));
   border: 1px solid var(--v-theme-outline-variant, #262626);
   border-radius: 12px;
   padding: 12px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 24%), 0 2px 8px rgba(0, 0, 0, 10%);
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 24%), 0 2px 4px rgba(0, 0, 0, 10%);
 }
 
 .stacked-bars {

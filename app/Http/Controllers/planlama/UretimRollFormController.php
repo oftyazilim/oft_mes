@@ -349,7 +349,7 @@ class UretimRollFormController extends Controller
       ])
       ->where('IS_ISTASYONU_ID', '=', $istasyon)
       ->get();
-// Log::info('İş emri detayları', ['rows' => $rows]);
+    // Log::info('İş emri detayları', ['rows' => $rows]);
     return response()->json($rows);
   }
 

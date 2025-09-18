@@ -654,7 +654,6 @@
 </template>
 
 <script setup lang="ts">
-import { staticPrimaryColor } from "@/plugins/vuetify/theme";
 import { usePageTitleStore } from "@/stores/pageTitle";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -1950,6 +1949,8 @@ const onDurusGirildi = async () => {
   await fetchKartlar();
 };
 
+const emit = defineEmits(['ilk-veri-hazir'])
+
 onMounted(async () => {
   document.title = "OFT - Montaj";
   pageTitleStore.setTitle("İstasyon: " + userData.value.proses);
@@ -1957,6 +1958,8 @@ onMounted(async () => {
   zaman = setInterval(updateTime, 10000);
   await getData();
   await fetchKartlar();
+  // İlk temel veri seti + kartlar yüklendi sinyali
+  try { emit('ilk-veri-hazir') } catch (e) { /* emit başarısız olsa bile akışı bozma */ }
   // await duruslariAl();
   startAutoScroll();
   interval = setInterval(verileriAl, 15000);

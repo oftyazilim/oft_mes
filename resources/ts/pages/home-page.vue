@@ -1,22 +1,44 @@
 <script setup lang="ts">
-import { VCard, VCardText } from 'vuetify/components';
+import { onMounted, ref } from 'vue'
+import { VCard } from 'vuetify/components'
 
+// Dinamik kelimeler (göz alıcı ama sakin döngü)
+const words = ['Verimlilik', 'İzlenebilirlik', 'Şeffaflık', 'Hız', 'Kalite']
+const activeIndex = ref(0)
+const prefersReducedMotion = ref(false)
+let rotateTimer: number | null = null
+
+onMounted(() => {
+  try { prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)')?.matches } catch (_) { }
+  if (!prefersReducedMotion.value) {
+    rotateTimer = window.setInterval(() => {
+      activeIndex.value = (activeIndex.value + 1) % words.length
+    }, 3200) // yumuşak geçiş aralığı
+  }
+})
 </script>
 
 <template>
   <VCard class="welcome-page">
     <div class="welcome-card">
       <!-- <img src="/images/svg/undraw_team_spirit.svg" alt="Motivasyon" class="welcome-image" /> -->
-      <h1 class="welcome-title">OFT MES'e Hoşgeldiniz!</h1>
+      <h1 class="welcome-title gradient-cycle">
+        <span class="title-text">OFT MES'e Hoşgeldiniz!</span>
+        <span class="shine" aria-hidden="true" />
+      </h1>
       <br>
       <br>
       <p class="welcome-desc">
-        Üretim süreçlerinizi dijitalleştirmenin ve verimliliği artırmanın tam zamanı!<br> <br>
-        Sistemi keşfetmek için menüyü kullanabilirsiniz.
+        Üretim süreçlerinizi dijitalleştirmenin ve verimliliği artırmanın tam zamanı!
       </p>
       <br>
-      <blockquote class="welcome-quote">
-        “Başarı, küçük adımların toplamıdır.”
+      <blockquote class="welcome-quote dynamic-quote">
+        <span class="quote-main">“Başarı, küçük adımların toplamıdır.”</span>
+        <span class="word-rotator" :class="{ reduced: prefersReducedMotion }">
+          <transition-group name="rot-fade" tag="span">
+            <span v-for="(w, i) in words" :key="w" v-show="i === activeIndex" class="rot-word">{{ w }}</span>
+          </transition-group>
+        </span>
       </blockquote>
     </div>
   </VCard>
@@ -27,6 +49,7 @@ import { VCard, VCardText } from 'vuetify/components';
   display: flex;
   align-items: center;
   justify-content: center;
+
   /* background: linear-gradient(120deg, #536271 0%, #e0e7ef 100%); */
   min-block-size: 70vh;
 }
@@ -36,6 +59,7 @@ import { VCard, VCardText } from 'vuetify/components';
   flex-direction: column;
   align-items: center;
   border-radius: 18px;
+
   /* background: #fff; */
   box-shadow: 0 4px 24px 0 rgba(60, 72, 100, 8%);
   inline-size: 100%;
@@ -52,10 +76,29 @@ import { VCard, VCardText } from 'vuetify/components';
 }
 
 .welcome-title {
-  /* color: #2a3a4b; */
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
   font-size: 2rem;
   font-weight: 700;
   margin-block-end: 1rem;
+}
+
+.gradient-cycle {
+  animation: titleGradient 14s linear infinite;
+  background: linear-gradient(90deg, #1e293b, #334155, #2563eb, #1e293b);
+  background-clip: text;
+  background-size: 280% 100%;
+  color: transparent;
+}
+
+.welcome-title .shine {
+  position: absolute;
+  animation: shineMove 6.5s ease-in-out infinite;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 15%) 45%, rgba(255, 255, 255, 60%) 50%, rgba(255, 255, 255, 15%) 55%, transparent 100%);
+  inset: 0;
+  mix-blend-mode: overlay;
+  pointer-events: none;
 }
 
 .welcome-desc {
@@ -65,10 +108,86 @@ import { VCard, VCardText } from 'vuetify/components';
 }
 
 .welcome-quote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin: 0;
   color: #2563eb;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-style: italic;
+  gap: 0.75rem;
+}
+
+.dynamic-quote .word-rotator {
+  position: relative;
+  display: inline-block;
+
+  /* Zıplamayı önlemek için sabit blok yüksekliği */
+  block-size: 1.6rem;
+  color: #475569;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  line-height: 1.6rem;
+  min-inline-size: 190px;
+  text-align: center;
+}
+
+.dynamic-quote .word-rotator .rot-word {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inset: 0;
+}
+
+.dynamic-quote .word-rotator.reduced {
+  display: none;
+}
+
+.rot-fade-enter-active,
+.rot-fade-leave-active {
+  position: absolute;
+  inset: 0;
+  transition: all 0.65s cubic-bezier(0.55, 0.21, 0.17, 1.02);
+}
+
+.rot-fade-enter-from {
+  filter: blur(5px);
+  opacity: 0;
+  transform: translateY(18px) scale(0.94);
+}
+
+.rot-fade-leave-to {
+  filter: blur(5px);
+  opacity: 0;
+  transform: translateY(-18px) scale(0.94);
+}
+
+@keyframes titleGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 280% 50%;
+  }
+}
+
+@keyframes shineMove {
+
+  0%,
+  45% {
+    transform: translateX(-130%);
+  }
+
+  60% {
+    transform: translateX(25%);
+  }
+
+  100% {
+    transform: translateX(130%);
+  }
 }
 
 @media (max-width: 600px) {

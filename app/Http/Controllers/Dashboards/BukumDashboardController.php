@@ -16,6 +16,8 @@ class BukumDashboardController extends BaseController
         // Varsayılan: mevcut vardiya diliminde özet. Parametre ile tarih aralığı da desteklenebilir.
         [$start, $end] = $this->resolveWindow($request);
 
+        // Log::info('Büküm dashboard overview', ['start' => $start->toDateTimeString(), 'end' => $end->toDateTimeString()]);
+
         // 1) Büküm istasyonlarını topla: oftv_works_info üzerinden aktif-en güncel kayıtlar.
         // Not: Burada Büküm'e ait istasyonları filtrelemek için isim/kod kalıbı gerekiyorsa eklenebilir.
         // Büküm merkez id'sini env veya query param ile aşırı yazılabilir hale getir
@@ -29,7 +31,7 @@ class BukumDashboardController extends BaseController
             ->limit($limit) // ekran 6 kart istiyordu; şimdilik üst limit parametreli
             ->get();
 
-            Log::info('Büküm istasyonları', ['stations' => $stations]);
+            // Log::info('Büküm istasyonları', ['stations' => $stations]);
 
         $machines = [];
         $sumAvailability = 0.0;

@@ -1,5 +1,15 @@
 <template>
   <div class="page-rollform pa-0">
+    <!-- İlk yükleme overlay -->
+    <div v-if="initialLoading" class="rf-loading-overlay">
+      <div class="rf-loader-box">
+        <div class="rf-spinner" aria-hidden="true"></div>
+        <h2>Veriler yükleniyor</h2>
+        <p>İstasyon, aktif iş emri, sayaç ve KPI verileri hazırlanıyor. Lütfen bekleyin…</p>
+        <small v-if="!stationId && !stationDetectError" class="hint-line">İstasyon tespiti yapılıyor...</small>
+        <small v-else-if="stationDetectError" class="warn-line">{{ stationDetectError }} – yeniden deniyor...</small>
+      </div>
+    </div>
     <div class="rollform-header">
       <!-- Üst satır: Gauge | Durum Bilgileri | Üretim Rakamları | Operatör -->
       <VRow class="match-height">
@@ -528,6 +538,8 @@ onMounted(async () => {
   fetchIsEmirleri()
   // Duruş sebeplerini de ilk yüklemede al
   durusSebepleriniAl()
+  // Güvenlik: 15sn içinde readiness tamamlanmazsa overlay'i kapat
+  setTimeout(() => { if (!firstLoadDone.value) firstLoadDone.value = true }, 15000)
   window.addEventListener('keydown', handleShortcut)
   window.addEventListener('keydown', handleHurdaShortcut)
 })
@@ -670,6 +682,16 @@ function handleHurdaShortcut(e: KeyboardEvent) { if (e.key === 'F8') { openHurda
 const durusSebebi = ref('uretim-disi')
 // Yeni KPI alanları
 const kpiLoaded = ref(false)
+// İlk yükleme overlay state & readiness bayrakları
+const firstLoadDone = ref(false)
+const stationReady = ref(false)
+const worksInfoReady = ref(false)
+const kpiReady = ref(false)
+const ordersReady = ref(false)
+const reasonsReady = ref(false)
+const allReady = computed(() => stationReady.value && worksInfoReady.value && kpiReady.value && ordersReady.value && reasonsReady.value)
+watch(allReady, (v) => { if (v && !firstLoadDone.value) firstLoadDone.value = true })
+const initialLoading = computed(() => !firstLoadDone.value)
 const kpi = ref({ availability: 0, performance: 0, quality: 0, oee: 0 })
 const shiftInfo = ref<{ id: string; start: string; end: string } | null>(null)
 
@@ -694,6 +716,7 @@ async function fetchKpiDirect() {
         }
       }
       kpiLoaded.value = true
+      kpiReady.value = true
     }
   } catch (err) {
     console.error('fetchKpiDirect error', err)
@@ -778,7 +801,7 @@ async function fetchWorksInfo() {
   } catch (e) {
     console.error('WorksInfo alınamadı', e)
     worksInfo.value = null
-  }
+  } finally { worksInfoReady.value = true }
 }
 
 async function fetchIsEmirleri() {
@@ -802,7 +825,7 @@ async function fetchIsEmirleri() {
     isEmirleri.value = mapped
   } catch (e) {
     console.error('İş emirleri alınamadı', e)
-  }
+  } finally { ordersReady.value = true }
 }
 
 // --- Duruş Sebepleri Akışı (ProductionCard'dan port) ---
@@ -852,6 +875,7 @@ function durusSebepleriniAl() {
   axios.get('/api/durus-sebepleri-al', { params: { istasyon: stationId.value } })
     .then(r => { durusSebepleri.value = r.data?.durusSebepleri || [] })
     .catch(err => { console.error('Duruş sebepleri alınamadı', err) })
+    .finally(() => { reasonsReady.value = true })
 }
 
 function durusSebebiGir() {
@@ -963,6 +987,7 @@ async function detectStation() {
     const { data } = await axios.get('/api/uretim-rollform/detect-station')
     if (data && data.station_id) {
       stationId.value = Number(data.station_id)
+      stationReady.value = true
     } else {
       stationId.value = null
       stationDetectError.value = 'İstasyon bulunamadı (IP eşleşmedi)'
@@ -1538,5 +1563,114 @@ onUnmounted(() => {
   opacity: 0.55;
   pointer-events: none !important;
   filter: grayscale(0.4);
+}
+/* İlk yükleme overlay (Rollform) */
+.rf-loading-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(0 0 0 / 55%), rgba(0 0 0 / 85%));
+  backdrop-filter: blur(2px);
+  z-index: 6000;
+  padding-block: 20px;
+  padding-inline: 20px;
+  text-align: center;
+}
+
+.rf-loader-box {
+  max-inline-size: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: rgba(30 30 30 / 75%);
+  border: 1px solid #3a3a3a;
+  border-radius: 22px;
+  padding-block: 46px 52px;
+  padding-inline: 52px;
+  box-shadow: 0 18px 48px rgba(0 0 0 / 55%), 0 4px 16px rgba(0 0 0 / 40%);
+  animation: rf-scale-in 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rf-loader-box h2 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  background: linear-gradient(90deg, #60a5fa, #38bdf8);
+  background-clip: text;
+  color: transparent;
+}
+
+.rf-loader-box p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #d1d5db;
+}
+
+.rf-spinner {
+  inline-size: 78px;
+  block-size: 78px;
+  border-radius: 50%;
+  border: 7px solid rgba(255 255 255 / 15%);
+  border-inline-start-color: #3b82f6;
+  border-block-end-color: #0ea5e9;
+  animation: rf-spin 1s linear infinite, rf-glow 2.2s ease-in-out infinite;
+  margin-block: 0 6px;
+  margin-inline: auto;
+  position: relative;
+}
+
+.rf-spinner::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border-radius: inherit;
+  border: 4px solid rgba(255 255 255 / 10%);
+  border-block-start-color: rgba(255 255 255 / 35%);
+  animation: rf-spin 2.2s linear infinite reverse;
+}
+
+.hint-line {
+  color: #9ca3af;
+  font-size: 16px;
+}
+
+.warn-line {
+  color: #fbbf24;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@keyframes rf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rf-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59 130 246 / 35%);
+  }
+
+  50% {
+    box-shadow: 0 0 0 14px rgba(59 130 246 / 0%);
+  }
+}
+
+@keyframes rf-scale-in {
+  0% {
+    transform: scale(0.9) translateY(8px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 </style>
