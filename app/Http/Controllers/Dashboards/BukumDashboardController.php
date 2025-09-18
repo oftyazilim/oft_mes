@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Routing\Controller as BaseController;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class BukumDashboardController extends BaseController
 {
@@ -17,13 +18,18 @@ class BukumDashboardController extends BaseController
 
         // 1) Büküm istasyonlarını topla: oftv_works_info üzerinden aktif-en güncel kayıtlar.
         // Not: Burada Büküm'e ait istasyonları filtrelemek için isim/kod kalıbı gerekiyorsa eklenebilir.
+        // Büküm merkez id'sini env veya query param ile aşırı yazılabilir hale getir
+        $centerId = (int)($request->query('center_id', env('BUKUM_WCENTER_ID', 1120)));
+        $limit = (int)($request->query('limit', 6));
         $stations = DB::connection('pgsql_oft')
             ->table('oftv_works_info')
             ->select('wstation_id', 'wstation_code', 'wstation_name', 'statu_id', 'speed_target', 'item_length', 'net_qty', 'scrap_qty', 'name', 'item_code', 'item_name', 'counter')
-            ->where('wcenter_id', 1120)
+            ->where('wcenter_id', $centerId)
             ->orderBy('wstation_code')
-            ->limit(12) // ekran 6 kart istiyordu; şimdilik üst limit koyuyoruz
+            ->limit($limit) // ekran 6 kart istiyordu; şimdilik üst limit parametreli
             ->get();
+
+            Log::info('Büküm istasyonları', ['stations' => $stations]);
 
         $machines = [];
         $sumAvailability = 0.0;
@@ -274,6 +280,11 @@ class BukumDashboardController extends BaseController
             'window' => [
                 'start' => $start->toDateTimeString(),
                 'end' => $end->toDateTimeString(),
+            ],
+            'meta' => [
+                'center_id' => $centerId,
+                'station_count' => count($machines),
+                'limit' => $limit,
             ],
         ]);
     }

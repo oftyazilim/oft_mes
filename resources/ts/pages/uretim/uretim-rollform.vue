@@ -243,13 +243,20 @@
         <VCardTitle>Hurda Girişi</VCardTitle>
         <VCardText>
           <VTextField ref="hurdaInputRef" v-model="hurdaInput" label="Hurda Miktarı" type="number" hide-details
-            autofocus @keydown.enter.prevent="kaydetHurda" @keydown.esc.prevent="cancelHurda" />
+            autofocus @keydown.enter.prevent="onHurdaEnter" @keyup.enter.prevent="onHurdaEnter"
+            @keydown.esc.prevent="cancelHurda" />
           <div class="text-caption mt-2">Enter = Kaydet, Esc = İptal</div>
         </VCardText>
         <VCardActions>
           <VSpacer />
           <VBtn variant="text" color="grey" @click="cancelHurda">İptal (Esc)</VBtn>
-          <VBtn variant="elevated" color="error" @click="kaydetHurda">Kaydet (Enter)</VBtn>
+          <VBtn variant="elevated" color="error" @click="kaydetHurda" :loading="hurdaKayitLoading"
+            :disabled="hurdaKayitLoading">
+            <template v-if="hurdaKayitLoading">
+              <VProgressCircular indeterminate size="18" color="white" class="mr-2" /> Kaydediliyor...
+            </template>
+            <template v-else>Kaydet (Enter)</template>
+          </VBtn>
         </VCardActions>
       </VCard>
     </VDialog>
@@ -358,11 +365,12 @@
     <!-- Duruş Sebebi Seçim Popup (ProductionCard akışı) -->
     <DxPopup v-model:visible="popupDurusSecGosterVisible" :width="500" :height="200" :hide-on-outside-click="false"
       :show-close-button="false" :drag-enabled="false" :close-on-back-button="false" :defer-rendering="false"
-      :focus-state-enabled="false" :shading="true" :shading-color="'rgba(0,0,0,0.5)'" :on-hiding="onPopupHiding"
-      titleTemplate="title">
+      :focus-state-enabled="true" :shading="true" :shading-color="'rgba(0,0,0,0.5)'" :on-hiding="onPopupHiding"
+      titleTemplate="title" :animation="{ show: { type: 'fade', duration: 120 }, hide: { type: 'fade', duration: 80 } }"
+      :on-shown="onDurusPopupShown">
       <template #content>
         <VRow class="pa-4">
-          <AppSelect v-model="selectedSebep" :items="durusSebepleri" item-title="description"
+          <AppSelect ref="durusSelectRef" v-model="selectedSebep" :items="durusSebepleri" item-title="description"
             item-value="break_reason_code" return-object label="Duruş Sebebi" single-line placeholder="Seçiniz..."
             variant="outlined" :disabled="!isDurusModu" :class="{ 'app-select--force-disabled': !isDurusModu }" />
         </VRow>
@@ -370,8 +378,7 @@
       <template #title>
         <p class="popup-title">Duruş Sebebini Giriniz</p>
       </template>
-      <DxToolbarItem widget="dxButton" toolbar="bottom" location="center"
-        :options="{ ...kaydetOptions, onClick: durusSebebiKaydet, disabled: durusKayitLoading }" />
+      <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="kaydetOptions" />
 
     </DxPopup>
   </div>
@@ -492,13 +499,14 @@ const applyPageTitle = () => {
 onMounted(async () => {
   await nextTick()
   applyPageTitle()
-  // statu_time bazlı Durum Süresi'ni ilk anda hesapla
+  await detectStation()
+  if (!stationId.value) {
+    console.warn('İstasyon tespiti başarısız; periyodikler başlatılmadı.')
+    return
+  }
   computeDurumSuresi()
-  // İlk KPI
   fetchKpiDirect()
   kpiTimer = setInterval(fetchKpiDirect, 10000)
-
-  // Demo: zamanı canlı akıt ve worksInfo'yu periyodik çek
   timer = setInterval(() => {
     const now = new Date()
     const hh = String(now.getHours()).padStart(2, '0')
@@ -514,9 +522,7 @@ onMounted(async () => {
     computeDurumSuresi()
   }, 1000)
 
-  info = setInterval(() => {
-    fetchWorksInfo()
-  }, 1000)
+  info = setInterval(fetchWorksInfo, 1000)
 
   // Sayfa yüklenince iş emirlerini getir
   fetchIsEmirleri()
@@ -621,6 +627,15 @@ function handleShortcut(e: KeyboardEvent) {
 const hurdaDialog = ref(false)
 const hurdaInput = ref('')
 const hurdaInputRef = ref<HTMLInputElement | null>(null)
+const hurdaKayitLoading = ref(false)
+let hurdaEnterTimer: ReturnType<typeof setTimeout> | null = null
+function onHurdaEnter() {
+  if (hurdaEnterTimer) return // debounce: hızlı çift Enter engelle
+  hurdaEnterTimer = setTimeout(() => { hurdaEnterTimer = null }, 300)
+  // Odak kaydırarak mobil/numpad commit tetikle
+  try { (hurdaInputRef.value as any)?.blur?.() } catch { /* ignore */ }
+  kaydetHurda()
+}
 
 function openHurdaDialog() {
   hurdaInput.value = ''
@@ -632,11 +647,20 @@ async function kaydetHurda() {
   const qty = Number(hurdaInput.value)
   if (!Number.isFinite(qty) || qty <= 0) { cancelHurda(); return }
   try {
-    await axios.post('/api/uretim-rollform/hurda-gir', { station_id: userData.value?.istasyon_id, qty })
+    if (hurdaKayitLoading.value) return
+    if (!stationId.value) throw new Error('İstasyon yok')
+    hurdaKayitLoading.value = true
+    await axios.post('/api/uretim-rollform/hurda-gir', { station_id: stationId.value, qty })
+    notify({ message: 'Hurda kaydedildi', type: 'success', displayTime: 1200 })
     hurdaDialog.value = false
     fetchWorksInfo()
     fetchKpiDirect()
-  } catch (e) { console.error('hurda kayıt hata', e) }
+  } catch (e) {
+    console.error('hurda kayıt hata', e)
+    notify({ message: 'Hurda kaydedilemedi', type: 'error', displayTime: 2000 })
+  } finally {
+    hurdaKayitLoading.value = false
+  }
 }
 
 function cancelHurda() { hurdaInput.value = ''; hurdaDialog.value = false }
@@ -651,9 +675,9 @@ const shiftInfo = ref<{ id: string; start: string; end: string } | null>(null)
 
 async function fetchKpiDirect() {
   try {
-    const stationId = userData.value?.istasyon_id
-    if (!stationId) return
-    const { data } = await axios.get('/api/uretim-rollform/kpi', { params: { station_id: stationId } })
+    if (!stationId.value) return
+    // console.log('KPI fetch', { station_id: stationId.value })
+    const { data } = await axios.get('/api/uretim-rollform/kpi', { params: { station_id: stationId.value } })
     if (data?.kpi) {
       const pct = (v: any) => Math.round(Number(v || 0) * 100)
       kpi.value = {
@@ -715,10 +739,10 @@ function openActivateDialog(row: Row) {
 async function confirmActivate() {
   if (!activateRow.value) return
   const length = Number(activateLength.value ?? 0)
-  const stationId = userData.value?.istasyon_id
-  if (!stationId) return
+  const stationIdValue = stationId.value
+  if (!stationIdValue) return
   const payload = {
-    wstation_id: stationId,
+    wstation_id: stationIdValue,
     worder_id: Number(activateRow.value.isEmriID ?? 0),
     worder_no: activateRow.value.isEmriNo,
     item_id: 0,
@@ -746,8 +770,8 @@ let selectedSebepSaveTimer: ReturnType<typeof setTimeout> | null = null
 
 async function fetchWorksInfo() {
   try {
-    if (!userData.value.istasyon_id) { worksInfo.value = null; return }
-    const res = await axios.get('/api/kapasite-works-info', { params: { station_id: userData.value.istasyon_id } })
+    if (!stationId.value) { worksInfo.value = null; return }
+    const res = await axios.get('/api/kapasite-works-info', { params: { station_id: stationId.value } })
     const arr = Array.isArray(res.data) ? res.data : []
     worksInfo.value = arr.length > 0 ? arr[0] : null
     computeDurumSuresi()
@@ -757,17 +781,10 @@ async function fetchWorksInfo() {
   }
 }
 
-onUnmounted(() => {
-  if (timer) clearInterval(timer)
-  if (info) clearInterval(info)
-  if (kpiTimer) clearInterval(kpiTimer)
-  if (selectedSebepSaveTimer) clearTimeout(selectedSebepSaveTimer)
-})
-
 async function fetchIsEmirleri() {
   try {
-    const istasyon = userData.value?.istasyon_kodu ?? '1511'
-    const { data } = await axios.get('/api/uretim-rollform/is-emirleri', { params: { istasyon } })
+    if (!stationId.value) { isEmirleri.value = []; return }
+    const { data } = await axios.get('/api/uretim-rollform/is-emirleri', { params: { istasyon: stationId.value } })
     const mapped: Row[] = (data || []).map((r: any) => ({
       grp: 0,
       isEmriID: r.isemri_id,
@@ -792,20 +809,47 @@ async function fetchIsEmirleri() {
 const popupDurusSecGosterVisible = ref(false)
 const durusKayitLoading = ref(false)
 const allowPopupClose = ref(true)
+// Select odak için ref
+const durusSelectRef = ref<any>(null)
+function focusDurusSelect(attempt = 0) {
+  try {
+    const root = durusSelectRef.value?.$el || durusSelectRef.value?.$refs?.root || null
+    if (root) {
+      // Vuetify v-select input alanı
+      const input: HTMLElement | null = root.querySelector('input') || root.querySelector('[role="combobox"]')
+      if (input) {
+        input.focus()
+        if (document.activeElement !== input && attempt < 3) {
+          // Çok hızlı render sebebiyle odak kaydı; tekrar dene
+          setTimeout(() => focusDurusSelect(attempt + 1), 40)
+        }
+        return
+      }
+    }
+    if (attempt < 5) setTimeout(() => focusDurusSelect(attempt + 1), 50)
+  } catch { /* ignore */ }
+}
+function onDurusPopupShown() {
+  // Popup animasyonundan hemen sonra güvenilir şekilde odakla
+  setTimeout(() => focusDurusSelect(), 10)
+}
 // Sayfa yenilemesi ile gelen ilk statu değerlendirmesini ayırt etmek için
 const firstStatuEvaluation = ref(true)
 
-const kaydetOptions = {
-  width: 100,
+const kaydetOptions = computed(() => ({
+  width: 110,
   marginBottom: 30,
   type: 'success',
-  text: 'Kaydet',
+  text: durusKayitLoading.value ? 'Kaydediliyor...' : 'Kaydet',
   stylingMode: 'contained',
-}
+  elementAttr: { class: durusKayitLoading.value ? 'btn-loading' : '' },
+  disabled: durusKayitLoading.value,
+  onClick: () => { if (!durusKayitLoading.value) durusSebebiKaydet() },
+}))
 
 function durusSebepleriniAl() {
-  if (!userData.value?.istasyon_id) return
-  axios.get('/api/durus-sebepleri-al', { params: { istasyon: userData.value.istasyon_id } })
+  if (!stationId.value) return
+  axios.get('/api/durus-sebepleri-al', { params: { istasyon: stationId.value } })
     .then(r => { durusSebepleri.value = r.data?.durusSebepleri || [] })
     .catch(err => { console.error('Duruş sebepleri alınamadı', err) })
 }
@@ -814,6 +858,8 @@ function durusSebebiGir() {
   // Varsayılan placeholder
   selectedSebep.value = { break_reason_code: '000', description: 'GİRİLMEDİ' }
   popupDurusSecGosterVisible.value = true
+  // Render sonrası select'e focus
+  nextTick(() => focusDurusSelect())
 }
 
 async function durusSebebiKaydet() {
@@ -827,11 +873,15 @@ async function durusSebebiKaydet() {
     popupDurusSecGosterVisible.value = false
     return
   }
+  if (!stationId.value) {
+    notify({ message: 'İstasyon bulunamadı.', type: 'error', displayTime: 3000 })
+    return
+  }
   try {
     durusKayitLoading.value = true
     allowPopupClose.value = false
     await axios.post('/api/duruskaydet-mekanik', {
-      istasyonID: userData.value.istasyon_id,
+      istasyonID: stationId.value,
       selectedDurus: selectedSebep.value,
     })
     notify({ message: 'Duruş kaydedildi.', type: 'success', displayTime: 2000 })
@@ -871,20 +921,13 @@ watch(() => worksInfo.value?.statu_id, async (nv, ov) => {
       if (!popupDurusSecGosterVisible.value) durusSebebiGir()
     }
   } else if (nv !== 1) {
-    // statu 1 dışına çıktıysa ve popup açıksa otomatik kaydet + kapat
+    // statu 1 dışına çıktı -> popup varsa hemen kapat (kaydetmeye çalışmadan)
     if (popupDurusSecGosterVisible.value) {
-      if (selectedSebep.value) {
-        try {
-          await durusSebebiKaydet()
-        } catch (e) {
-          // Kaydetme hata verirse en azından popup'ı kapatalım (isteğe göre iptal edilebilir)
-          popupDurusSecGosterVisible.value = false
-        }
-      } else {
-        popupDurusSecGosterVisible.value = false
-      }
+      // Kaydetme UI'si donmasın diye önce loading reset
+      durusKayitLoading.value = false
+      allowPopupClose.value = true
+      popupDurusSecGosterVisible.value = false
     }
-    // Ardından seçimi sıfırla
     selectedSebep.value = null
   }
   lastStatuId.value = nv ?? null
@@ -908,6 +951,69 @@ watch(selectedSebep, (nv, ov) => {
       /* sessiz */
     }
   }, 250)
+})
+
+// İstasyon tespiti
+const stationId = ref<number | null>(null)
+const stationDetectError = ref<string | null>(null)
+
+async function detectStation() {
+  try {
+    stationDetectError.value = null
+    const { data } = await axios.get('/api/uretim-rollform/detect-station')
+    if (data && data.station_id) {
+      stationId.value = Number(data.station_id)
+    } else {
+      stationId.value = null
+      stationDetectError.value = 'İstasyon bulunamadı (IP eşleşmedi)'
+    }
+  } catch (e: any) {
+    stationDetectError.value = 'İstasyon tespiti hata: ' + (e?.message || 'bilinmiyor')
+  }
+  // console.log('detectStation', { stationId: stationId.value, error: stationDetectError.value }) 
+}
+
+// fetchWorksInfo, fetchKpiDirect, fetchIsEmirleri ve hurda/duruş kaydetme fonksiyonlarında userData.value?.istasyon_id yerine stationId kullanacağız.
+// (Yinelenen fonksiyon ve timer tanımları kaldırıldı)
+
+// Mount sırasını güncelle: önce istasyon tespit, sonra periyodikler
+onMounted(async () => {
+  await nextTick()
+  applyPageTitle()
+  await detectStation()
+  if (!stationId.value) {
+    console.warn('İstasyon tespiti başarısız; periyodikler başlatılmadı.')
+    return
+  }
+  computeDurumSuresi()
+  fetchKpiDirect()
+  kpiTimer = setInterval(fetchKpiDirect, 10000)
+  timer = setInterval(() => {
+    const now = new Date()
+    const hh = String(now.getHours()).padStart(2, '0')
+    const mm = String(now.getMinutes()).padStart(2, '0')
+    const ss = String(now.getSeconds()).padStart(2, '0')
+    time.value = `${hh}:${mm}:${ss}`
+
+    const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
+    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+    dateText.value = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} ${days[now.getDay()]}`
+
+    // statu_time'a bağlı Durum Süresi'ni her saniye güncelle
+    computeDurumSuresi()
+  }, 1000)
+  info = setInterval(fetchWorksInfo, 1000)
+  fetchIsEmirleri()
+  durusSebepleriniAl()
+  window.addEventListener('keydown', handleShortcut)
+  window.addEventListener('keydown', handleHurdaShortcut)
+})
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+  if (info) clearInterval(info)
+  if (kpiTimer) clearInterval(kpiTimer)
+  if (selectedSebepSaveTimer) clearTimeout(selectedSebepSaveTimer)
 })
 </script>
 

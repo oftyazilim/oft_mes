@@ -1,10 +1,18 @@
 <template>
   <div class="dash-container">
+    <!-- İlk yükleme overlay -->
+    <div v-if="initialLoading" class="loading-overlay">
+      <div class="loader-box">
+        <div class="spinner" aria-hidden="true"></div>
+        <h2>Veriler yükleniyor</h2>
+        <p>Makine durumları, OEE ve haftalık istatistikler getiriliyor. Lütfen bekleyin…</p>
+      </div>
+    </div>
     <header class="dash-header">
       <div class="header-left">
         <div class="title-block ms-4">
           <h1>Büküm Dashboard</h1>
-          <p class="muted">Full HD ekran için optimize, mobilde akıcı.</p>
+          <!-- <p class="muted">Full HD ekran için optimize, mobilde akıcı.</p> -->
         </div>
         <div class="summary-card stretch">
           <div class="summary-title">Günlük Genel Değerlendirme</div>
@@ -12,45 +20,58 @@
             <div class="kpi"><span>Uyg.</span><strong>{{ fmtPct(daySummary.availability) }}</strong></div>
             <div class="kpi"><span>Perf.</span><strong>{{ fmtPct(daySummary.performance) }}</strong></div>
             <div class="kpi"><span>Kalite</span><strong>{{ fmtPct(daySummary.quality) }}</strong></div>
-            <div class="kpi oee" :class="oeeClass(daySummary.oee)"><span>OEE</span><strong>{{ fmtPct(daySummary.oee) }}</strong></div>
+            <div class="kpi oee" :class="oeeClass(daySummary.oee)"><span>OEE</span><strong>{{ fmtPct(daySummary.oee)
+            }}</strong></div>
+          </div>
+          <div class="dash-actions mt-3">
+            <button class="refresh-btn" @click="manualRefresh" :disabled="refreshing || loading">
+              <span v-if="refreshing">⟳ Yenileniyor...</span>
+              <span v-else>⟳ Yenile</span>
+            </button>
+            <small v-if="lastUpdated" class="last-updated">Güncellendi: {{ formatTime(lastUpdated) }}</small>
+            <small v-if="transientEmpty" class="warn"
+              title="API geçici boş yanıt verdi; önceki veriler gösteriliyor">Geçici boş yanıt</small>
+            <small v-else-if="emptyData && !loading" class="warn">Veri yok</small>
+            <small v-if="backoffMs > basePoll && !loading" class="hint">Bekleme: {{ Math.round(backoffMs / 1000)
+            }}sn</small>
           </div>
         </div>
       </div>
       <div class="header-right">
         <div class="weekly-card">
-        <h4>Haftalık Çalışma / Duruş (dk)</h4>
-        <div class="weekly-vertical mt-2">
-          <div class="wv-bars">
-            <template v-if="loading">
-              <div v-for="i in 7" :key="'wv-skel-'+i" class="wv-col">
-                <div class="wv-stack">
-                  <div class="wv-fill sk-fill" :style="{ blockSize: (20 + i * 6) + '%' }"></div>
-                </div>
-                <div class="wv-day">&nbsp;</div>
-              </div>
-            </template>
-            <template v-else>
-              <div v-for="d in weekly" :key="d.date" class="wv-col">
-                <div class="wv-stack" :title="d.work + ' dk çalışma / ' + d.stop + ' dk duruş'">
-                  <div class="wv-seg work" :style="{ blockSize: weeklyHeight(d.work) }" title="Çalışma">
-                    <span v-if="d.work > 0" class="wv-val">{{ d.work }}</span>
+          <h4>Haftalık Çalışma / Duruş (dk)</h4>
+          <div class="weekly-vertical mt-2">
+            <div class="wv-bars">
+              <template v-if="loading">
+                <div v-for="i in 7" :key="'wv-skel-' + i" class="wv-col">
+                  <div class="wv-stack">
+                    <div class="wv-fill sk-fill" :style="{ blockSize: (20 + i * 6) + '%' }"></div>
                   </div>
-                  <div class="wv-seg stop" :style="{ blockSize: weeklyHeight(d.stop) }" title="Duruş">
-                    <span v-if="d.stop > 0" class="wv-val">{{ d.stop }}</span>
-                  </div>
+                  <div class="wv-day">&nbsp;</div>
                 </div>
-                <div class="wv-day">{{ d.label }}</div>
-              </div>
-            </template>
+              </template>
+              <template v-else>
+                <div v-for="d in weekly" :key="d.date" class="wv-col">
+                  <div class="wv-stack" :title="d.work + ' dk çalışma / ' + d.stop + ' dk duruş'">
+                    <div class="wv-seg work" :style="{ blockSize: weeklyHeight(d.work) }" title="Çalışma">
+                      <span v-if="d.work > 0" class="wv-val">{{ d.work }}</span>
+                    </div>
+                    <div class="wv-seg stop" :style="{ blockSize: weeklyHeight(d.stop) }" title="Duruş">
+                      <span v-if="d.stop > 0" class="wv-val">{{ d.stop }}</span>
+                    </div>
+                  </div>
+                  <div class="wv-day">{{ d.label }}</div>
+                </div>
+              </template>
+            </div>
           </div>
-        </div>
         </div>
         <div class="weekly-count-card">
           <h4>Haftalık Sayaç (adet)</h4>
           <div class="weekly-vertical mt-2">
             <div class="wvc-bars">
               <template v-if="loading">
-                <div v-for="i in 7" :key="'wvc-skel-'+i" class="wvc-col">
+                <div v-for="i in 7" :key="'wvc-skel-' + i" class="wvc-col">
                   <div class="wvc-stack">
                     <div class="wvc-fill sk-fill" :style="{ blockSize: (20 + i * 4) + '%' }"></div>
                   </div>
@@ -70,13 +91,12 @@
             </div>
           </div>
         </div>
-        <div v-if="isSlow && loading" class="slow-hint">Veri yükleniyor…</div>
       </div>
     </header>
 
     <section class="cards-grid">
       <template v-if="loading">
-        <article v-for="i in 6" :key="'skeleton-'+i" class="machine-card skeleton">
+        <article v-for="i in 6" :key="'skeleton-' + i" class="machine-card skeleton">
           <div class="card-top">
             <div class="names">
               <div class="sk-line w-60"></div>
@@ -89,10 +109,22 @@
           </div>
 
           <div class="kpi-row">
-            <div class="kpi-item"><div class="sk-line w-60"></div><div class="sk-line w-40 mt-1"></div></div>
-            <div class="kpi-item"><div class="sk-line w-60"></div><div class="sk-line w-40 mt-1"></div></div>
-            <div class="kpi-item"><div class="sk-line w-60"></div><div class="sk-line w-40 mt-1"></div></div>
-            <div class="kpi-item"><div class="sk-line w-60"></div><div class="sk-line w-40 mt-1"></div></div>
+            <div class="kpi-item">
+              <div class="sk-line w-60"></div>
+              <div class="sk-line w-40 mt-1"></div>
+            </div>
+            <div class="kpi-item">
+              <div class="sk-line w-60"></div>
+              <div class="sk-line w-40 mt-1"></div>
+            </div>
+            <div class="kpi-item">
+              <div class="sk-line w-60"></div>
+              <div class="sk-line w-40 mt-1"></div>
+            </div>
+            <div class="kpi-item">
+              <div class="sk-line w-60"></div>
+              <div class="sk-line w-40 mt-1"></div>
+            </div>
           </div>
 
           <div class="mini-bars">
@@ -106,61 +138,60 @@
       </template>
       <template v-else>
         <article v-for="m in machines" :key="m.id" class="machine-card">
-        <div class="card-top">
-          <div class="names">
-            <h3 class="machine-name">{{ m.code }} - {{ m.name }}</h3>
-            <p class="operator-name" v-if="m.operator">Operatör: {{ m.operator }}</p>
-          </div>
-          <div class="status" :class="m.status">
-            <span class="dot"></span>
-            <span class="label">{{ statusText(m.status) }}</span>
-          </div>
-        </div>
-
-        <div class="meta-row" v-if="m.itemCode || m.itemName || m.counter !== undefined">
-          <div class="meta-left">
-            <span v-if="m.itemCode" class="pill code">{{ m.itemCode }}</span>
-            <span v-if="m.itemName" class="meta-name">{{ m.itemName }}</span>
-          </div>
-          <div class="meta-right" v-if="m.counter !== undefined">Sayaç: <strong>{{ m.counter }}</strong></div>
-        </div>
-
-        <div class="kpi-row">
-          <div class="kpi-item">
-            <span>Uygulanabilirlik</span>
-            <strong>{{ fmtPct(m.availability) }}</strong>
-          </div>
-          <div class="kpi-item">
-            <span>Performans</span>
-            <strong>{{ fmtPct(m.performance) }}</strong>
-          </div>
-          <div class="kpi-item">
-            <span>Kalite</span>
-            <strong>{{ fmtPct(m.quality) }}</strong>
-          </div>
-          <div class="kpi-item oee" :class="oeeClass(m.oee)">
-            <span>OEE</span>
-            <strong>{{ fmtPct(m.oee) }}</strong>
-          </div>
-        </div>
-
-        <div class="mini-bars">
-          <template v-if="m.segments && m.segments.length">
-            <div class="multi-bar">
-              <div v-for="(seg, idx) in m.segments" :key="m.id + '-seg-' + idx"
-                   class="multi-seg"
-                   :style="getSegmentStyle(seg as any, m.segments as any)"
-                   :title="getSegmentTooltip(seg as any, m)" />
+          <div class="card-top">
+            <div class="names">
+              <h3 class="machine-name">{{ m.code }} - {{ m.name }}</h3>
+              <p class="operator-name" v-if="m.operator">Operatör: {{ m.operator }}</p>
             </div>
-          </template>
-          <template v-else>
-            <div class="multi-bar" :title="'Çalışma/Duruş oranı'">
-              <div class="multi-seg work" :style="{ inlineSize: segs(m).work + '%' }" title="Çalışma"></div>
-              <div class="multi-seg stop" :style="{ inlineSize: segs(m).stop + '%' }" title="Duruş"></div>
-              <div class="multi-seg remain" v-if="segs(m).remain > 0" :style="{ inlineSize: segs(m).remain + '%' }" title="Kalan"></div>
+            <div class="status" :class="m.status">
+              <span class="dot"></span>
+              <span class="label">{{ statusText(m.status) }}</span>
             </div>
-          </template>
-        </div>
+          </div>
+
+          <div class="meta-row" v-if="m.itemCode || m.itemName || m.counter !== undefined">
+            <div class="meta-left">
+              <span v-if="m.itemCode" class="pill code">{{ m.itemCode }}</span>
+              <span v-if="m.itemName" class="meta-name">{{ m.itemName }}</span>
+            </div>
+            <div class="meta-right" v-if="m.counter !== undefined">Sayaç: <strong>{{ m.counter }}</strong></div>
+          </div>
+
+          <div class="kpi-row">
+            <div class="kpi-item">
+              <span>Uygulanabilirlik</span>
+              <strong>{{ fmtPct(m.availability) }}</strong>
+            </div>
+            <div class="kpi-item">
+              <span>Performans</span>
+              <strong>{{ fmtPct(m.performance) }}</strong>
+            </div>
+            <div class="kpi-item">
+              <span>Kalite</span>
+              <strong>{{ fmtPct(m.quality) }}</strong>
+            </div>
+            <div class="kpi-item oee" :class="oeeClass(m.oee)">
+              <span>OEE</span>
+              <strong>{{ fmtPct(m.oee) }}</strong>
+            </div>
+          </div>
+
+          <div class="mini-bars">
+            <template v-if="m.segments && m.segments.length">
+              <div class="multi-bar">
+                <div v-for="(seg, idx) in m.segments" :key="m.id + '-seg-' + idx" class="multi-seg"
+                  :style="getSegmentStyle(seg as any, m.segments as any)" :title="getSegmentTooltip(seg as any, m)" />
+              </div>
+            </template>
+            <template v-else>
+              <div class="multi-bar" :title="'Çalışma/Duruş oranı'">
+                <div class="multi-seg work" :style="{ inlineSize: segs(m).work + '%' }" title="Çalışma"></div>
+                <div class="multi-seg stop" :style="{ inlineSize: segs(m).stop + '%' }" title="Duruş"></div>
+                <div class="multi-seg remain" v-if="segs(m).remain > 0" :style="{ inlineSize: segs(m).remain + '%' }"
+                  title="Kalan"></div>
+              </div>
+            </template>
+          </div>
         </article>
       </template>
     </section>
@@ -169,16 +200,24 @@
       <div class="chart-card">
         <h4>Duruş Sebepleri (Süre)</h4>
         <div v-if="loading" class="reason-bars mt-2">
-          <div v-for="i in 5" :key="'rs-'+i" class="reason-row">
-            <div class="row-label"><div class="sk-line w-40"></div></div>
-            <div class="bar"><div class="fill sk-fill" :style="{ width: (100 - i*12) + '%' }"/></div>
-            <div class="value"><div class="sk-line w-20 ml-auto"></div></div>
+          <div v-for="i in 5" :key="'rs-' + i" class="reason-row">
+            <div class="row-label">
+              <div class="sk-line w-40"></div>
+            </div>
+            <div class="bar">
+              <div class="fill sk-fill" :style="{ width: (100 - i * 12) + '%' }" />
+            </div>
+            <div class="value">
+              <div class="sk-line w-20 ml-auto"></div>
+            </div>
           </div>
         </div>
         <div v-else class="reason-bars mt-2">
           <div v-for="r in downtimeReasons" :key="r.name" class="reason-row">
             <div class="row-label">{{ r.name }}</div>
-            <div class="bar mt-2"><div class="fill reason" :style="{ width: reasonWidth(r.minutes) }"/></div>
+            <div class="bar mt-2">
+              <div class="fill reason" :style="{ width: reasonWidth(r.minutes) }" />
+            </div>
             <div class="value">{{ r.minutes }} dk</div>
           </div>
         </div>
@@ -189,7 +228,7 @@
 
 <script setup lang="ts">
 import axios from 'axios';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 type MachineStatus = 'running' | 'stopped' | 'offline';
 
@@ -226,6 +265,17 @@ const weekly = ref<WeeklyDay[]>([]);
 const weeklyCounts = ref<WeeklyCount[]>([]);
 const loading = ref<boolean>(true);
 const isSlow = ref<boolean>(false);
+// Stale-while-revalidate ve hata/backoff durum değişkenleri
+const refreshing = ref<boolean>(false);
+const lastUpdated = ref<Date | null>(null);
+const emptyData = ref<boolean>(false);          // İlk veri hiç yoksa
+const transientEmpty = ref<boolean>(false);     // Önceden veri vardı, bu poll boş döndü
+const errorCount = ref<number>(0);
+const basePoll = 10000; // ms
+const backoffMs = ref<number>(basePoll);
+const meta = ref<any>(null);
+// İlk yükleme (hiç başarı yokken) durumunu ayırt et
+const initialLoading = computed(() => loading.value && !lastUpdated.value);
 
 const fmtPct = (v: number) => isFinite(v) ? `${Math.round(v * 100)}%` : '-';
 const oeeClass = (v: number) => {
@@ -322,11 +372,16 @@ function getSegmentTooltip(seg: Segment & { code?: string }, m: MachineCard) {
 let slowTimer: number | null = null;
 async function loadData(signal?: AbortSignal) {
   try {
-    if (machines.value.length === 0) loading.value = true;
+    const firstLoad = machines.value.length === 0;
+    if (firstLoad) {
+      loading.value = true;
+    } else {
+      refreshing.value = true;
+    }
     if (slowTimer) { clearTimeout(slowTimer); slowTimer = null; }
     slowTimer = window.setTimeout(() => { isSlow.value = true; }, 2500);
-    const { data } = await axios.get('/api/dash-bukum/overview', { signal, timeout: 4500 });
-    machines.value = (data?.machines || []).map((m: any) => ({
+    const { data } = await axios.get('/api/dash-bukum/overview', { signal, timeout: 6500 });
+    const newMachines = (data?.machines || []).map((m: any) => ({
       id: Number(m.id),
       name: String(m.name ?? ''),
       operator: m.operator || undefined,
@@ -343,29 +398,50 @@ async function loadData(signal?: AbortSignal) {
       code: m.code || '',
       segments: Array.isArray(m.segments) ? m.segments : (Array.isArray(m.barData) ? m.barData : (Array.isArray(m.timeline) ? m.timeline : undefined)),
     }));
-    daySummary.value = data?.daySummary || { availability: 0, performance: 0, quality: 1, oee: 0 };
-    downtimeReasons.value = data?.reasons || [];
-  weekly.value = data?.weekly || [];
+    meta.value = data?.meta || null;
+    if (newMachines.length === 0) {
+      if (machines.value.length === 0) {
+        // İlkten beri boş
+        emptyData.value = true;
+      } else {
+        // Geçici boş – önceki veriyi koru
+        transientEmpty.value = true;
+      }
+    } else {
+      machines.value = newMachines;
+      emptyData.value = false;
+      transientEmpty.value = false;
+    }
+    daySummary.value = data?.daySummary || daySummary.value;
+    downtimeReasons.value = data?.reasons || downtimeReasons.value;
+    weekly.value = data?.weekly || weekly.value;
     weeklyCounts.value = (data?.weeklyCounts || data?.weekly_counts || []).map((d: any) => ({
       date: String(d.date),
       label: String(d.label ?? ''),
       count: Number(d.count ?? 0),
     }));
+    lastUpdated.value = new Date();
+    // Başarılı yükleme -> backoff resetle
+    errorCount.value = 0;
+    backoffMs.value = basePoll;
   } catch (e) {
-    // 401/419 durumlarını global interceptor gösteriyor.
+    errorCount.value += 1;
+    // Üstel backoff (maks 60s)
+    backoffMs.value = Math.min(basePoll * Math.pow(2, errorCount.value), 60000);
   } finally {
     loading.value = false;
+    refreshing.value = false;
     if (slowTimer) { clearTimeout(slowTimer); slowTimer = null; }
     if (isSlow.value) setTimeout(() => { isSlow.value = false; }, 400);
   }
 }
 
-const POLL_MS = 5000;
+const POLL_MS = basePoll; // eski referans sabit
 let timer: number | null = null;
 let inFlight = false;
 let controller: AbortController | null = null;
 
-function schedule(nextMs = POLL_MS) {
+function schedule(nextMs = backoffMs.value) {
   if (timer) {
     clearTimeout(timer);
   }
@@ -374,8 +450,8 @@ function schedule(nextMs = POLL_MS) {
 
 async function tick() {
   if (document.hidden) {
-    // Sekme gizliyken bekle, gereksiz istek atma
-    schedule(POLL_MS);
+    // Sekme gizliyken daha uzun bekle (en az 30sn veya backoff)
+    schedule(Math.max(30000, backoffMs.value));
     return;
   }
   if (inFlight) {
@@ -407,6 +483,17 @@ function handleVisibility() {
   }
 }
 
+function manualRefresh() {
+  if (inFlight) return;
+  if (timer) { clearTimeout(timer); timer = null; }
+  schedule(0);
+}
+
+function formatTime(d: Date | null) {
+  if (!d) return '-';
+  return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
 onMounted(async () => {
   document.addEventListener('visibilitychange', handleVisibility);
   await tick();
@@ -418,87 +505,434 @@ onBeforeUnmount(() => {
 });
 </script>
 
+
+
+
 <style scoped>
 /* stylelint-disable order/properties-order, @stylistic/declaration-colon-space-after, declaration-block-single-line-max-declarations, at-rule-empty-line-before, rule-empty-line-before, no-descending-specificity, no-duplicate-selectors, @stylistic/max-line-length */
-.dash-container { display: flex; flex-direction: column; gap: 10px; padding-block: 0; padding-inline: 0; }
-.dash-header { display: grid; grid-template-columns: minmax(250px, 25%) 1fr; gap: 16px; align-items: stretch; }
-.header-left { display: flex; flex-direction: column; gap: 12px; }
-.summary-card.stretch { flex: 1; display: flex; flex-direction: column; }
-.summary-card.stretch .summary-kpis { margin-block-start: auto; }
-.title-block h1 { margin: 0; font-size: 26px; }
-.header-right { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: end; }
-.dash-header h1 { margin: 0; font-size: 26px; }
-.muted { color: #7d7d7d; font-size: 13px; }
+.dash-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-block: 0;
+  padding-inline: 0;
+}
 
-.header-metrics { display: flex; gap: 16px; }
-.weekly-card { border: 1px solid var(--v-theme-outline-variant, #272727); border-radius: 12px; background: rgb(var(--v-theme-surface)); padding-block: 12px; padding-inline: 12px; box-shadow: 0 10px 24px rgba(0, 0, 0, 24%), 0 2px 8px rgba(0, 0, 0, 10%); }
-.weekly-vertical { display: flex; }
-.wv-bars { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(32px, 1fr); gap: 10px; align-items: end; inline-size: 100%; }
-.wv-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.wv-stack { position: relative; inline-size: 100%; block-size: 140px; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; border: 1px solid var(--v-theme-outline-variant, #2a2a2a); border-radius: 6px; background: var(--v-theme-surface-variant, #222); padding: 2px; }
-.wv-val { position: absolute; inset-inline-start: 50%; transform: translate(-50%, 0); inset-block-start: 2px; font-size: 16px; font-weight: 600; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 70%); pointer-events: none; line-height: 1; white-space: nowrap; }
-.wv-seg { position: relative; display: flex; align-items: flex-start; justify-content: center; }
-.wv-seg.work .wv-val { color: #e8fce9; }
-.wv-seg.stop .wv-val { color: #2b2200; text-shadow: 0 1px 2px rgba(255, 255, 255, 40%); }
-.wv-seg { inline-size: 100%; border-radius: 2px; }
-.wv-seg.work { background: #189c49; }
-.wv-seg.stop { background: #efb803; }
-.wv-fill { inline-size: 100%; border-radius: 2px; }
-.wv-day { color: #bdbdbd; font-size: 12px; text-align: center; }
+.dash-header {
+  display: grid;
+  grid-template-columns: minmax(250px, 25%) 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
 
-.weekly-count-card { border: 1px solid var(--v-theme-outline-variant, #272727); border-radius: 12px; background: rgb(var(--v-theme-surface)); padding-block: 12px; padding-inline: 12px; box-shadow: 0 10px 24px rgba(0, 0, 0, 24%), 0 2px 8px rgba(0, 0, 0, 10%); }
-.wvc-bars { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(32px, 1fr); gap: 10px; align-items: end; inline-size: 100%; }
-.wvc-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.wvc-stack { inline-size: 100%; block-size: 140px; border: 1px solid var(--v-theme-outline-variant, #2a2a2a); border-radius: 6px; background: var(--v-theme-surface-variant, #222); display: flex; flex-direction: column; justify-content: flex-end; padding: 2px; }
-.wvc-label { position: absolute; inset-inline-start: 50%; transform: translate(-50%, 0); inset-block-start: 2px; font-size: 16px; font-weight: 600; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 80%); pointer-events: none; line-height: 1; white-space: nowrap; }
-.wvc-bar { position: relative; display: flex; align-items: flex-start; justify-content: center; }
-.wvc-bar { inline-size: 100%; background: linear-gradient(180deg, #60a5fa, #2563eb); border-radius: 2px; }
-.wvc-fill { inline-size: 100%; border-radius: 2px; }
-.wvc-day { color: #bdbdbd; font-size: 12px; text-align: center; }
-.summary-card { border: 1px solid var(--v-theme-outline-variant, #272727); border-radius: 12px; background: rgb(var(--v-theme-surface)); min-inline-size: 250px; padding-block: 14px; padding-inline: 16px; box-shadow: 0 10px 24px rgba(0, 0, 0, 24%), 0 2px 8px rgba(0, 0, 0, 10%); }
-.summary-title { font-weight: 600; margin-block-end: 8px; }
-.summary-kpis { display: grid; grid-template-columns: repeat(4, minmax(80px, 1fr)); gap: 10px; }
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary-card.stretch {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-card.stretch .summary-kpis {
+  margin-block-start: auto;
+}
+
+.title-block h1 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.header-right {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: end;
+}
+
+.dash-header h1 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.muted {
+  color: #7d7d7d;
+  font-size: 13px;
+}
+
+.header-metrics {
+  display: flex;
+  gap: 16px;
+}
+
+.weekly-card {
+  border: 1px solid var(--v-theme-outline-variant, #a19e9e);
+  border-radius: 12px;
+  background: rgb(var(--v-theme-surface));
+  padding-block: 12px;
+  padding-inline: 12px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 24%), 0 2px 8px rgba(0, 0, 0, 10%);
+}
+
+.weekly-vertical {
+  display: flex;
+}
+
+.wv-bars {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(32px, 1fr);
+  gap: 10px;
+  align-items: end;
+  inline-size: 100%;
+}
+
+.wv-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.wv-stack {
+  position: relative;
+  inline-size: 100%;
+  block-size: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  border: 1px solid var(--v-theme-outline-variant, #626262);
+  border-radius: 6px;
+  background: var(--v-theme-surface-variant, #222);
+  padding: 2px;
+}
+
+.wv-val {
+  position: absolute;
+  inset-inline-start: 50%;
+  transform: translate(-50%, 0);
+  inset-block-start: 2px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 70%);
+  pointer-events: none;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.wv-seg {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.wv-seg.work .wv-val {
+  color: #e8fce9;
+}
+
+.wv-seg.stop .wv-val {
+  color: #2b2200;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 40%);
+}
+
+.wv-seg {
+  inline-size: 100%;
+  border-radius: 2px;
+}
+
+.wv-seg.work {
+  background: #189c49;
+}
+
+.wv-seg.stop {
+  background: #efb803;
+}
+
+.wv-fill {
+  inline-size: 100%;
+  border-radius: 2px;
+}
+
+.wv-day {
+  color: #bdbdbd;
+  font-size: 12px;
+  text-align: center;
+}
+
+.weekly-count-card {
+  border: 1px solid var(--v-theme-outline-variant, #656565);
+  border-radius: 12px;
+  background: rgb(var(--v-theme-surface));
+  padding-block: 12px;
+  padding-inline: 12px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 24%), 0 2px 8px rgba(0, 0, 0, 10%);
+}
+
+.wvc-bars {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(32px, 1fr);
+  gap: 10px;
+  align-items: end;
+  inline-size: 100%;
+}
+
+.wvc-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.wvc-stack {
+  inline-size: 100%;
+  block-size: 140px;
+  border: 1px solid var(--v-theme-outline-variant, #5d5d5d);
+  border-radius: 6px;
+  background: var(--v-theme-surface-variant, #222);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 2px;
+}
+
+.wvc-label {
+  position: absolute;
+  inset-inline-start: 50%;
+  transform: translate(-50%, 0);
+  inset-block-start: 2px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 80%);
+  pointer-events: none;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.wvc-bar {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.wvc-bar {
+  inline-size: 100%;
+  background: linear-gradient(180deg, #60a5fa, #2563eb);
+  border-radius: 2px;
+}
+
+.wvc-fill {
+  inline-size: 100%;
+  border-radius: 2px;
+}
+
+.wvc-day {
+  color: #bdbdbd;
+  font-size: 12px;
+  text-align: center;
+}
+
+.summary-card {
+  border: 1px solid var(--v-theme-outline-variant, #4e4e4e);
+  border-radius: 12px;
+  background: rgb(var(--v-theme-surface));
+  min-inline-size: 250px;
+  padding-block: 14px;
+  padding-inline: 16px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 24%), 0 2px 8px rgba(0, 0, 0, 10%);
+}
+
+.summary-title {
+  font-weight: 600;
+  margin-block-end: 8px;
+}
+
+.summary-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(80px, 1fr));
+  gap: 10px;
+}
+
 .summary-kpis .kpi {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   background: var(--v-theme-surface-variant, #171717);
-  border: 1px solid var(--v-theme-outline-variant, #2a2a2a);
+  border: 1px solid var(--v-theme-outline-variant, #535353);
   border-radius: 8px;
   padding: 8px;
 }
-.summary-kpis .kpi strong { font-size: 18px; }
-.summary-kpis .kpi.oee { border-width: 2px; }
 
-.cards-grid { display: grid; grid-template-columns: repeat(3, minmax(260px, 1fr)); gap: 16px; }
+.summary-kpis .kpi strong {
+  font-size: 18px;
+}
+
+.summary-kpis .kpi.oee {
+  border-width: 2px;
+}
+
+.dash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-block-start: 10px;
+}
+
+.refresh-btn {
+  background: var(--v-theme-primary, #3b82f6);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  padding-block: 4px;
+  padding-inline: 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.refresh-btn[disabled] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.last-updated {
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.warn {
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.hint {
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 16px;
+}
+
 .machine-card {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border: 1px solid var(--v-theme-outline-variant, #262626);
+  border: 1px solid var(--v-theme-outline-variant, #5a5959);
   border-radius: 12px;
   background: rgb(var(--v-theme-surface));
   padding-block: 12px;
   padding-inline: 12px;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 26%), 0 3px 10px rgba(0, 0, 0, 12%);
 }
-.card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.machine-name { margin: 0; font-size: 15px; }
-.operator-name { margin: 0; color: var(--v-theme-on-surface-variant, #bdbdbd); font-size: 15px; }
-.meta-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px dashed var(--v-theme-outline-variant, #2a2a2a); border-radius: 8px; background: var(--v-theme-surface-variant, #141414); padding-block: 6px; padding-inline: 8px; }
-.meta-left { display: flex; align-items: center; gap: 8px; min-inline-size: 0; }
-.meta-name { color: var(--v-theme-on-surface, #e5e5e5); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--v-theme-outline-variant, #2a2a2a); border-radius: 999px; padding-block: 2px; padding-inline: 8px; font-size: 16px; background: color-mix(in oklab, var(--v-theme-primary, #3b82f6) 12%, transparent); color: var(--v-theme-primary, #3b82f6); }
-.pill.code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-.status { display: flex; align-items: center; border-radius: 999px; gap: 8px; font-size: 14px; font-weight: 600; padding-block: 6px; padding-inline: 10px; }
-.status .dot { position: relative; background: #888; border-radius: 5px; block-size: 10px; inline-size: 50px; }
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.machine-name {
+  margin: 0;
+  font-size: 15px;
+}
+
+.operator-name {
+  margin: 0;
+  color: var(--v-theme-on-surface-variant, #bdbdbd);
+  font-size: 15px;
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px dashed var(--v-theme-outline-variant, #4e4d4d);
+  border-radius: 8px;
+  background: var(--v-theme-surface-variant, #141414);
+  padding-block: 6px;
+  padding-inline: 8px;
+}
+
+.meta-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-inline-size: 0;
+}
+
+.meta-name {
+  color: var(--v-theme-on-surface, #e5e5e5);
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--v-theme-outline-variant, #4b4a4a);
+  border-radius: 999px;
+  padding-block: 2px;
+  padding-inline: 8px;
+  font-size: 16px;
+  background: color-mix(in oklab, var(--v-theme-primary, #3b82f6) 12%, transparent);
+  color: var(--v-theme-primary, #3b82f6);
+}
+
+.pill.code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  border-radius: 999px;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  padding-block: 6px;
+  padding-inline: 10px;
+}
+
+.status .dot {
+  position: relative;
+  background: #888;
+  border-radius: 5px;
+  block-size: 10px;
+  inline-size: 50px;
+}
+
 .status.running {
   background: color-mix(in oklab, var(--v-theme-success, #22c55e) 18%, transparent);
   color: var(--v-theme-success, #22c55e);
   border: 1px solid color-mix(in oklab, var(--v-theme-success, #22c55e) 40%, transparent);
 }
-.status.running .dot { background: #22c55e; }
+
+.status.running .dot {
+  background: #22c55e;
+}
+
 .status.running .dot::after {
   content: "";
   position: absolute;
@@ -507,16 +941,34 @@ onBeforeUnmount(() => {
   box-shadow: 0 0 0 0 rgba(34, 197, 94, 60%);
   animation: ping-green 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
+
 .status.stopped {
   background: color-mix(in oklab, var(--v-theme-warning, #fb923c) 18%, transparent);
   color: var(--v-theme-warning, #fb923c);
   border: 1px solid color-mix(in oklab, var(--v-theme-warning, #fb923c) 40%, transparent);
 }
-.status.stopped .dot { background: #fb923c; animation: blink-orange 1.2s ease-in-out infinite; }
-.status.offline { background: var(--v-theme-surface-variant, #2b2b2b); color: var(--v-theme-on-surface-variant, #b5b5b5); border: 1px solid var(--v-theme-outline-variant, #4a4a4a); }
-.status.offline .dot { background: #9e9e9e; }
 
-.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.status.stopped .dot {
+  background: #fb923c;
+  animation: blink-orange 1.2s ease-in-out infinite;
+}
+
+.status.offline {
+  background: var(--v-theme-surface-variant, #2b2b2b);
+  color: var(--v-theme-on-surface-variant, #b5b5b5);
+  border: 1px solid var(--v-theme-outline-variant, #4a4a4a);
+}
+
+.status.offline .dot {
+  background: #9e9e9e;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
 .kpi-item {
   display: flex;
   flex-direction: column;
@@ -527,76 +979,351 @@ onBeforeUnmount(() => {
   background: var(--v-theme-surface-variant, #161616);
   padding: 8px;
 }
-.kpi-item strong { font-size: 22px; }
-.kpi-item.oee { border-width: 2px; }
 
-.mini-bars { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.mini-bar { display: flex; align-items: center; gap: 10px; }
-.mini-bar-label { color: #bdbdbd; font-size: 12px; inline-size: 68px; }
-.bar { overflow: hidden; flex: 1; border: 1px solid var(--v-theme-outline-variant, #2a2a2a); border-radius: 999px; background: var(--v-theme-surface-variant, #222); block-size: 10px; }
-.fill { border-radius: 999px; block-size: 100%; }
-.fill.work { background:linear-gradient(90deg, #22c55e, #16a34a); }
-.fill.stop { background:linear-gradient(90deg, #fb923c, #f97316); }
-.fill.reason { background:linear-gradient(90deg, #60a5fa, #2563eb); }
+.kpi-item strong {
+  font-size: 22px;
+}
+
+.kpi-item.oee {
+  border-width: 2px;
+}
+
+.mini-bars {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.mini-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mini-bar-label {
+  color: #bdbdbd;
+  font-size: 12px;
+  inline-size: 68px;
+}
+
+.bar {
+  overflow: hidden;
+  flex: 1;
+  border: 1px solid var(--v-theme-outline-variant, #2a2a2a);
+  border-radius: 999px;
+  background: var(--v-theme-surface-variant, #222);
+  block-size: 10px;
+}
+
+.fill {
+  border-radius: 999px;
+  block-size: 100%;
+}
+
+.fill.work {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.fill.stop {
+  background: linear-gradient(90deg, #fb923c, #f97316);
+}
+
+.fill.reason {
+  background: linear-gradient(90deg, #60a5fa, #2563eb);
+}
 
 /* Yeni: Çalışma + Duruş tek satır çok renkli bar */
-.multi-bar { overflow: hidden; display: flex; gap: 1px; border: 1px solid var(--v-theme-outline-variant, #2a2a2a); border-radius: 999px; background: var(--v-theme-surface-variant, #222); block-size: 10px; }
-.multi-seg { block-size: 100%; }
-.multi-seg.work { background: linear-gradient(90deg, #22c55e, #16a34a); }
-.multi-seg.stop { background: linear-gradient(90deg, #fb923c, #f97316); }
-.multi-seg.remain { background: repeating-linear-gradient(45deg, #2a2a2a, #2a2a2a 6px, #1a1a1a 6px, #1a1a1a 12px); opacity: 0.5; }
+.multi-bar {
+  overflow: hidden;
+  display: flex;
+  gap: 1px;
+  border: 1px solid var(--v-theme-outline-variant, #2a2a2a);
+  border-radius: 999px;
+  background: var(--v-theme-surface-variant, #222);
+  block-size: 10px;
+}
 
-.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.chart-card { background: rgb(var(--v-theme-surface)); border: 1px solid var(--v-theme-outline-variant, #262626); border-radius: 12px; padding: 12px; box-shadow: 0 10px 24px rgba(0, 0, 0, 24%), 0 2px 8px rgba(0, 0, 0, 10%); }
-.stacked-bars { display: flex; flex-direction: column; gap: 8px; }
-.stacked-row { display: flex; align-items: center; gap: 10px; }
-.row-label { color: #bdbdbd; font-size: 16px; white-space: nowrap; flex: 0 0 auto; }
-.row-bars { overflow: hidden; display: flex; flex: 1; border: 1px solid var(--v-theme-outline-variant, #2a2a2a); border-radius: 6px; background: var(--v-theme-surface-variant, #222); block-size: 14px; }
-.row-bars .seg { block-size: 100%; }
-.row-bars .seg.work { background:#189c49; }
-.row-bars .seg.stop { background:#efb803; }
+.multi-seg {
+  block-size: 100%;
+}
 
-.reason-bars { display: grid; grid-template-columns: max-content 1fr auto; gap: 8px 10px; }
-.reason-row { display: contents; }
-.reason-row .row-label { white-space: nowrap; }
-.reason-row .bar { overflow: hidden; border: 1px solid var(--v-theme-outline-variant, #2a2a2a); border-radius: 6px; background: var(--v-theme-surface-variant, #222); block-size: 12px; }
-.reason-row .value { inline-size: 64px; text-align: end; font-size: 12px; color: #bdbdbd; }
+.multi-seg.work {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.multi-seg.stop {
+  background: linear-gradient(90deg, #fb923c, #f97316);
+}
+
+.multi-seg.remain {
+  background: repeating-linear-gradient(45deg, #2a2a2a, #2a2a2a 6px, #1a1a1a 6px, #1a1a1a 12px);
+  opacity: 0.5;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.chart-card {
+  background: rgb(var(--v-theme-surface));
+  border: 1px solid var(--v-theme-outline-variant, #262626);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 24%), 0 2px 8px rgba(0, 0, 0, 10%);
+}
+
+.stacked-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stacked-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.row-label {
+  color: #bdbdbd;
+  font-size: 16px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.row-bars {
+  overflow: hidden;
+  display: flex;
+  flex: 1;
+  border: 1px solid var(--v-theme-outline-variant, #2a2a2a);
+  border-radius: 6px;
+  background: var(--v-theme-surface-variant, #222);
+  block-size: 14px;
+}
+
+.row-bars .seg {
+  block-size: 100%;
+}
+
+.row-bars .seg.work {
+  background: #189c49;
+}
+
+.row-bars .seg.stop {
+  background: #efb803;
+}
+
+.reason-bars {
+  display: grid;
+  grid-template-columns: max-content 1fr auto;
+  gap: 8px 10px;
+}
+
+.reason-row {
+  display: contents;
+}
+
+.reason-row .row-label {
+  white-space: nowrap;
+}
+
+.reason-row .bar {
+  overflow: hidden;
+  border: 1px solid var(--v-theme-outline-variant, #2a2a2a);
+  border-radius: 6px;
+  background: var(--v-theme-surface-variant, #222);
+  block-size: 12px;
+}
+
+.reason-row .value {
+  inline-size: 64px;
+  text-align: end;
+  font-size: 12px;
+  color: #bdbdbd;
+}
 
 /* OEE renkleri */
-.oee-red { border-color: #ef4444 !important; }
-.oee-yellow { border-color: #eab308 !important; }
-.oee-orange { border-color: #f97316 !important; }
-.oee-green { border-color: #22c55e !important; }
+.oee-red {
+  border-color: #ef4444 !important;
+}
+
+.oee-yellow {
+  border-color: #eab308 !important;
+}
+
+.oee-orange {
+  border-color: #f97316 !important;
+}
+
+.oee-green {
+  border-color: #22c55e !important;
+}
 
 /* Responsive */
 @media (max-width: 1280px) {
-  .dash-header { grid-template-columns: 1fr; }
-  .header-left { order: 1; }
-  .header-right { order: 2; grid-template-columns: 1fr 1fr; }
-  .summary-card.stretch { flex: initial; }
-  .cards-grid { grid-template-columns: repeat(2, minmax(260px, 1fr)); }
-  .charts-grid { grid-template-columns: 1fr; }
+  .dash-header {
+    grid-template-columns: 1fr;
+  }
+
+  .header-left {
+    order: 1;
+  }
+
+  .header-right {
+    order: 2;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .summary-card.stretch {
+    flex: initial;
+  }
+
+  .cards-grid {
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 720px) {
-  .dash-header { grid-template-columns: 1fr; }
-  .cards-grid { grid-template-columns: 1fr; }
-  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .dash-header {
+    grid-template-columns: 1fr;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* Skeletons */
-.skeleton .status .dot { opacity: 0.5; }
+.skeleton .status .dot {
+  opacity: 0.5;
+}
+
 .sk-line {
   block-size: 12px;
   background: linear-gradient(90deg, rgba(200, 200, 200, 10%), rgba(200, 200, 200, 25%), rgba(200, 200, 200, 10%));
   border-radius: 6px;
   animation: sk 1.2s infinite ease-in-out;
 }
+
 .sk-fill {
   background: linear-gradient(90deg, rgba(200, 200, 200, 15%), rgba(200, 200, 200, 35%), rgba(200, 200, 200, 15%)) !important;
   animation: sk 1.2s infinite ease-in-out;
 }
-.slow-hint { align-self: flex-end; color: #bdbdbd; font-size: 12px; }
+
+.slow-hint {
+  align-self: flex-end;
+  color: #bdbdbd;
+  font-size: 12px;
+}
+
+/* İlk yükleme overlay */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(0 0 0 / 55%), rgba(0 0 0 / 85%));
+  backdrop-filter: blur(2px);
+  z-index: 5000;
+  padding-block: 20px;
+  padding-inline: 20px;
+  text-align: center;
+}
+
+.loader-box {
+  max-inline-size: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: rgba(30 30 30 / 75%);
+  border: 1px solid #3a3a3a;
+  border-radius: 20px;
+  padding-block: 42px 46px;
+  padding-inline: 48px;
+  box-shadow: 0 18px 48px rgba(0 0 0 / 55%), 0 4px 16px rgba(0 0 0 / 40%);
+  animation: scale-in 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.loader-box h2 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  background: linear-gradient(90deg, #60a5fa, #38bdf8);
+  background-clip: text;
+  color: transparent;
+}
+
+.loader-box p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: #d1d5db;
+}
+
+.spinner {
+  inline-size: 72px;
+  block-size: 72px;
+  border-radius: 50%;
+  border: 6px solid rgba(255 255 255 / 15%);
+  border-inline-start-color: #3b82f6;
+  border-block-end-color: #0ea5e9;
+  animation: spin 1s linear infinite, glow 2.2s ease-in-out infinite;
+  margin-block: 0 4px;
+  margin-inline: auto;
+  position: relative;
+}
+
+.spinner::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: inherit;
+  border: 4px solid rgba(255 255 255 / 8%);
+  border-block-start-color: rgba(255 255 255 / 35%);
+  animation: spin 2.2s linear infinite reverse;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59 130 246 / 35%);
+  }
+
+  50% {
+    box-shadow: 0 0 0 12px rgba(59 130 246 / 0%);
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    transform: scale(0.92) translateY(8px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
 .w-20 { inline-size: 20%; }
 .w-40 { inline-size: 40%; }
 .w-60 { inline-size: 60%; }

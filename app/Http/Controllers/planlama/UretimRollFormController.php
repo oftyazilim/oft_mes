@@ -135,15 +135,15 @@ class UretimRollFormController extends Controller
         ->where('wstation_id', $stationId)
         ->first();
 
-      $speedTarget = (float)($w->speed_target ?? 0);
-      // $good = (float)($rows->good ?? 0);
-      // $counter = (float)($rows->good ?? 0);
-      // $scrap = (float)($rows->scrap ?? 0);
+      // oftt_works_info kaydı bulunamayabilir -> null koruması
+      $speedTarget = $w ? (float)($w->speed_target ?? 0) : 0.0;
       $actualUnits = $good + $scrap; // mevcut kullanım şekline uyum
-
-      $itemLength = (float)(($w->item_length / 1000) ?? 0);
+      // item_length (mm varsayımı) -> metre
+      $itemLength = ($w && $w->item_length) ? (float)$w->item_length / 1000.0 : 0.0;
       $runtimeHours = $upSeconds / 3600.0;
-      $theoretical = (float)(($speedTarget / $itemLength * 60 * $runtimeHours) ?? 0);
+      $theoretical = ($itemLength > 0 && $speedTarget > 0 && $runtimeHours > 0)
+        ? ($speedTarget / $itemLength * 60 * $runtimeHours)
+        : 0.0;
       $performance = $theoretical > 0 ? ($actualUnits / $theoretical) : 0.0;
       if ($performance < 0) $performance = 0; // güvenlik
 
@@ -191,7 +191,11 @@ class UretimRollFormController extends Controller
         ],
       ]);
     } catch (\Throwable $e) {
-      Log::error('KPI hesaplama hatası', ['err' => $e->getMessage()]);
+      Log::error('KPI hesaplama hatası', [
+        'err' => $e->getMessage(),
+        'station_id' => $stationId ?? null,
+        'trace' => $e->getFile() . ':' . $e->getLine(),
+      ]);
       return response()->json(['error' => 'KPI hesaplanamadı'], 500);
     }
   }
@@ -287,9 +291,49 @@ class UretimRollFormController extends Controller
     return response()->json($rows);
   }
 
+  /**
+   * İstemci IP adresine göre oftt_works_info tablosundan istasyon (wstation_id) tespiti.
+   * Dönüş: { station_id: int|null, ip: string }
+   */
+  public function detectStation(Request $request)
+  {
+    try {
+      $ip = $request->ip();
+      // Log::info('Detect station request', ['ip' => $ip]);
+      $row = DB::connection('pgsql_oft')
+        ->table('oftt_works_info')
+        ->select('wstation_id')
+        ->where('ip_address', $ip)
+        ->first();
+      // Log::info('Detect station', ['ip' => $ip, 'station_id' => $row->wstation_id ?? null]);
+      return response()->json([
+        'station_id' => $row->wstation_id ?? null,
+        'ip' => $ip,
+      ]);
+    } catch (\Throwable $e) {
+      return response()->json([
+        'station_id' => null,
+        'error' => $e->getMessage(),
+      ], 500);
+    }
+  }
+
   public function isEmirleri(Request $request)
   {
-    $istasyon = $request->query('istasyon', '1511');
+    // İstasyon kodunu belirleme sırası:
+    // 1) Query param 'istasyon'
+    // 2) IP eşlemesi (config/stations.php ip_map)
+    // 3) DEFAULT_STATION_CODE (.env)
+    $istasyon = $request->query('istasyon');
+    // if (!$istasyon) {
+    //   $clientIp = $request->ip();
+    //   $map = config('stations.ip_map', []);
+    //   $istasyon = $map[$clientIp] ?? null;
+    // }
+    // Log::info('İstasyon kodu', ['istasyon' => $istasyon]);
+    if (!$istasyon) {
+      $istasyon = config('stations.default_code', '0000');
+    }
     $rows = DB::connection('pgsql')
       ->table(DB::raw('uyumsoft."OFTV_ISEMIRLERI_DETAY" as oid'))
       ->select([
@@ -303,9 +347,9 @@ class UretimRollFormController extends Controller
         'oid.toplam_hurda_miktari',
         'oid.operasyon_suresi',
       ])
-      ->where('IS_ISTASYONU_KODU', '=', $istasyon)
+      ->where('IS_ISTASYONU_ID', '=', $istasyon)
       ->get();
-
+// Log::info('İş emri detayları', ['rows' => $rows]);
     return response()->json($rows);
   }
 

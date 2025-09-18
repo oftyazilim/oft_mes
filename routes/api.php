@@ -162,6 +162,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/duruskaydet-mekanik', [UretimRollFormController::class, 'DurusKaydet']);
   Route::get('/uretim-rollform/kpi', [UretimRollFormController::class, 'kpi']);
   Route::post('/uretim-rollform/hurda-gir', [UretimRollFormController::class, 'hurdaGir']);
+  Route::get('/uretim-rollform/detect-station', [UretimRollFormController::class, 'detectStation']);
 });
 
 // satis
