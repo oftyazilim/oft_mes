@@ -196,7 +196,7 @@ class BukumDashboardController extends BaseController
                 ->whereRaw('COALESCE(end_ts, now()) > ?', [$start])
                 ->groupBy('code', 'name')
                 ->orderByDesc('seconds')
-                ->limit(8)
+                ->limit(4)
                 ->get();
 
             foreach ($reasonsRaw as $rr) {

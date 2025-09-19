@@ -216,36 +216,31 @@ class UretimRollFormController extends Controller
     $qty = (float)$validated['qty'];
     try {
       DB::connection('pgsql_oft')->transaction(function () use ($sid, $qty) {
-        // works info güncelle
-        $row = DB::connection('pgsql_oft')
+        // oftt_works_info: tek UPDATE ile counter ve scrap_qty güncelle
+        DB::connection('pgsql_oft')
           ->table('oftt_works_info')
           ->where('wstation_id', $sid)
-          ->lockForUpdate()
-          ->first(['counter', 'scrap_qty']);
-        if ($row) {
-          $counter = max(0, (float)$row->counter - $qty);
-          $scrap = (float)$row->scrap_qty + $qty;
-          DB::connection('pgsql_oft')
-            ->table('oftt_works_info')
-            ->where('wstation_id', $sid)
-            ->update(['counter' => $counter, 'scrap_qty' => $scrap]);
-        }
-        // aktif event güncelle
-        $event = DB::connection('pgsql_oft')
-          ->table('machine_events')
-          ->where('wstation_id', $sid)
-          ->whereNull('end_ts')
-          ->orderByDesc('id')
-          ->lockForUpdate()
-          ->first(['id', 'good_count_inc', 'scrap_count_inc']);
-        if ($event) {
-          $good = max(0, (float)$event->good_count_inc - $qty);
-          $scrap2 = (float)$event->scrap_count_inc + $qty;
-          DB::connection('pgsql_oft')
-            ->table('machine_events')
-            ->where('id', $event->id)
-            ->update(['good_count_inc' => $good, 'scrap_count_inc' => $scrap2]);
-        }
+          ->update([
+            // counter = GREATEST(counter - qty, 0)
+            'counter' => DB::raw('GREATEST(counter - ' . ((float)$qty) . ', 0)'),
+            'scrap_qty' => DB::raw('scrap_qty + ' . ((float)$qty)),
+          ]);
+
+        // machine_events: aktif (end_ts IS NULL) en güncel kaydı tek UPDATE ile güncelle
+        // good_count_inc = GREATEST(good_count_inc - qty, 0), scrap_count_inc = scrap_count_inc + qty
+        DB::connection('pgsql_oft')
+          ->update(
+            'UPDATE machine_events me
+             SET good_count_inc = GREATEST(me.good_count_inc - ?, 0),
+                 scrap_count_inc = me.scrap_count_inc + ?
+             WHERE me.id = (
+               SELECT id FROM machine_events
+               WHERE wstation_id = ? AND end_ts IS NULL
+               ORDER BY id DESC
+               LIMIT 1
+             )',
+            [$qty, $qty, $sid]
+          );
       });
       return response()->json(['ok' => true]);
     } catch (\Throwable $e) {

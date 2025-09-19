@@ -107,7 +107,9 @@
                 <label>Duruş Sebebi (F10 – Yeni Duruş)</label>
                 <AppSelect v-model="selectedSebep" :items="durusSebepleri" item-title="description"
                   item-value="break_reason_code" return-object single-line placeholder="Seçiniz..." variant="outlined"
-                  :disabled="!isDurusModu" :class="{ 'app-select--force-disabled': !isDurusModu }" />
+                  :disabled="!isDurusModu || durusKayitLoading"
+                  :class="{ 'app-select--force-disabled': !isDurusModu || durusKayitLoading }"
+                  @keydown.enter.prevent="durusSebebiKaydet" />
                 <AppTextarea v-model="durusAciklamasi" placeholder="Açıklama..." disabled />
               </div>
 
@@ -252,8 +254,8 @@
       <VCard>
         <VCardTitle>Hurda Girişi</VCardTitle>
         <VCardText>
-          <VTextField ref="hurdaInputRef" v-model="hurdaInput" label="Hurda Miktarı" type="number" hide-details
-            autofocus @keydown.enter.prevent="onHurdaEnter" @keyup.enter.prevent="onHurdaEnter"
+          <VTextField ref="hurdaInputRef" v-model="hurdaInput" label="Hurda Miktarı" type="number" hide-details :min="1"
+            step="1" autofocus @keydown.enter.prevent="onHurdaEnter" @keyup.enter.prevent="onHurdaEnter"
             @keydown.esc.prevent="cancelHurda" />
           <div class="text-caption mt-2">Enter = Kaydet, Esc = İptal</div>
         </VCardText>
@@ -382,7 +384,9 @@
         <VRow class="pa-4">
           <AppSelect ref="durusSelectRef" v-model="selectedSebep" :items="durusSebepleri" item-title="description"
             item-value="break_reason_code" return-object label="Duruş Sebebi" single-line placeholder="Seçiniz..."
-            variant="outlined" :disabled="!isDurusModu" :class="{ 'app-select--force-disabled': !isDurusModu }" />
+            variant="outlined" :disabled="!isDurusModu || durusKayitLoading"
+            :class="{ 'app-select--force-disabled': !isDurusModu || durusKayitLoading }"
+            @keydown.enter.prevent="durusSebebiKaydet" />
         </VRow>
       </template>
       <template #title>
@@ -532,7 +536,7 @@ onMounted(async () => {
     computeDurumSuresi()
   }, 1000)
 
-  info = setInterval(fetchWorksInfo, 1000)
+  info = setInterval(fetchWorksInfo, 2000)
 
   // Sayfa yüklenince iş emirlerini getir
   fetchIsEmirleri()
@@ -658,17 +662,64 @@ function openHurdaDialog() {
 async function kaydetHurda() {
   const qty = Number(hurdaInput.value)
   if (!Number.isFinite(qty) || qty <= 0) { cancelHurda(); return }
+  // Optimistik yedekler (catch içinde geri alabilmek için dış scope)
+  let prevWorks: any = worksInfo.value ? { ...worksInfo.value } : null
+  let activeOrderId: number | null = worksInfo.value?.worder_id ?? null
+  let patchedRowIndex = -1
+  let prevRowHurda: number | null = null
   try {
     if (hurdaKayitLoading.value) return
     if (!stationId.value) throw new Error('İstasyon yok')
     hurdaKayitLoading.value = true
+
+    // Performans ölçümü
+    const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+
+    // Optimistik UI: aktif kart ve grid hurda değerlerini anında artır
+    if (prevWorks) {
+      const currentScrap = Number((prevWorks as any).scrap_qty || 0)
+      worksInfo.value = { ...prevWorks, scrap_qty: currentScrap + qty } as any
+    }
+    if (activeOrderId) {
+      patchedRowIndex = isEmirleri.value.findIndex(r => r.isEmriID === activeOrderId)
+      if (patchedRowIndex >= 0) {
+        prevRowHurda = Number(isEmirleri.value[patchedRowIndex].hurda || 0)
+        const row = { ...isEmirleri.value[patchedRowIndex], hurda: prevRowHurda + qty }
+        // Reaktivite için splice ile değiştir
+        isEmirleri.value.splice(patchedRowIndex, 1, row)
+      }
+    }
+
     await axios.post('/api/uretim-rollform/hurda-gir', { station_id: stationId.value, qty })
+
+    const t1 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+    try { console.info(`[Hurda] POST tamam: ${(t1 - t0).toFixed(0)}ms (qty=${qty})`) } catch { /* ignore */ }
+
     notify({ message: 'Hurda kaydedildi', type: 'success', displayTime: 1200 })
     hurdaDialog.value = false
-    fetchWorksInfo()
-    fetchKpiDirect()
+    // Arka planda hafif tazelemeler (paralel)
+    void Promise.allSettled([
+      fetchWorksInfo(),
+      fetchIsEmirleri(),
+      fetchKpiDirect(),
+    ])
   } catch (e) {
     console.error('hurda kayıt hata', e)
+    // Optimistik değişiklikleri geri al
+    try {
+      if (activeOrderId != null) {
+        const idx = isEmirleri.value.findIndex(r => r.isEmriID === activeOrderId)
+        if (idx >= 0 && prevRowHurda != null) {
+          const row = { ...isEmirleri.value[idx], hurda: prevRowHurda }
+          isEmirleri.value.splice(idx, 1, row)
+        }
+      }
+    } catch { /* ignore */ }
+    try {
+      if (prevWorks !== null) {
+        worksInfo.value = prevWorks as any
+      }
+    } catch { /* ignore */ }
     notify({ message: 'Hurda kaydedilemedi', type: 'error', displayTime: 2000 })
   } finally {
     hurdaKayitLoading.value = false
@@ -789,7 +840,7 @@ async function confirmActivate() {
 let timer: ReturnType<typeof setInterval> | null = null
 let info: ReturnType<typeof setInterval> | null = null
 let kpiTimer: ReturnType<typeof setInterval> | null = null
-let selectedSebepSaveTimer: ReturnType<typeof setTimeout> | null = null
+// Otomatik kaydetme kaldırıldığı için zamanlayıcıya ihtiyaç yok
 
 async function fetchWorksInfo() {
   try {
@@ -904,21 +955,30 @@ async function durusSebebiKaydet() {
   try {
     durusKayitLoading.value = true
     allowPopupClose.value = false
+    const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
     await axios.post('/api/duruskaydet-mekanik', {
       istasyonID: stationId.value,
       selectedDurus: selectedSebep.value,
     })
-    notify({ message: 'Duruş kaydedildi.', type: 'success', displayTime: 2000 })
+    const t1 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+    try { console.info(`[Duruş] POST tamam: ${(t1 - t0).toFixed(0)}ms (code=${selectedSebep.value.break_reason_code})`) } catch { /* ignore */ }
+    notify({ message: 'Duruş kaydedildi.', type: 'success', displayTime: 1600 })
     // Persist edileni güncelle
     try { localStorage.setItem(reasonStorageKey(), JSON.stringify(selectedSebep.value)) } catch { /* ignore */ }
+    // Hızlı algı için popup'ı hemen kapat
+    popupDurusSecGosterVisible.value = false
+    // Arka planda hafif tazelemeler (paralel)
+    void Promise.allSettled([
+      fetchWorksInfo(),
+      fetchKpiDirect(),
+    ])
   } catch (err) {
     console.error('Duruş kaydedilemedi', err)
     notify({ message: 'Duruş kaydedilemedi.', type: 'error', displayTime: 3000 })
   } finally {
     durusKayitLoading.value = false
     allowPopupClose.value = true
-    popupDurusSecGosterVisible.value = false
-    fetchWorksInfo()
+    // popupDurusSecGosterVisible flag'ini catch içinde açık bırakıyoruz ki kullanıcı tekrar deneyebilsin
   }
 }
 
@@ -958,24 +1018,7 @@ watch(() => worksInfo.value?.statu_id, async (nv, ov) => {
   if (firstStatuEvaluation.value) firstStatuEvaluation.value = false
 })
 
-// Seçilen duruş sebebi değiştiğinde otomatik kaydet (debounce 250ms)
-watch(selectedSebep, (nv, ov) => {
-  if (selectedSebepSaveTimer) clearTimeout(selectedSebepSaveTimer)
-  if (!nv) return
-  selectedSebepSaveTimer = setTimeout(async () => {
-    // Koşulları timer anında tekrar doğrula
-    if (!selectedSebep.value) return
-    if (worksInfo.value?.statu_id !== 1) return
-    if (durusKayitLoading.value) return
-    if (selectedSebep.value.break_reason_code === '000') return
-    try {
-      await durusSebebiKaydet()
-// Kaydet başarılı ise localStorage zaten durusSebebiKaydet içinde güncellendi
-    } catch (e) {
-      /* sessiz */
-    }
-  }, 250)
-})
+// Otomatik kaydetme kaldırıldı: Duruş sebebi yalnızca Enter veya Kaydet butonu ile kaydedilecek
 
 // İstasyon tespiti
 const stationId = ref<number | null>(null)
@@ -1002,44 +1045,7 @@ async function detectStation() {
 // (Yinelenen fonksiyon ve timer tanımları kaldırıldı)
 
 // Mount sırasını güncelle: önce istasyon tespit, sonra periyodikler
-onMounted(async () => {
-  await nextTick()
-  applyPageTitle()
-  await detectStation()
-  if (!stationId.value) {
-    console.warn('İstasyon tespiti başarısız; periyodikler başlatılmadı.')
-    return
-  }
-  computeDurumSuresi()
-  fetchKpiDirect()
-  kpiTimer = setInterval(fetchKpiDirect, 10000)
-  timer = setInterval(() => {
-    const now = new Date()
-    const hh = String(now.getHours()).padStart(2, '0')
-    const mm = String(now.getMinutes()).padStart(2, '0')
-    const ss = String(now.getSeconds()).padStart(2, '0')
-    time.value = `${hh}:${mm}:${ss}`
-
-    const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
-    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
-    dateText.value = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} ${days[now.getDay()]}`
-
-    // statu_time'a bağlı Durum Süresi'ni her saniye güncelle
-    computeDurumSuresi()
-  }, 1000)
-  info = setInterval(fetchWorksInfo, 1000)
-  fetchIsEmirleri()
-  durusSebepleriniAl()
-  window.addEventListener('keydown', handleShortcut)
-  window.addEventListener('keydown', handleHurdaShortcut)
-})
-
-onUnmounted(() => {
-  if (timer) clearInterval(timer)
-  if (info) clearInterval(info)
-  if (kpiTimer) clearInterval(kpiTimer)
-  if (selectedSebepSaveTimer) clearTimeout(selectedSebepSaveTimer)
-})
+// (ikinci onMounted/onUnmounted bloğu kaldırıldı; yukarıdaki tekil mount akışı kullanılır)
 </script>
 
 <style scoped>
@@ -1564,6 +1570,7 @@ onUnmounted(() => {
   pointer-events: none !important;
   filter: grayscale(0.4);
 }
+
 /* İlk yükleme overlay (Rollform) */
 .rf-loading-overlay {
   position: fixed;
@@ -1651,7 +1658,6 @@ onUnmounted(() => {
 }
 
 @keyframes rf-glow {
-
   0%,
   100% {
     box-shadow: 0 0 0 0 rgba(59 130 246 / 35%);
