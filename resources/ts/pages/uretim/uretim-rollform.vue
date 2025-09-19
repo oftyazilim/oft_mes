@@ -1033,7 +1033,8 @@ async function detectStation() {
       stationReady.value = true
     } else {
       stationId.value = null
-      stationDetectError.value = 'İstasyon bulunamadı (IP eşleşmedi)'
+      const detected = data?.ip ? ` – tespit edilen IP: ${data.ip}` : ''
+      stationDetectError.value = 'İstasyon bulunamadı (IP eşleşmedi)' + detected
     }
   } catch (e: any) {
     stationDetectError.value = 'İstasyon tespiti hata: ' + (e?.message || 'bilinmiyor')

@@ -293,7 +293,13 @@ class UretimRollFormController extends Controller
   public function detectStation(Request $request)
   {
     try {
-      $ip = $request->ip();
+      // Reverse proxy/CDN arkasında doğru IP'yi almak için X-Forwarded-For tercih et
+      $xff = $request->header('X-Forwarded-For');
+      $ip = $xff ? trim(explode(',', $xff)[0]) : $request->ip();
+      // IPv6-mapped IPv4 ("::ffff:192.168.1.10") formatını normalize et
+      if (str_starts_with($ip, '::ffff:')) {
+        $ip = substr($ip, 7);
+      }
       // Log::info('Detect station request', ['ip' => $ip]);
       $row = DB::connection('pgsql_oft')
         ->table('oftt_works_info')
