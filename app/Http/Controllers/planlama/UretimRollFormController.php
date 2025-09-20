@@ -22,7 +22,7 @@ class UretimRollFormController extends Controller
   {
     $tz = config('app.timezone', 'Europe/Istanbul');
     $now = Carbon::now($tz);
-    $sliceStr = env('SHIFT_SLICES', '08:00-18:00, 18:00-23:30, 23:30-08:00');
+    $sliceStr = env('SHIFT_SLICES', '23:30-08:00, 08:00-18:00, 18:00-23:30');
     $raw = array_values(array_filter(array_map('trim', explode(',', $sliceStr))));
     // Varsayılan etiketler: G (Gündüz), A (Akşam), N (Gece) – uzunluk eşleşmezse indeks kullan.
     $labels = ['G', 'A', 'N'];
@@ -390,6 +390,22 @@ class UretimRollFormController extends Controller
     return response()->json(['message' => 'Aktif iş emri güncellendi']);
   }
 
+  /**
+   * İstasyon açıldığında operatör bilgisini oftt_works_info.operator_id alanına yaz.
+   */
+  public function setOperator(Request $request)
+  {
+    $validated = $request->validate([
+      'station_id' => 'required|numeric',
+      'operator_id' => 'required|numeric',
+    ]);
+    DB::connection('pgsql_oft')
+      ->table('oftt_works_info')
+      ->where('wstation_id', $validated['station_id'])
+      ->update(['operator_id' => $validated['operator_id']]);
+    return response()->json(['ok' => true]);
+  }
+
 
   public function DurusKaydet(Request $request)
   {
@@ -402,22 +418,70 @@ class UretimRollFormController extends Controller
         'break_description' => $request->selectedDurus['description'] ?? 'GİRİLMEDİ',
       ]);
 
-    $kayit = DB::connection('pgsql_oft')
+    // Aktif (end_ts IS NULL) event kaydını güncelle
+    $active = DB::connection('pgsql_oft')
       ->table('machine_events')
+      ->select('id')
       ->where('wstation_id', $request->istasyonID)
-      ->where('state', 'DOWN')
-      ->orderBy('id', 'desc')
+      ->whereNull('end_ts')
+      ->orderByDesc('id')
       ->first();
 
-    if ($kayit) {
+    if ($active) {
       DB::connection('pgsql_oft')
         ->table('machine_events')
-        ->where('id', $kayit->id)
+        ->where('id', $active->id)
         ->update([
           'break_description' => $request->selectedDurus['description'] ?? 'GİRİLMEDİ',
-          'break_reason_code' => $request->selectedDurus['break_reason_code'] ?? '0000',
+        // Varsayılan kod: '000' (kullanıcı seçmezse)
+        'break_reason_code' => $request->selectedDurus['break_reason_code'] ?? '000',
         ]);
     }
     return response()->json(['message' => 'Güncelleme başarılı'], 200);
+  }
+
+  /**
+   * F10: Aktif event'i kapat (end_ts = now()) ve yeni bir DOWN event'i aç.
+   */
+  public function closeAndOpenDown(Request $request)
+  {
+    $validated = $request->validate([
+      'station_id' => 'required|numeric',
+    ]);
+    $sid = (int)$validated['station_id'];
+    try {
+      DB::connection('pgsql_oft')->transaction(function () use ($sid) {
+        // Mevcut aktif kaydı kapat
+        DB::connection('pgsql_oft')->update(
+          'UPDATE machine_events SET end_ts = now() WHERE id = (
+             SELECT id FROM machine_events
+             WHERE wstation_id = ? AND end_ts IS NULL
+             ORDER BY id DESC LIMIT 1
+           )',
+          [$sid]
+        );
+        // Yeni DOWN kaydını aç
+        DB::connection('pgsql_oft')->table('machine_events')->insert([
+          'wstation_id' => $sid,
+          'state' => 'DOWN',
+          'event_ts' => DB::raw('now()'),
+          'end_ts' => null,
+          'good_count_inc' => 0,
+          'scrap_count_inc' => 0,
+          // Varsayılan açıklama ve kod – ilk açılışta anlamlı değerler olsun
+          'break_description' => 'GİRİLMEDİ',
+          'break_reason_code' => '000',
+        ]);
+        // Çalışma kartında da varsayılan açıklamayı yaz (operatör seçerse sonra güncellenecek)
+        DB::connection('pgsql_oft')
+          ->table('oftt_works_info')
+          ->where('wstation_id', $sid)
+          ->update(['break_description' => 'GİRİLMEDİ']);
+      });
+      return response()->json(['ok' => true]);
+    } catch (\Throwable $e) {
+      Log::error('closeAndOpenDown error', ['err' => $e->getMessage(), 'station_id' => $sid]);
+      return response()->json(['error' => 'İşlem tamamlanamadı'], 500);
+    }
   }
 }

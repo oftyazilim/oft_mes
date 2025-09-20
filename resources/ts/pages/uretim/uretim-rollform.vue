@@ -104,12 +104,19 @@
             <!-- Orta: Durum Bilgileri -->
             <section class="panel status-panel">
               <div class="form-row mt-2">
-                <label>Duruş Sebebi (F10 – Yeni Duruş)</label>
-                <AppSelect v-model="selectedSebep" :items="durusSebepleri" item-title="description"
-                  item-value="break_reason_code" return-object single-line placeholder="Seçiniz..." variant="outlined"
-                  :disabled="!isDurusModu || durusKayitLoading"
-                  :class="{ 'app-select--force-disabled': !isDurusModu || durusKayitLoading }"
-                  @keydown.enter.prevent="durusSebebiKaydet" />
+                <label>Duruş Sebebi (F8 – Yeni Duruş)</label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <AppSelect v-model="selectedSebep" :items="durusSebepleri" item-title="description"
+                    item-value="break_reason_code" return-object single-line placeholder="Seçiniz..." variant="outlined"
+                    :disabled="!isDurusModu || durusKayitLoading"
+                    :class="{ 'app-select--force-disabled': !isDurusModu || durusKayitLoading }"
+                    @keydown.enter.prevent="durusSebebiKaydet" />
+                  <VBtn color="success" variant="tonal" size="small"
+                    :disabled="!isDurusModu || durusKayitLoading || !selectedSebep" @click="durusSebebiKaydet">
+                    Kaydet
+                    <VIcon end icon="tabler-check" />
+                  </VBtn>
+                </div>
                 <AppTextarea v-model="durusAciklamasi" placeholder="Açıklama..." disabled />
               </div>
 
@@ -119,11 +126,15 @@
               </div>
 
               <div class="status-actions justify-between">
-                <VBtn variant="tonal" color="warning" size="small" width="48%">
+                <VBtn variant="tonal" color="warning" size="small" width="32%" @click="yeniDurusF8">
+                  F8 - Yeni Duruş
+                  <VIcon end icon="tabler-player-skip-forward" />
+                </VBtn>
+                <VBtn variant="tonal" color="warning" size="small" width="32%" @click="cayMolasiKaydet">
                   F9 - Çay Molası
                   <VIcon end icon="tabler-mug" />
                 </VBtn>
-                <VBtn variant="tonal" color="warning" size="small" width="48%">
+                <VBtn variant="tonal" color="warning" size="small" width="32%" @click="yemekMolasiKaydet">
                   F10 - Yemek Molası
                   <VIcon end icon="tabler-bowl-spoon" />
                 </VBtn>
@@ -143,15 +154,15 @@
               <div class="uclu text-center mt-4">
                 <div>
                   <div class="label">Çalışma</div>
-                  <div class="metric-time ok">00:00</div>
+                  <div class="metric-time ok">{{ calismaSure }}</div>
                 </div>
                 <div>
                   <div class="label">Duruş</div>
-                  <div class="metric-time warn">00:00</div>
+                  <div class="metric-time warn">{{ durusSure }}</div>
                 </div>
                 <div>
                   <div class="label">Boşta</div>
-                  <div class="metric-time">02:00</div>
+                  <div class="metric-time">{{ bostaSure }}</div>
                 </div>
               </div>
             </section>
@@ -167,7 +178,6 @@
               <VProgressLinear
                 :model-value="((worksInfo?.net_qty + worksInfo?.counter) / worksInfo?.order_qty * 100) ?? 0"
                 color="warning" height="10" :rounded="true" class="my-4" />
-
               <VRow>
                 <VCol cols="5">
                   <div>
@@ -213,25 +223,28 @@
                     </VRow>
 
 
-                    <div class="mt-10">
-                      <div>İş Emri No:</div>
-                      <div class="info">{{ worksInfo?.worder_no }}</div>
+
+
+
+                    <div width="60%">
+                      <div class="label">İş Emri No</div>
+                      <div class="bilgi">{{ worksInfo?.worder_no }}</div>
                     </div>
                     <div width="60%">
-                      <div>Ürün Kodu:</div>
-                      <div class="info">{{ worksInfo?.item_code }}</div>
+                      <div class="label">Ürün Kodu</div>
+                      <div class="bilgi">{{ worksInfo?.item_code }}</div>
                     </div>
                     <div width="60%">
-                      <div>Ürün Adı:</div>
-                      <div class="info">{{ worksInfo?.item_name }}</div>
+                      <div class="label">Kalan</div>
+                      <div class="bilgi">{{ worksInfo?.item_name }}</div>
                     </div>
                   </div>
                   <div width="60%">
-                    <div>Ürün Boyu:</div>
-                    <div class="info">{{ fmt0(worksInfo?.item_length) }}</div>
+                    <div class="label">Ürün Boyu</div>
+                    <div class="bilgi">{{ fmt0(worksInfo?.item_length) }}</div>
                   </div>
 
-                  <div class="status-actions mt-11 mb-0">
+                  <div class="status-actions mt-5 mb-0">
                     <VBtn id="hurdaGir" variant="outlined" color="error" width="100%" @click="openHurdaDialog">
                       F8 - Hurda Girişi
                       <VIcon end icon="tabler-trash" />
@@ -534,6 +547,8 @@ onMounted(async () => {
 
     // statu_time'a bağlı Durum Süresi'ni her saniye güncelle
     computeDurumSuresi()
+    // Vardiya + çalışma/duruş/boşta sürelerini her saniye güncelle
+    computeVardiyaSureleri()
   }, 1000)
 
   info = setInterval(fetchWorksInfo, 2000)
@@ -581,6 +596,14 @@ function fmt0(v: unknown): string {
 
 const durumSuresi = ref('00:00:00')
 const vardiyaSuresi = ref('00:00')
+const calismaSure = ref('00:00')
+const durusSure = ref('00:00')
+const bostaSure = ref('00:00')
+// KPI ham değerlerden saniye cinsinden toplamlar
+const upSec = ref(0)
+const downSec = ref(0)
+// Vardiya başlangıç zamanı (ms)
+const shiftStartMs = ref<number | null>(null)
 const time = ref('00:00:00')
 const dateText = ref('...')
 
@@ -592,6 +615,14 @@ function toHHMMSS(totalSeconds: number): string {
   const s = sec % 60
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${pad(h)}:${pad(m)}:${pad(s)}`
+}
+// HH:MM formatı
+function toHHMM(totalSeconds: number): string {
+  const sec = Math.max(0, Math.floor(totalSeconds || 0))
+  const h = Math.floor(sec / 3600)
+  const m = Math.floor((sec % 3600) / 60)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(h)}:${pad(m)}`
 }
 function computeDurumSuresi() {
   const v = worksInfo.value?.statu_time as unknown
@@ -617,6 +648,27 @@ function computeDurumSuresi() {
   durumSuresi.value = toHHMMSS(seconds)
 }
 
+// Vardiya, çalışma, duruş ve boşta sürelerini hesapla
+function computeVardiyaSureleri() {
+  // Vardiya: başlangıçtan şu ana
+  if (shiftStartMs.value != null) {
+    const vSec = Math.max(0, Math.floor((Date.now() - shiftStartMs.value) / 1000))
+    vardiyaSuresi.value = toHHMM(vSec)
+    const up = Math.max(0, Math.floor(upSec.value || 0))
+    const down = Math.max(0, Math.floor(downSec.value || 0))
+    calismaSure.value = toHHMM(up)
+    durusSure.value = toHHMM(down)
+    const idle = Math.max(0, vSec - up - down)
+    bostaSure.value = toHHMM(idle)
+  } else {
+    // Varsayılanlar
+    vardiyaSuresi.value = '00:00'
+    calismaSure.value = '00:00'
+    durusSure.value = '00:00'
+    bostaSure.value = '00:00'
+  }
+}
+
 function findSebepByDescription(substr: string) {
   const lower = substr.toLowerCase()
   return (durusSebepleri.value as any[]).find(s => String(s.description || '').toLowerCase().includes(lower))
@@ -630,12 +682,60 @@ function handleShortcut(e: KeyboardEvent) {
       selectedSebep.value = { break_reason_code: tea.break_reason_code, description: tea.description }
       e.preventDefault()
     }
+  } else if (e.key === 'F8') {
+    e.preventDefault()
+    yeniDurusF8()
   } else if (e.key === 'F10') {
-    const combo = findSebepByDescription('çay ve yemek') || findSebepByDescription('cay ve yemek') || findSebepByDescription('çay & yemek')
-    if (combo) {
-      selectedSebep.value = { break_reason_code: combo.break_reason_code, description: combo.description }
+    // Yemek molası seç
+    const meal = findSebepByDescription('yemek') || findSebepByDescription('öğle') || findSebepByDescription('ogle')
+    if (meal) {
+      selectedSebep.value = { break_reason_code: meal.break_reason_code, description: meal.description }
       e.preventDefault()
     }
+  }
+}
+
+async function yeniDurusF8() {
+  if (!isDurusModu.value) return
+  if (!stationId.value) return
+  try {
+    await axios.post('/api/uretim-rollform/close-and-open-down', { station_id: stationId.value })
+    notify({ message: 'Yeni duruş başlatıldı (F8)', type: 'success', displayTime: 1500 })
+    void Promise.allSettled([fetchWorksInfo(), fetchKpiDirect()])
+  } catch (e) {
+    console.error('F8 yeni duruş hata', e)
+    notify({ message: 'Yeni duruş başlatılamadı', type: 'error', displayTime: 2000 })
+  }
+}
+
+function yemekMolasiF10() {
+  if (!isDurusModu.value) return
+  // Yemek molasını seç
+  const meal = findSebepByDescription('yemek') || findSebepByDescription('öğle') || findSebepByDescription('ogle')
+  if (meal) {
+    selectedSebep.value = { break_reason_code: meal.break_reason_code, description: meal.description }
+  }
+}
+
+async function cayMolasiKaydet() {
+  if (!isDurusModu.value || durusKayitLoading.value) return
+  const tea = findSebepByDescription('çay') || findSebepByDescription('cay')
+  if (tea) {
+    selectedSebep.value = { break_reason_code: tea.break_reason_code, description: tea.description }
+    await durusSebebiKaydet()
+  } else {
+    notify({ message: 'Çay molası sebebi bulunamadı', type: 'warning', displayTime: 1500 })
+  }
+}
+
+async function yemekMolasiKaydet() {
+  if (!isDurusModu.value || durusKayitLoading.value) return
+  const meal = findSebepByDescription('yemek') || findSebepByDescription('öğle') || findSebepByDescription('ogle')
+  if (meal) {
+    selectedSebep.value = { break_reason_code: meal.break_reason_code, description: meal.description }
+    await durusSebebiKaydet()
+  } else {
+    notify({ message: 'Yemek molası sebebi bulunamadı', type: 'warning', displayTime: 1500 })
   }
 }
 
@@ -759,13 +859,25 @@ async function fetchKpiDirect() {
         quality: pct(data.kpi.quality),
         oee: pct(data.kpi.oee),
       }
+      // Vardiya penceresi
       if (data.shift) {
+        // Ekran için HH:MM gösterimi
         shiftInfo.value = {
           id: data.shift.id,
-          start: data.shift.start.substring(11, 16),
-          end: data.shift.end.substring(11, 16)
+          start: String(data.shift.start || '').substring(11, 16),
+          end: String(data.shift.end || '').substring(11, 16)
         }
+        // Hesaplama için başlangıç zamanı (ms)
+        const ms = Date.parse(data.shift.start)
+        if (!Number.isNaN(ms)) shiftStartMs.value = ms
       }
+      // Ham süreler (saniye): çalışma ve duruş
+      if (data.raw) {
+        upSec.value = Math.max(0, Math.floor(Number(data.raw.upSeconds || 0)))
+        downSec.value = Math.max(0, Math.floor(Number(data.raw.downSeconds || 0)))
+      }
+      // İlk çekimde anında hesapla
+      computeVardiyaSureleri()
       kpiLoaded.value = true
       kpiReady.value = true
     }
@@ -1031,6 +1143,13 @@ async function detectStation() {
     if (data && data.station_id) {
       stationId.value = Number(data.station_id)
       stationReady.value = true
+      // Operatör atanması: istasyon bulunduysa ve kullanıcı oturum açıksa
+      try {
+        const opId = Number(userData?.value?.id || userData?.value?.user?.id)
+        if (Number.isFinite(opId) && opId > 0) {
+          await axios.post('/api/uretim-rollform/set-operator', { station_id: stationId.value, operator_id: opId })
+        }
+      } catch (e) { /* sessiz */ }
     } else {
       stationId.value = null
       const detected = data?.ip ? ` – tespit edilen IP: ${data.ip}` : ''
@@ -1284,6 +1403,25 @@ async function detectStation() {
   font-size: 40px;
 }
 
+.bilgi {
+  /* background-color: #2a3142; */
+  color: #5993b5;
+  font-size: 24px;
+  font-weight: bold;
+  text-align-last: center;
+  border-radius: 10px;
+  border: rgb(131, 114, 23) solid 1px;
+}
+
+.bilgi-urun-adi {
+  /* background-color: #2a3142; */
+  color: #5993b5;
+  font-size: 24px;
+  font-weight: bold;
+  text-align-last: left;
+  border-radius: 10px;
+  border: rgb(131, 114, 23) solid 1px;
+}
 .uclu {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

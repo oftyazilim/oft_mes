@@ -140,14 +140,16 @@
         <article v-for="m in machines" :key="m.id" class="machine-card">
           <div class="card-top">
             <div class="names">
-              <h3 class="machine-name">{{ m.code }} - {{ m.name }}</h3>
-              <p class="operator-name" v-if="m.operator">Operatör: {{ m.operator }}</p>
+              <h3 class="machine-name" style="font-size: 20px;">{{ m.code }} - <span class="machine-name">{{ truncate(m.name, 35) }}</span></h3>
+              <p class="mb-1">Operatör: <span class="operator-name" v-if="m.operator"> {{ m.operator }}</span></p>
             </div>
             <div class="status" :class="m.status">
+              <span class="duration pe-3">{{ durationSinceShort(m.statuTime) }}</span>
+              <!-- <span class="label">{{ statusText(m.status) }}</span> -->
               <span class="dot"></span>
-              <span class="label">{{ statusText(m.status) }}</span>
             </div>
           </div>
+
 
           <div class="meta-row" v-if="m.itemCode || m.itemName || m.counter !== undefined">
             <div class="meta-left">
@@ -191,6 +193,14 @@
                   title="Kalan"></div>
               </div>
             </template>
+
+          <!-- Ek bilgi satırı: sadece duruşta (stopped) sebep göster -->
+          <div class="status-extra" v-if="m.status === 'stopped' && displayReason(m)">
+            <div class="extra-right">
+              <span>Sebep: </span>
+              <span class="value reason" :title="displayReason(m)">{{ displayReason(m) }}</span>
+            </div>
+          </div>
           </div>
         </article>
       </template>
@@ -333,6 +343,8 @@ interface MachineCard {
   name: string;
   code?: string;
   operator?: string;
+  breakDescription?: string;
+  statuTime?: string | number | Date | null;
   itemCode?: string;
   itemName?: string;
   counter?: number;
@@ -441,6 +453,10 @@ function segmentTotal(segments: Segment[]): number {
   return segments.reduce((sum, s) => sum + (Number(s.duration) || 0), 0) || 0;
 }
 
+function truncate(val: string, max = 20) {
+  return val.length > max ? val.slice(0, max) + '…' : val
+}
+
 function getSegmentStyle(seg: Segment, all: Segment[]) {
   const total = Math.max(1, segmentTotal(all));
   const widthPercent = Math.max(0, (Number(seg.duration) || 0) / total * 100);
@@ -483,6 +499,8 @@ async function loadData(signal?: AbortSignal) {
       id: Number(m.id),
       name: String(m.name ?? ''),
       operator: m.operator || undefined,
+      breakDescription: m.break_description ?? m.breakDescription ?? m.break_desc ?? undefined,
+      statuTime: m.statu_time ?? m.statuTime ?? undefined,
       itemCode: m.itemCode ?? m.item_code ?? undefined,
       itemName: m.itemName ?? m.item_name ?? undefined,
       counter: (m.counter !== undefined && m.counter !== null) ? Number(m.counter) : undefined,
@@ -606,14 +624,74 @@ function formatTime(d: Date | null) {
   return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
+// --- Statü süresi (statu_time -> now farkı) ---
+const nowTick = ref<number>(Date.now());
+let durTimer: number | null = null;
+
+function parseStatuTime(v: unknown): number | null {
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'number') {
+    // Saniye mi milisaniye mi?
+    return v > 1e12 ? v : (v > 1e10 ? v : Math.round(v * 1000));
+  }
+  const d = v instanceof Date ? v : new Date(String(v));
+  const ms = d.getTime();
+  return Number.isFinite(ms) ? ms : null;
+}
+
+function fmtHHMMSS(totalSeconds: number): string {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = Math.floor(totalSeconds % 60);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+function durationSince(statuTime: MachineCard['statuTime']): string {
+  const t = parseStatuTime(statuTime as any);
+  if (!t) return '-';
+  const deltaSec = Math.max(0, Math.floor((nowTick.value - t) / 1000));
+  return fmtHHMMSS(deltaSec);
+}
+
+// Kısa süre formatı: 2h 03m, 12m 05s, 45s
+function durationSinceShort(statuTime: MachineCard['statuTime']): string {
+  const t = parseStatuTime(statuTime as any);
+  if (!t) return '-';
+  let sec = Math.max(0, Math.floor((nowTick.value - t) / 1000));
+  const h = Math.floor(sec / 3600); sec %= 3600;
+  const m = Math.floor(sec / 60); const s = sec % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  if (h > 0) return `${h}h ${pad(m)}m`;
+  if (m > 0) return `${m}m ${pad(s)}s`;
+  return `${s}s`;
+}
+
+// Sebep fallback: API break_description yoksa segmentlerden son duruş sebebini dene
+function displayReason(m: MachineCard): string | undefined {
+  if (m.breakDescription) return String(m.breakDescription);
+  const segs = Array.isArray(m.segments) ? m.segments : [];
+  for (let i = segs.length - 1; i >= 0; i--) {
+    const t = normalizeSegType(String(segs[i]?.type));
+    if (t === 'durus') {
+      const r = (segs[i] as any).reason || (segs[i] as any).sebep || (segs[i] as any).code;
+      if (r) return String(r);
+    }
+  }
+  return undefined;
+}
+
 onMounted(async () => {
   document.addEventListener('visibilitychange', handleVisibility);
   await tick();
+  // Her kart için süre göstergesini canlı güncelle
+  durTimer = window.setInterval(() => { nowTick.value = Date.now(); }, 1000);
 });
 onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', handleVisibility);
   if (controller) controller.abort();
   if (timer) clearTimeout(timer);
+  if (durTimer) clearInterval(durTimer);
 });
 </script>
 
@@ -955,6 +1033,9 @@ onBeforeUnmount(() => {
 }
 
 .card-top {
+  background-color: #33404d;
+  border-radius: 10px 10px 0 0;
+  padding-inline: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -968,8 +1049,13 @@ onBeforeUnmount(() => {
 
 .operator-name {
   margin: 0;
-  color: var(--v-theme-on-surface-variant, #bdbdbd);
-  font-size: 15px;
+  color: #ffa500;
+
+  /* turuncu */
+  font-size: 17px;
+
+  /* bir tık büyük */
+  font-weight: 600;
 }
 
 .meta-row {
@@ -993,7 +1079,7 @@ onBeforeUnmount(() => {
 
 .meta-name {
   color: var(--v-theme-on-surface, #e5e5e5);
-  font-size: 14px;
+  font-size: 18px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1030,9 +1116,15 @@ onBeforeUnmount(() => {
 .status .dot {
   position: relative;
   background: #888;
-  border-radius: 5px;
-  block-size: 10px;
+  border-radius: 10px;
+  block-size: 20px;
   inline-size: 50px;
+}
+
+.status .duration {
+  margin-inline-start: 6px;
+  font-size: 18px;
+  opacity: 0.9;
 }
 
 .status.running {
@@ -1085,15 +1177,15 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 0;
   border: 1px solid var(--v-theme-outline-variant, #2a2a2a);
   border-radius: 8px;
   background: var(--v-theme-surface-variant, #161616);
-  padding: 8px;
+  padding: 2px;
 }
 
 .kpi-item strong {
-  font-size: 22px;
+  font-size: 30px;
 }
 
 .kpi-item.oee {
@@ -1170,6 +1262,37 @@ onBeforeUnmount(() => {
 .multi-seg.remain {
   background: repeating-linear-gradient(45deg, #2a2a2a, #2a2a2a 6px, #1a1a1a 6px, #1a1a1a 12px);
   opacity: 0.5;
+}
+
+/* Ek bilgi satırı: Süre ve duruş sebebi */
+.status-extra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px dashed var(--v-theme-outline-variant, #4e4d4d);
+  border-radius: 8px;
+  background: #693d3d;
+  padding-block: 6px;
+  padding-inline: 8px;
+}
+
+.status-extra .label {
+  color: #bdbdbd;
+  font-size: 12px;
+  margin-inline-end: 6px;
+}
+
+.status-extra .value {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-extra .reason {
+  max-inline-size: 32ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .charts-grid {
@@ -1392,6 +1515,7 @@ onBeforeUnmount(() => {
     transform: none !important;
   }
 }
+
 .chart-card {
   background: rgb(var(--v-theme-surface));
   border: 1px solid var(--v-theme-outline-variant, #262626);
@@ -1650,26 +1774,66 @@ onBeforeUnmount(() => {
     opacity: 1;
   }
 }
-.w-20 { inline-size: 20%; }
-.w-40 { inline-size: 40%; }
-.w-60 { inline-size: 60%; }
-.mt-1 { margin-block-start: 4px; }
-.ml-auto { margin-inline-start: auto; }
+
+.w-20 {
+  inline-size: 20%;
+}
+
+.w-40 {
+  inline-size: 40%;
+}
+
+.w-60 {
+  inline-size: 60%;
+}
+
+.mt-1 {
+  margin-block-start: 4px;
+}
+
+.ml-auto {
+  margin-inline-start: auto;
+}
+
 @keyframes sk {
-  0% { opacity: 0.5; }
-  50% { opacity: 1; }
-  100% { opacity: 0.5; }
+  0% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.5;
+  }
 }
 
 @keyframes ping-green {
-  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 60%); }
-  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0%); }
-  100% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0%); }
-}
-@keyframes blink-orange {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 60%);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0%);
+  }
+
+  100% {
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0%);
+  }
 }
 
+@keyframes blink-orange {
+  0% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.6;
+  }
+}
 </style>

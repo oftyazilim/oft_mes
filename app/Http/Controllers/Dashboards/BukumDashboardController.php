@@ -43,6 +43,7 @@ class BukumDashboardController extends BaseController
         $stationIds = $stations->pluck('wstation_id')->filter()->values();
         $eventsByStation = [];
         $timelineByStation = [];
+        $lastEventByStation = [];
         if ($stationIds->isNotEmpty()) {
             $evRows = DB::connection('pgsql_oft')
                 ->table('machine_events')
@@ -92,6 +93,15 @@ class BukumDashboardController extends BaseController
                     'reason' => $type === 'durus' ? ($tr->break_description ?? null) : null,
                     'code' => $type === 'durus' ? ($tr->break_reason_code ?? null) : null,
                 ];
+            }
+
+            // Her istasyon için son event (aktif ise end_ts NULL). PostgreSQL distinct on ile pratikçe alınır.
+            $placeholders = implode(',', array_fill(0, count($stationIds), '?'));
+            $bindings = $stationIds->all();
+            $sql = "SELECT DISTINCT ON (wstation_id) wstation_id, state, break_description, break_reason_code, event_ts, end_ts, id\n                    FROM machine_events\n                    WHERE wstation_id IN ($placeholders)\n                    ORDER BY wstation_id, event_ts DESC, id DESC";
+            $rows = DB::connection('pgsql_oft')->select($sql, $bindings);
+            foreach ($rows as $row) {
+                $lastEventByStation[(int)$row->wstation_id] = $row;
             }
         }
 
@@ -147,6 +157,24 @@ class BukumDashboardController extends BaseController
             $workRatio = $totalTracked > 0 ? round($upSeconds / $totalTracked * 100) : 0;
             $stopRatio = max(0, 100 - $workRatio);
 
+            // statu_time ve duruş sebebi (aktif duruş için) – son event üzerinden
+            $statuTimeIso = null;
+            $breakDescription = null;
+            if (isset($lastEventByStation[$sid])) {
+                $le = $lastEventByStation[$sid];
+                try {
+                    $statuTimeIso = Carbon::parse($le->event_ts)->toIso8601String();
+                } catch (\Throwable $e) {
+                    $statuTimeIso = null;
+                }
+                $stateUp = strtoupper((string)$le->state);
+                $isDown = in_array($stateUp, ['DOWN', 'DUR', 'DURUŞ', 'DURUS']);
+                $isActive = empty($le->end_ts);
+                if ($isDown && $isActive) {
+                    $breakDescription = $le->break_description ?? null;
+                }
+            }
+
             $machines[] = [
                 'id' => $sid,
                 'code' => $ws->wstation_code ?: '',
@@ -163,6 +191,9 @@ class BukumDashboardController extends BaseController
                 'workRatio' => $workRatio,
                 'stopRatio' => $stopRatio,
                 'segments' => $timelineByStation[$sid] ?? [],
+                // Yeni alanlar: frontend kısa süreyi chip içinde gösterecek; sebep yalnız duruşta görünür
+                'statu_time' => $statuTimeIso,
+                'break_description' => $breakDescription,
             ];
 
             $sumAvailability += $availability;
@@ -189,7 +220,7 @@ class BukumDashboardController extends BaseController
         if (!empty($stationIds)) {
             $reasonsRaw = DB::connection('pgsql_oft')
                 ->table('machine_events')
-                ->selectRaw("COALESCE(break_reason_code, '0000') AS code, COALESCE(break_description, 'Bilinmiyor') AS name, SUM(EXTRACT(EPOCH FROM (LEAST(COALESCE(end_ts, now()), ?) - GREATEST(event_ts, ?)))) AS seconds", [$end, $start])
+                ->selectRaw("COALESCE(break_reason_code, '000') AS code, COALESCE(break_description, 'Bilinmiyor') AS name, SUM(EXTRACT(EPOCH FROM (LEAST(COALESCE(end_ts, now()), ?) - GREATEST(event_ts, ?)))) AS seconds", [$end, $start])
                 ->whereIn('wstation_id', $stationIds)
                 ->where('state', 'DOWN')
                 ->where('event_ts', '<', $end)
