@@ -222,10 +222,6 @@
                       </VCol>
                     </VRow>
 
-
-
-
-
                     <div width="60%">
                       <div class="label">İş Emri No</div>
                       <div class="bilgi">{{ worksInfo?.worder_no }}</div>
@@ -243,68 +239,31 @@
                     <div class="label">Ürün Boyu</div>
                     <div class="bilgi">{{ fmt0(worksInfo?.item_length) }}</div>
                   </div>
-
-                  <div class="status-actions mt-5 mb-0">
-                    <VBtn id="hurdaGir" variant="outlined" color="error" width="100%" @click="openHurdaDialog">
-                      F8 - Hurda Girişi
-                      <VIcon end icon="tabler-trash" />
-                    </VBtn>
-                  </div>
-
+                  <VRow class="mt-1">
+                    <VCol cols="6" class="mt-0 py-2 pe-1">
+                      <VBtn id="hurdaGir" block variant="outlined" color="error" 
+                      @click="openHurdaDialog">
+                        F8 - Hurda Girişi
+                      </VBtn>
+                    </VCol>
+                    <VCol cols="6" class="mt-0 py-2 ps-1">
+                      <VBtn variant="outlined" block @click="openUretimGirisiDialog">İş Emrini Kapat</VBtn>
+                    </VCol>
+                  </VRow>
+                  <VRow class="mt-1">
+                    <VCol cols="6" class="mt-0 py-2 pe-1">
+                      <VBtn variant="outlined" block @click="openTechnicalDrawing">Teknik Resim</VBtn>
+                    </VCol>
+                    <VCol cols="6" class="mt-0 py-2 ps-1">
+                      <VBtn variant="outlined" block>Ürün Etiketi Bas</VBtn>
+                    </VCol>
+                  </VRow>
                 </VCol>
-
               </VRow>
-
             </section>
           </VCard>
         </VCol>
-
       </VRow>
-    </div>
-
-    <!-- Hurda Giriş Dialog -->
-    <VDialog v-model="hurdaDialog" max-width="400">
-      <VCard>
-        <VCardTitle>Hurda Girişi</VCardTitle>
-        <VCardText>
-          <VTextField ref="hurdaInputRef" v-model="hurdaInput" label="Hurda Miktarı" type="number" hide-details :min="1"
-            step="1" autofocus @keydown.enter.prevent="onHurdaEnter" @keyup.enter.prevent="onHurdaEnter"
-            @keydown.esc.prevent="cancelHurda" />
-          <div class="text-caption mt-2">Enter = Kaydet, Esc = İptal</div>
-        </VCardText>
-        <VCardActions>
-          <VSpacer />
-          <VBtn variant="text" color="grey" @click="cancelHurda">İptal (Esc)</VBtn>
-          <VBtn variant="elevated" color="error" @click="kaydetHurda" :loading="hurdaKayitLoading"
-            :disabled="hurdaKayitLoading">
-            <template v-if="hurdaKayitLoading">
-              <VProgressCircular indeterminate size="18" color="white" class="mr-2" /> Kaydediliyor...
-            </template>
-            <template v-else>Kaydet (Enter)</template>
-          </VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
-
-
-
-
-    <!-- Aksiyonlar ve tablo alanı -->
-    <div class="mid-actions ">
-      <div class="action-left">
-        <VBtn variant="tonal">İş Emrini Kapat</VBtn>
-
-        <VBtn variant="tonal" @click="openTechnicalDrawing">Teknik Resim</VBtn>
-        <VBtn variant="tonal">Ürün Etiketi Bas</VBtn>
-        <!-- <VBtn variant="tonal" icon="🔍">Ara</VBtn> -->
-      </div>
-      <!-- <div class="action-right">
-        <button class="btn btn-warn">Vardiya Bitir</button>
-        <button class="btn icon">🟨</button>
-        <button class="btn icon">🗂️</button>
-        <button class="btn icon">⏻</button>
-      </div> -->
     </div>
 
     <section class="panel grid-panel">
@@ -367,6 +326,30 @@
       <button class="tab">Kısayollar</button>
     </div>
 
+    <!-- Hurda Giriş Dialog -->
+    <VDialog v-model="hurdaDialog" max-width="400">
+      <VCard>
+        <VCardTitle>Hurda Girişi</VCardTitle>
+        <VCardText>
+          <VTextField ref="hurdaInputRef" v-model="hurdaInput" label="Hurda Miktarı" type="number" hide-details :min="1"
+            step="1" autofocus @keydown.enter.prevent="onHurdaEnter" @keyup.enter.prevent="onHurdaEnter"
+            @keydown.esc.prevent="cancelHurda" />
+          <div class="text-caption mt-2">Enter = Kaydet, Esc = İptal</div>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn variant="text" color="grey" @click="cancelHurda">İptal (Esc)</VBtn>
+          <VBtn variant="elevated" color="error" @click="kaydetHurda" :loading="hurdaKayitLoading"
+            :disabled="hurdaKayitLoading">
+            <template v-if="hurdaKayitLoading">
+              <VProgressCircular indeterminate size="18" color="white" class="mr-2" /> Kaydediliyor...
+            </template>
+            <template v-else>Kaydet (Enter)</template>
+          </VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
     <!-- İş Emri Aktivasyon Diyaloğu -->
     <VDialog v-model="activateDialog" max-width="420" @keydown.esc.prevent.stop="activateDialog = false">
       <VCard>
@@ -385,6 +368,37 @@
           <VSpacer />
           <VBtn variant="text" @click="activateDialog = false">İptal</VBtn>
           <VBtn color="primary" variant="flat" @click="confirmActivate" :disabled="!activateLength">Onayla</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- Üretim Girişi (İş Emrini Kapat) Dialog -->
+    <VDialog v-model="uretimiKapatDialog" max-width="520" @keydown.esc.prevent.stop="closeUretimGirisiDialog">
+      <VCard>
+        <VCardTitle class="text-h6">Üretim Girişi</VCardTitle>
+        <VCardText>
+          <VRow class="mb-2">
+            <VCol cols="12" sm="4">
+              <div class="label">İş Emri Miktarı</div>
+              <div class="bilgi">{{ fmt0(worksInfo?.order_qty) }}</div>
+            </VCol>
+            <VCol cols="12" sm="4">
+              <div class="label">Üretilen (uyum)</div>
+              <div class="bilgi">{{ fmt0(worksInfo?.net_qty) }}</div>
+            </VCol>
+            <VCol cols="12" sm="4">
+              <div class="label">Sayaç</div>
+              <div class="bilgi">{{ fmt0(worksInfo?.counter) }}</div>
+            </VCol>
+          </VRow>
+          <VTextField v-model.number="manuelUretimMiktari" type="number" label="Elle Üretim Miktarı"
+            variant="outlined" density="comfortable" :min="0" :step="1" hide-details />
+          <div class="text-caption mt-2">Bilgi amaçlı değerler read-only gösterilir. Kaydet ile elle girilen miktarı işleyeceğiz.</div>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn variant="text" color="grey" @click="closeUretimGirisiDialog">Vazgeç</VBtn>
+          <VBtn color="primary" variant="flat" @click="saveUretimGirisi" :disabled="manuelUretimMiktari == null">Kaydet</VBtn>
         </VCardActions>
       </VCard>
     </VDialog>
@@ -922,6 +936,22 @@ function openActivateDialog(row: Row) {
   activateRow.value = row
   activateLength.value = null
   activateDialog.value = true
+}
+
+// Üretim Girişi dialog state ve aksiyonları
+const uretimiKapatDialog = ref(false)
+const manuelUretimMiktari = ref<number | null>(null)
+function openUretimGirisiDialog() {
+  manuelUretimMiktari.value = null
+  uretimiKapatDialog.value = true
+}
+function closeUretimGirisiDialog() {
+  uretimiKapatDialog.value = false
+}
+function saveUretimGirisi() {
+  // Şimdilik yalnızca dialogu kapat ve bilgi mesajı göster; backend entegrasyonu sonra
+  notify({ message: 'Üretim girişi kaydedilecek (yakında).', type: 'info', displayTime: 1500 })
+  uretimiKapatDialog.value = false
 }
 
 async function confirmActivate() {
@@ -1811,7 +1841,6 @@ async function detectStation() {
 }
 
 @keyframes rf-glow {
-
   0%,
   100% {
     box-shadow: 0 0 0 0 rgba(59 130 246 / 35%);

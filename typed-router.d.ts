@@ -169,8 +169,6 @@ declare module 'vue-router/auto-routes' {
     'uretim-production-slider': RouteRecordInfo<'uretim-production-slider', '/uretim/ProductionSlider', Record<never, never>, Record<never, never>>,
     'uretim-uretim-montaj': RouteRecordInfo<'uretim-uretim-montaj', '/uretim/uretim-montaj', Record<never, never>, Record<never, never>>,
     'uretim-uretim-rollform': RouteRecordInfo<'uretim-uretim-rollform', '/uretim/uretim-rollform', Record<never, never>, Record<never, never>>,
-    'uretim-uretim-rollform copy': RouteRecordInfo<'uretim-uretim-rollform copy', '/uretim/uretim-rollform copy', Record<never, never>, Record<never, never>>,
-    'uretim-uretim-rollform copy 2': RouteRecordInfo<'uretim-uretim-rollform copy 2', '/uretim/uretim-rollform copy 2', Record<never, never>, Record<never, never>>,
     'users': RouteRecordInfo<'users', '/users', Record<never, never>, Record<never, never>>,
     'users-user-form-drawer': RouteRecordInfo<'users-user-form-drawer', '/users/UserFormDrawer', Record<never, never>, Record<never, never>>,
     'wizard-examples-checkout': RouteRecordInfo<'wizard-examples-checkout', '/wizard-examples/checkout', Record<never, never>, Record<never, never>>,
