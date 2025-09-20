@@ -295,7 +295,7 @@
       <div class="action-left">
         <VBtn variant="tonal">İş Emrini Kapat</VBtn>
 
-        <VBtn variant="tonal">Teknik Resim</VBtn>
+        <VBtn variant="tonal" @click="openTechnicalDrawing">Teknik Resim</VBtn>
         <VBtn variant="tonal">Ürün Etiketi Bas</VBtn>
         <!-- <VBtn variant="tonal" icon="🔍">Ara</VBtn> -->
       </div>
@@ -967,6 +967,16 @@ async function fetchWorksInfo() {
     console.error('WorksInfo alınamadı', e)
     worksInfo.value = null
   } finally { worksInfoReady.value = true }
+}
+
+function openTechnicalDrawing() {
+  const code = activateRow.value?.stokKodu || worksInfo.value?.item_code || null
+  if (!code) {
+    alert('Önce bir iş emri/ürün seçiniz (stok kodu yok).')
+    return
+  }
+  const url = `/teknik-resim?code=${encodeURIComponent(code)}`
+  window.open(url, '_blank')
 }
 
 async function fetchIsEmirleri() {
@@ -1641,7 +1651,7 @@ async function detectStation() {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  margin-block: 10px -55px;
+  margin-block: 10px 0;
 }
 
 .action-left,
