@@ -20,10 +20,10 @@
             <section>
               <VCardTitle class="durum-title" :style="{ backgroundColor: statusColor }">
                 {{ worksInfo?.statu_id === 0
-                ? 'KAPALI'
-                : worksInfo?.statu_id === 1
-                ? 'DURUYOR'
-                : 'ÇALIŞIYOR' }}
+                  ? 'KAPALI'
+                  : worksInfo?.statu_id === 1
+                    ? 'DURUYOR'
+                    : 'ÇALIŞIYOR' }}
               </VCardTitle>
               <hr>
               <div class="gauge-wrap">
@@ -291,21 +291,20 @@
 
 
     <!-- Aksiyonlar ve tablo alanı -->
-    <div class="mid-actions">
+    <div class="mid-actions ">
       <div class="action-left">
-        <button class="btn">İş Emrini Kapat</button>
-        <button class="btn btn-primary">Çalışmaya Başla</button>
-        <button class="btn">Operasyon Gir</button>
-        <button class="btn">Teknik Resim</button>
-        <button class="btn">Ürün Etiketi Bas</button>
-        <button class="btn icon">🔍 Ara</button>
+        <VBtn variant="tonal">İş Emrini Kapat</VBtn>
+
+        <VBtn variant="tonal">Teknik Resim</VBtn>
+        <VBtn variant="tonal">Ürün Etiketi Bas</VBtn>
+        <!-- <VBtn variant="tonal" icon="🔍">Ara</VBtn> -->
       </div>
-      <div class="action-right">
+      <!-- <div class="action-right">
         <button class="btn btn-warn">Vardiya Bitir</button>
         <button class="btn icon">🟨</button>
         <button class="btn icon">🗂️</button>
         <button class="btn icon">⏻</button>
-      </div>
+      </div> -->
     </div>
 
     <section class="panel grid-panel">
@@ -353,6 +352,9 @@
           precision: 0,
           thousandsSeparator: ',',
         }" />
+
+        <DxSearchPanel :visible="true" :width="240" />
+
       </DxDataGrid>
     </section>
 
@@ -424,9 +426,9 @@ import DxCircularGauge, {
   DxRangeContainer,
   DxScale,
   DxTick,
-  DxValueIndicator
+  DxValueIndicator,
 } from 'devextreme-vue/circular-gauge';
-import DxDataGrid, { DxColumn } from 'devextreme-vue/data-grid';
+import DxDataGrid, { DxColumn, DxSearchPanel } from 'devextreme-vue/data-grid';
 import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup';
 import notify from 'devextreme/ui/notify';
 import { computed, nextTick, onActivated, onMounted, onUnmounted, ref, watch } from 'vue';
@@ -1422,6 +1424,7 @@ async function detectStation() {
   border-radius: 10px;
   border: rgb(131, 114, 23) solid 1px;
 }
+
 .uclu {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1638,6 +1641,7 @@ async function detectStation() {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
+  margin-block: 10px -55px;
 }
 
 .action-left,
@@ -1797,6 +1801,7 @@ async function detectStation() {
 }
 
 @keyframes rf-glow {
+
   0%,
   100% {
     box-shadow: 0 0 0 0 rgba(59 130 246 / 35%);
