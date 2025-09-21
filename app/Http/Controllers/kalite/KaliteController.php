@@ -171,7 +171,9 @@ class KaliteController extends Controller
             $serino = $request->serino;
             $isemri_no = $request->isemri_no;
 
-            $klasorYolu = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\kk-fotolari\\$isemri_no";
+            // Foto klasörü kökünü .env PHOTO_KK_DIR ile yapılandırılabilir yap (Windows UNC veya Linux mount)
+            $photoBase = rtrim(env('PHOTO_KK_DIR', "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\kk-fotolari\\"), '\\/');
+            $klasorYolu = $photoBase . DIRECTORY_SEPARATOR . $isemri_no;
 
             if (!File::exists($klasorYolu)) {
                 File::makeDirectory($klasorYolu, 0777, true);
@@ -188,7 +190,7 @@ class KaliteController extends Controller
                 }
 
                 $dosyaAdi = $serino . '-' . str_pad($sira, 2, '0', STR_PAD_LEFT) . '.jpg';
-                $tamYol = $klasorYolu . "\\" . $dosyaAdi;
+                $tamYol = $klasorYolu . DIRECTORY_SEPARATOR . $dosyaAdi;
 
                 try {
                     $imageData = base64_decode($resim['base64']);

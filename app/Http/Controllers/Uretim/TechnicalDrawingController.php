@@ -11,9 +11,15 @@ use Illuminate\Support\Str;
 
 class TechnicalDrawingController extends BaseController
 {
-    // UNC kök klasör
-    // Windows UNC: backslash ile kullan
-    private string $baseDir = "\\\\192.6.2.4\\canovate_elektronik\\12_DOKUMANTASYON\\YAYINLI RESİMLER\\ÜRETİM";
+    // Teknik resim kök klasörü (.env: TECHNICAL_DRAWINGS_DIR ile override edilir)
+    // Örn Windows: \\\\192.6.2.4\\canovate_elektronik\\12_DOKUMANTASYON\\YAYINLI RESİMLER\\ÜRETİM
+    // Örn Linux/macOS: /mnt/oft/teknik-resimler/URETIM
+    private string $baseDir;
+
+    public function __construct()
+    {
+        $this->baseDir = rtrim(env('TECHNICAL_DRAWINGS_DIR', "\\\\192.6.2.4\\canovate_elektronik\\12_DOKUMANTASYON\\YAYINLI RESİMLER\\ÜRETİM"), '\\/\u{00A0}');
+    }
 
     public function show(Request $request)
     {

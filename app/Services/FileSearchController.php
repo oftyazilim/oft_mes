@@ -14,10 +14,10 @@ class FileSearchController
         // Kullanıcıdan gelen dosya adı
         $fileName = '002003M00.PDF'; //$request->input('fileName');
 
-        // Ağdaki paylaşılan ana klasör (UNC yolu veya lokal test için bir dizin)
-         $basePath = '\\\\192.6.2.110\\oft\\TeknikResimler'; // Ağdaki klasör
-        //$basePath = '\\\\192.6.2.4\\canovate_elektronik\\12_DOKUMANTASYON\\YAYINLI RESİMLER\\ÜRETİM\\06\\06 6000'; // Ağdaki klasör
-        // $basePath = 'C:\\Users\\Public\\Documents'; // Lokal test için
+        // Ağdaki paylaşılan ana klasör (.env: FILE_SEARCH_BASE_DIR)
+        // Örn Windows: \\\\192.6.2.110\\oft\\TeknikResimler
+        // Örn Linux/macOS: /mnt/oft/TeknikResimler
+        $basePath = rtrim(env('FILE_SEARCH_BASE_DIR', '\\192.6.2.110\oft\TeknikResimler'), '\\/');
 
         // Dosyayı arama işlemi
         $filePath = $this->searchFile($basePath, $fileName);

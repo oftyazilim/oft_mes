@@ -14,8 +14,16 @@ use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 
 class StokPhotoController extends Controller
 {
-    private const BASE_NETWORK_DIR = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\sk-fotolari\\"; // ends with backslash
+    // Varsayılan (Windows UNC) kök. Linux/macOS'ta .env'den PHOTO_SK_DIR ile override edilmelidir (örn. /mnt/oft/sk-fotolari)
+    private const BASE_NETWORK_DIR = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\sk-fotolari\\"; // backslash ile biter
     private const BASE_PUBLIC_URL = '/api/stok-resimler';
+
+    private function baseDir(): string
+    {
+        // .env PHOTO_SK_DIR varsa onu kullan, değilse Windows UNC default'u kullan
+        // Sağ ve sol ayırıcıları temizleyip platforma uygun ayırıcı ile bağlayacağız
+        return rtrim(env('PHOTO_SK_DIR', self::BASE_NETWORK_DIR), '\\/');
+    }
 
     private function cleanItemCode(string $code): string
     {
@@ -26,14 +34,20 @@ class StokPhotoController extends Controller
 
     private function dirFor(string $itemCode): string
     {
-        return rtrim(self::BASE_NETWORK_DIR, '\\') . '\\' . $this->cleanItemCode($itemCode) . '\\';
+        $base = $this->baseDir();
+        return rtrim($base, '\\/') . DIRECTORY_SEPARATOR . $this->cleanItemCode($itemCode) . DIRECTORY_SEPARATOR;
     }
 
     private function nextSequentialName(string $itemCode, string $ext): string
     {
         $dir = $this->dirFor($itemCode);
         if (!File::exists($dir)) {
-            File::makeDirectory($dir, 0775, true, true);
+            try {
+                File::makeDirectory($dir, 0775, true, true);
+            } catch (\Throwable $e) {
+                Log::error('Stok foto klasörü oluşturulamadı: ' . $e->getMessage(), ['dir' => $dir]);
+                throw $e;
+            }
         }
         // Accept any allowed extension when scanning so numbering is continuous
         $pattern = '/^' . preg_quote($this->cleanItemCode($itemCode), '/') . '-(\d{3})\.(?:jpe?g|png|webp)$/i';

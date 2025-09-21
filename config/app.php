@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'oft_mes'),
 
     /*
     |--------------------------------------------------------------------------
@@ -122,5 +122,14 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Public Photo Base URL
+    |--------------------------------------------------------------------------
+    | Fotoğrafların servis edildiği public URL kökü. .env'de PHOTO_BASE_URL ile
+    | override edilebilir. Örn: http://your-host:8080/photos/
+    */
+    // 'photo_base_url' => env('PHOTO_BASE_URL', 'http://192.6.2.110:8080/photos/'),
 
 ];

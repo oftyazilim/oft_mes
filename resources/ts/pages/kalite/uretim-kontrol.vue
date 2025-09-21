@@ -1,25 +1,25 @@
 <template>
   <VRow class="match-height pa-0">
     <VCol cols="6" md="3" class="pa-2">
-      <VBtn class="text-center mb-2" block @click="popupIsemriSecVisible = true">
+      <VBtn variant="outlined" class="text-center mb-2" block @click="popupIsemriSecVisible = true">
         İş Emri Seç
       </VBtn>
     </VCol>
 
     <VCol cols="6" md="3" class="pa-2">
-      <VBtn :disabled="isEmriNo.length === 0" class="text-center mb-2" block @click="pdfGoster">
+      <VBtn variant="outlined" :disabled="isEmriNo.length === 0" class="text-center mb-2" block @click="pdfGoster">
         Teknik Resim
       </VBtn>
     </VCol>
 
     <VCol cols="6" md="3" class="pa-2">
-      <VBtn :disabled="isEmriNo.length === 0" class="text-center mb-2" block @click="KontrolKapat">
+      <VBtn variant="outlined" :disabled="isEmriNo.length === 0" class="text-center mb-2" block @click="KontrolKapat">
         Kontrol Sonu
       </VBtn>
     </VCol>
 
     <VCol cols="6" md="3" class="pa-2">
-      <VBtn :disabled="isEmriNo.length === 0" class="text-center mb-2" block @click="hataAc">
+      <VBtn variant="outlined" :disabled="isEmriNo.length === 0" class="text-center mb-2" block @click="hataAc">
         Mail Gönder
       </VBtn>
     </VCol>
@@ -145,7 +145,7 @@
               </VCol>
 
 
-              <VBtn class="d-flex justify-center mt-4" block color="warning" @click="kaydetKontroller">
+              <VBtn variant="outlined" class="d-flex justify-center mt-4" block color="warning" @click="kaydetKontroller">
                 Kaydet / Güncelle
               </VBtn>
 
@@ -226,7 +226,7 @@
 
   <VRow class="match-height pa-0">
     <VCol cols="12" class="py-2">
-      <VBtn :disabled="kontroller.masterId === 0" class="text-center me-2 mb-2" color="info" block
+      <VBtn variant="outlined" :disabled="kontroller.masterId === 0" class="text-center me-2 mb-2" color="info" block
         @click="popupVisible = true">
         Kontrol Gir
       </VBtn>
@@ -240,7 +240,7 @@
         <VCardTitle style=" color: black; font-size: 16px;">Seri Kontroller</VCardTitle>
       </VCardItem>
 
-      <div class="pa-2 d-flex justify-center gap-8">ttttt
+      <div class="pa-2 d-flex justify-center gap-8">
         <VBtn variant="tonal" icon="tabler-trash" rounded @click="kontrolSil" />
         <VBtn variant="tonal" icon="tabler-photo" rounded @click="fotoGoster" />
 
@@ -373,7 +373,7 @@
       <VCombobox v-model="aciklama" :items="hazirGerekceler" label="Gerekçe" variant="outlined" item-title="tanim"
         item-value="id" :disabled="isEmriNo.length === 0 || secilenSatirlar.length === 0" auto-grow clearable
         rows="1" />
-      <VBtn :disabled="isEmriNo.length === 0 || secilenSatirlar.length === 0" color="warning" :height="37"
+      <VBtn variant="outlined" :disabled="isEmriNo.length === 0 || secilenSatirlar.length === 0" color="warning" :height="37"
         @click="GerekceGir">
         Gerekçe Gir
       </VBtn>

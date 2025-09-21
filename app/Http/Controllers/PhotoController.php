@@ -16,24 +16,23 @@ use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 
 class PhotoController extends Controller
 {
-    // UNC ana dizin (sonunda tek ters slash olacak şekilde)
-    private const BASE_NETWORK_DIR = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\kk-fotolari\\"; // ends with backslash
-    // Depo/Stok fotoğrafları için UNC kök
-    private const BASE_SK_NETWORK_DIR = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\sk-fotolari\\"; // ends with backslash
-    private const DEFAULT_PUBLIC_PHOTO_BASE = 'http://192.6.2.110:8080/photos/';
+    // Varsayılan UNC kökleri (Windows). Linux/macOS'ta .env ile override edilebilir.
+    private const BASE_NETWORK_DIR = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\kk-fotolari\\"; // backslash ile biter
+    private const BASE_SK_NETWORK_DIR = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\sk-fotolari\\"; // backslash ile biter
+    // private const DEFAULT_PUBLIC_PHOTO_BASE = 'http://192.6.2.110:8080/photos/';
 
-    private function fotoBaseUrl(): string
-    {
-        // .env'de PHOTO_BASE_URL varsa onu kullan
-        return rtrim(config('app.photo_base_url', self::DEFAULT_PUBLIC_PHOTO_BASE), '/') . '/';
-    }
+    // private function fotoBaseUrl(): string
+    // {
+    //     // .env'de PHOTO_BASE_URL varsa onu kullan
+    //     return rtrim(config('app.photo_base_url', env('PHOTO_BASE_URL', self::DEFAULT_PUBLIC_PHOTO_BASE)), '/') . '/';
+    // }
 
     private function buildDir(string $isEmriNo): string
     {
-        // Base'i sağdan temizle, iş emri no baş/son backslash temizle ve standardize ederek sonuna bir ayırıcı ekle
-        $base = rtrim(self::BASE_NETWORK_DIR, '\\');
-        $cleanIsEmri = trim($isEmriNo, '\\');
-        return $base . '\\' . $cleanIsEmri . '\\';
+        // Base'i .env PHOTO_KK_DIR ile override et, ayırıcıları normalize et
+        $base = rtrim(env('PHOTO_KK_DIR', self::BASE_NETWORK_DIR), '\\/');
+        $cleanIsEmri = trim($isEmriNo, '\\/');
+        return rtrim($base, '\\/') . DIRECTORY_SEPARATOR . $cleanIsEmri . DIRECTORY_SEPARATOR;
     }
 
     private function buildFilePath(string $isEmriNo, string $filename): string
@@ -52,7 +51,8 @@ class PhotoController extends Controller
 
     private function stockDirFor(string $code): string
     {
-        return rtrim(self::BASE_SK_NETWORK_DIR, '\\') . '\\' . $this->cleanCode($code) . '\\';
+        $base = rtrim(env('PHOTO_SK_DIR', self::BASE_SK_NETWORK_DIR), '\\/');
+        return $base . DIRECTORY_SEPARATOR . $this->cleanCode($code) . DIRECTORY_SEPARATOR;
     }
 
     private function nextSequentialNameStock(string $code, string $ext): string
