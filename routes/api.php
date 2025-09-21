@@ -95,6 +95,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/aktifleri-al', [EmirlerController::class, 'AktifleriAl']);
   Route::get('/isEmriDetay', [EmirlerController::class, 'getIsEmriDetay']);
   Route::get('/digerdepobakiyeleri', [EmirlerController::class, 'getDepoBakiyeleri']);
+  Route::get('/isEmriKapanmislar', [EmirlerController::class, 'getIsEmriKapanmislar']);
 
   Route::post('/istasyonKaydet', [EmirlerController::class, 'istasyonKaydet']);
   Route::post('/aksesuarKaydet', [EmirlerController::class, 'AksesuarKaydet']);

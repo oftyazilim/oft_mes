@@ -1,12 +1,28 @@
 <template>
+  <!-- İlk yükleme overlay -->
+  <div v-if="!firstLoadDone" class="montaj-loading-overlay">
+    <div class="montaj-loading-content">
+      <div class="montaj-spinner" aria-label="Yükleniyor" />
+      <h2 class="montaj-loading-title">Master İş Emirleri Yükleniyor</h2>
+      <p class="montaj-loading-hint">
+        Kritik veriler alınıyor: <strong>{{ readinessProgress }}</strong>
+      </p>
+      <p class="montaj-loading-sub">
+        İlk listeleme tamamlandığında ekran otomatik açılacak.
+      </p>
+      <p class="montaj-loading-timeout" v-if="safetyTimeoutHit">
+        <span class="warn">Beklenen bazı veriler gecikti, yine de gösteriliyor...</span>
+      </p>
+    </div>
+  </div>
   <VCard class="mt-0 pa-0 pt-2">
     <VCardText class="mt-0 pa-0 ms-2 me-1">
       <VCol cols="12" class="mt-0 pa-1 pe-2">
         <div id="liste" style="margin-block-end: -10px;">
-          <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" />
+          <!-- <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" /> -->
 
           <DxDataGrid id="grid" ref="dataGridRef" :key="gridKey" :data-source="gridData" key-expr="satir_id"
-            :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="false" :min-width="200"
+            :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true" :min-width="200"
             @exporting="onExporting" :allow-column-reordering="true" :column-auto-width="false"
             @content-ready="onContentReady" @focused-row-changed="onFocusedRowChanged" :allow-column-resizing="true"
             column-resizing-mode="widget" @cell-prepared="onCellPrepared" @selection-changed="onSelectionChanged"
@@ -15,140 +31,115 @@
             :selected-rows-keys="selectedRows">
 
             <!-- <DxColumn type="selection" :fixed="true" fixedPosition="left" /> -->
-            <DxColumn data-field="id" caption="ID" :visible="false" :min-width="90" />
-            <DxColumn data-field="aktif" caption="AKTIF" :visible="true" :min-width="40"
-              cell-template="aktifTemplate" />
+ <DxColumn data-field="id" caption="ID" :visible="false" :min-width="90"/>
             <DxColumn data-field="hafta" caption="HAFTA" :fixed="true" :width="120" :visible="true" alignment="left"
-              :cell-template="weekCellTemplate" />
-            <DxColumn data-field="haftax" caption="HFT" data-type="string" :visible="false" :width="20" />
-            <DxColumn data-field="aksesuar" caption="AKSESUAR" :visible="true" :width="60"
-              cell-template="aksesuarTemplate" alignment="center" :allow-sorting="false" />
-            <DxColumn data-field="grup_id" caption="GRUP ID" data-type="string" :visible="false" :width="40" />
-            <DxColumn data-field="IS_ISTASYONU" caption="İST. ADI" :visible="true" :width="130" />
-            <DxColumn data-field="IS_ISTASYONU_ID" caption="İSTASYON ID" :visible="false" :width="90" />
-            <DxColumn data-field="IS_MERKEZI_ID" caption="İŞ MERKEZİ ID" :visible="false" :width="90" />
-            <DxColumn data-field="IS_MERKEZI_ADI" caption="İŞ MERKEZİ ADI" :visible="false" :width="90" />
-            <DxColumn data-field="IS_ISTASYONU_KODU" caption="İSTASYON KODU" :visible="false" :width="150" />
-            <DxColumn data-field="IS_ISTASYONU_ADI" caption="İSTASYON ADIx" :visible="false" :width="150" />
-            <DxColumn data-field="OPERASYON_ID" caption="OPRSYN ID" :visible="false" :width="120" />
-            <DxColumn data-field="OPERASYON" caption="OPRSYN" :visible="true" :width="120" />
-            <DxColumn data-field="Operasyon_no" caption="OPRSYN NO" :visible="false" :width="120" />
+                      :cell-template="weekCellTemplate"/>
+            <DxColumn data-field="grup_id" caption="GRUP ID" data-type="string" :visible="props.grup" :width="40"/>
+            <DxColumn data-field="IS_ISTASYONU" caption="İST. ADI" :visible="operasyon" :width="130"/>
+            <DxColumn data-field="IS_ISTASYONU_KODU" caption="İSTASYON KODU" :visible="false" :width="150"/>
+            <DxColumn data-field="IS_ISTASYONU_ADI" caption="İSTASYON ADIx" :visible="false" :width="150"/>
+            <DxColumn data-field="OPERASYON" caption="OPRSYN" :visible="operasyon" :width="120"/>
             <DxColumn data-field="siparis_belge_no" caption="SİPARİŞ NO" :width="90" :visible="true"
-              :allow-sorting="false" />
-            <DxColumn data-field="siparis_miktari" caption="SİPARİŞ MİKTARI" data-type="number" :width="90"
-              :visible="true" :allow-sorting="false" />
-            <DxColumn data-field="kalan_siparis_miktari" caption="KALAN SİPARİŞ MİKTARI" data-type="number" :width="90"
-              :visible="true" :allow-sorting="false" />
-            <DxColumn data-field="cari_ad" caption="MÜŞTERİ" :visible="true" :min-width="140" :allow-sorting="false" />
-            <DxColumn data-field="renk_id" caption="RENK ID" :visible="false" :min-width="90" :allow-sorting="false" />
-            <DxColumn data-field="renk_kodu" caption="RENK KODU" :visible="true" :min-width="110" :allow-sorting="false"
-              :cell-template="renkleriGoster" />
-            <DxColumn data-field="renk_adi" caption="RENK ADI" :visible="false" :min-width="90"
-              :allow-sorting="false" />
-            <DxColumn data-field="item_id" caption="ITEM ID" :visible="false" :min-width="90" :allow-sorting="false" />
-            <DxColumn data-field="stok_kodu" caption="STOK KODU" :visible="true" :width="120" :allow-sorting="false" />
-            <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="200" :allow-sorting="false" />
-            <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="100" :visible="false"
-              :allow-sorting="false" />
-            <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" :allow-sorting="false" />
-            <DxColumn data-field="teslim_tarihi" caption="TESLİM TARİHİ" data-type="date" :width="140" :visible="true"
-              :format="{
-                formatter: (date: Date | string): string => {
-                  const formattedDate: string = new Intl.DateTimeFormat('tr-TR', {
+                      :allow-sorting="false"/>
+            <DxColumn data-field="cari_ad" caption="MÜŞTERİ" :visible="true" :min-width="140" :allow-sorting="false"/>
+            <DxColumn data-field="stok_kodu" caption="STOK KODU" :visible="true" :width="120" :allow-sorting="false"/>
+            <DxColumn data-field="stok_adi" caption="STOK ADI" min-width="200" :allow-sorting="false"/>
+            <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="150" :visible="false"
+                      :allow-sorting="false"/>
+            <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" :allow-sorting="false"/>
+            <DxColumn data-field="teslim_tarihi" caption="TESLİM TARİHİ" data-type="date" :width="140"
+                      :visible="operasyon" :format="{
+                formatter: (date) => {
+                  const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
                   }).format(new Date(date));
                   return formattedDate.replace(/\//g, '.');
                 },
-              }" :cell-template="getIconType" :allow-sorting="false" />
+              }" :cell-template="getIconType" :allow-sorting="false"/>
             <DxColumn data-field="planlanan_baslangic" caption="PLN BŞL" data-type="date" :width="130" :visible="true"
-              :format="{
-                formatter: (date: Date | string): string => {
-                  const formattedDate: string = new Intl.DateTimeFormat('tr-TR', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  }).format(new Date(date as string | number | Date));
-
-                  return formattedDate.replace(/\//g, '.');
-                },
-              }" />
-            <DxColumn data-field="planlanan_bitis_tarihi" caption="PLN BTŞ" data-type="date" :width="110"
-              :visible="true" :format="{
-                formatter: (date: Date | string): string => {
-                  const formattedDate: string = new Intl.DateTimeFormat('tr-TR', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                  }).format(new Date(date as string | number | Date));
-
-                  return formattedDate.replace(/\//g, '.');
-                },
-              }" alignment="left" />
-            <DxColumn data-field="kalan_miktar" caption="KALAN MİKTAR" data-type="number" :width="80" :visible="true"
-              :allow-sorting="false" />
-
-            <DxColumn data-field="surec" caption="SÜREÇ" data-type="number" :width="150" :visible="true"
-              cell-template="surecCellTemplate" alignment="center" :allow-sorting="false" />
-
-            <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MİKTARI" data-type="number" :width="110"
-              :visible="true" />
-            <DxColumn data-field="uretilen_toplam_miktar" caption="TOPLAM URETİLEN" data-type="number" :width="60"
-              :visible="false" :allow-sorting="false" />
-            <DxColumn data-field="uretilen_net_miktar" caption="NET URETILEN" data-type="number" :width="60"
-              :visible="true" />
-            <DxColumn data-field="toplam_hurda_miktari" caption="HURDA MİKTARI" data-type="number" :width="60"
-              :visible="true" :allow-sorting="false" />
-            <DxColumn data-field="operasyon_hazirlik_suresi" caption="HAZIRLIK SÜRESİ" data-type="number" :width="110"
-              :visible="true" :format="{
-                type: 'fixedPoint',
-                precision: 1,
-                thousandsSeparator: ',',
-              }" />
-            <DxColumn data-field="operasyon_suresi" caption="OPERASYON SÜRESİ" data-type="number" :width="110"
-              :visible="true" :format="{
-                type: 'fixedPoint',
-                precision: 1,
-                thousandsSeparator: ',',
-              }" :allow-sorting="false" />
-            <DxColumn data-field="sip_detay_id" :min-width="120" :width="140" :allow-sorting="false" />
-            <DxColumn data-field="eksikler" caption="EKSİKLER" :visible="true" :width="60"
-              cell-template="eksiklerTemplate" alignment="center" :allow-sorting="false" />
-
-            <DxColumn data-field="isemri_tipi" caption="İŞ EMRİ TİPİ" :min-width="120" :width="140"
-              :allow-sorting="false" />
-
-            <DxColumn data-field="teknik_not1" caption="PLN NOTU" :width="60" :visible="false" :allow-sorting="false" />
-            <DxColumn data-field="teknik_not2" caption="OPR NOTU" :width="90" :visible="false" alignment="center"
-              :allow-sorting="false" />
-            <DxColumn data-field="kaydi_giren_kullanici" caption="KAYIT YAPAN" :min-width="120" :width="140"
-              :allow-sorting="false" />
-            <DxColumn data-field="satir_id" caption="SATIR ID" :visible="false" :min-width="90"
-              :allow-sorting="false" />
-
-
-            <DxColumn data-field="sip_not1" caption="SİP NOT 1" :min-width="120" :allow-sorting="false" />
-            <DxColumn data-field="sip_not2" caption="SİP NOT 2" :min-width="120" :allow-sorting="false" />
-            <DxColumn data-field="sip_not3" caption="SİP NOT 3" :min-width="120" :allow-sorting="false" />
-            <DxColumn data-field="sip_not4" caption="SİP NOT 4" :min-width="120" :allow-sorting="false" />
-            <DxColumn data-field="CIKIS_DEPO" caption="ÇIKIŞ DEPO" :min-width="80" :allow-sorting="false" />
-            <DxColumn data-field="kayit_tarihi" caption="OLUŞTURMA TARİHİ" data-type="date" :width="130" :visible="true"
-              :format="{
-                formatter: (date: Date | string): string => {
+                      :format="{
+                formatter: (date) => {
                   const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
                     hour: '2-digit',
                     minute: '2-digit',
-                  }).format(new Date(date as string | number | Date));
+                  }).format(new Date(date));
 
                   return formattedDate.replace(/\//g, '.');
                 },
-}" />
+              }"/>
+            <DxColumn data-field="planlanan_bitis_tarihi" caption="PLN BTŞ" data-type="date" :width="110"
+                      :visible="true" :format="{
+                formatter: (date) => {
+                  const formattedDate = new Intl.DateTimeFormat('tr-TR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                  }).format(new Date(date));
+
+                  return formattedDate.replace(/\//g, '.');
+                },
+              }" alignment="left"/>
+            <DxColumn data-field="kalan_miktar" caption="KALAN MİKTAR" data-type="number" :width="90" :visible="true"
+            :allow-sorting="false" />
+
+            <DxColumn data-field="surec" caption="SÜREÇ" data-type="number" :width="150" :visible="true"
+                      cell-template="surecCellTemplate" alignment="center" :allow-sorting="false"/>
+            <DxColumn data-field="siparis_miktari" caption="SİPARİŞ MİKTARI" data-type="number" :width="60"
+                      :visible="true" :allow-sorting="false"/>
+            <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MİKTARI" data-type="number" :width="60"
+                      :visible="true"/>
+            <DxColumn data-field="uretilen_toplam_miktar" caption="TOPLAM URETİLEN" data-type="number" :width="60"
+                      :visible="false" :allow-sorting="false"/>
+            <DxColumn data-field="uretilen_net_miktar" caption="NET URETILEN" data-type="number" :width="60"
+                      :visible="true"/>
+            <DxColumn data-field="toplam_hurda_miktari" caption="HURDA MİKTARI" data-type="number" :width="60"
+                      :visible="true" :allow-sorting="false"/>
+            <DxColumn data-field="operasyon_hazirlik_suresi" caption="HAZIRLIK SÜRESİ" data-type="number" :width="60"
+                      :visible="true" :format="{
+                type: 'fixedPoint',
+                precision: 1,
+                thousandsSeparator: ',',
+              }"/>
+            <DxColumn data-field="operasyon_suresi" caption="OPERASYON SÜRESİ" data-type="number" :width="60"
+                      :visible="true" :format="{
+                type: 'fixedPoint',
+                precision: 1,
+                thousandsSeparator: ',',
+              }" :allow-sorting="false"/>
+            <!-- <DxColumn data-field="sip_detay_id" :min-width="120" :width="140" :allow-sorting="false" /> -->
+            <DxColumn data-field="aksesuar" caption="AKSESUAR" :visible="props.operasyon" :width="60"
+                      cell-template="aksesuarTemplate" alignment="center" :allow-sorting="false"/>
+            <DxColumn data-field="eksikler" caption="EKSİKLER" :visible="true" :width="60"
+                      cell-template="eksiklerTemplate" alignment="center" :allow-sorting="false"/>
+
+            <DxColumn data-field="isemri_tipi" caption="İŞ EMRİ TİPİ" :min-width="120" :width="140"
+                      :allow-sorting="false"/>
+
+            <DxColumn data-field="teknik_not1" caption="PLN NOTU" :width="60" :allow-sorting="false"/>
+            <DxColumn data-field="teknik_not2" caption="OPR NOTU" :width="90" :visible="props.grup" alignment="center"
+                      :allow-sorting="false"/>
+            <DxColumn data-field="kaydi_giren_kullanici" caption="KAYIT YAPAN" :min-width="120" :width="140"
+                      :allow-sorting="false"/>
+            <DxColumn data-field="item_id" caption="ITEM ID" :visible="false" :min-width="90" :allow-sorting="false"/>
+            <DxColumn data-field="satir_id" caption="SATIR ID" :visible="false" :min-width="90"
+                      :allow-sorting="false"/>
+
+
+            <DxColumn data-field="sip_not1" caption="SİP NOT 1" :min-width="120" :allow-sorting="false"/>
+            <DxColumn data-field="sip_not2" caption="SİP NOT 2" :min-width="120" :allow-sorting="false"/>
+            <DxColumn data-field="sip_not3" caption="SİP NOT 3" :min-width="120" :allow-sorting="false"/>
+            <DxColumn data-field="sip_not4" caption="SİP NOT 4" :min-width="120" :allow-sorting="false"/>
+            <DxColumn data-field="CIKIS_DEPO" caption="ÇIKIŞ DEPO" :min-width="80" :allow-sorting="false"/>
+
+
+
+            <DxGridLoadPanel :enabled="firstLoadDone" :text="loadingMessage || 'Yükleniyor...'" :show-indicator="true"
+              :show-pane="true" :shading="true" />
             <DxSelection mode="multiple" select-all-mode="page" show-check-boxes-mode="onClick" />
             <DxGrouping :auto-expand-all="expandAll" />
             <DxGroupPanel :visible="true" />
@@ -320,12 +311,9 @@
               </template>
             </template>
           </DxDataGrid>
-
+          <DxLoadPanel v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true" :shading="true"
+            :message="loadingMessage || 'Yükleniyor...'" :position="position" />
         </div>
-
-        <!-- Global Load Panel (grid dışında) -->
-        <DxLoadPanel v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true" :shading="true"
-          :message="loadingMessage || 'Yükleniyor...'" :position="position" shading-color="rgba(0,0,0,0.35)" />
       </VCol>
     </VCardText>
   </VCard>
@@ -739,7 +727,7 @@
 // import type { Rule } from "./ability";
 
 import { useAbility } from "@casl/vue";
-import { computed, nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 
 // import { DxTooltip } from 'devextreme-vue/tooltip';
 import { usePageTitleStore } from '@/stores/pageTitle';
@@ -787,7 +775,7 @@ import { saveAs } from 'file-saver';
 import SurecCell from './SurecCell.vue';
 
 definePage({
-  meta: { action: ['read'], subject: ['planlama', 'mekanik'] }
+  meta: { action: ['read'], subject: ['planlama'] }
 })
 
 function formatliNumber(value: number): string {
@@ -828,7 +816,7 @@ const disabledDates = ref<null | ((data: { view: string; date: Date }) => boolea
 const calendarRef = ref<any>(null)
 const pageTitleStore = usePageTitleStore()
 const pageName = 'İş Emirleri'
-const pageAlias = 'MEKANIK'
+const pageAlias = 'MASTER'
 
 pageTitleStore.setTitle(`${pageName} (${pageAlias})`)
 document.title = `OFT - ${pageName} | ${pageAlias}`
@@ -858,24 +846,54 @@ const dataGridRefD = ref<DxDataGrid | null>(null)
 const dataGridRefM = ref<DxDataGrid | null>(null)
 const goster = ref(true)
 const loadingVisible = ref<boolean>(false)
-const loadingMessage = ref<string>("")
-
-async function beginLoading(message: string = "Veriler yükleniyor…") {
-  loadingMessage.value = message
-  loadingVisible.value = true
-  await nextTick()
-  await new Promise(requestAnimationFrame)
-}
-
-function endLoading() {
-  loadingVisible.value = false
-  loadingMessage.value = ""
-}
+const loadingMessage = ref<string>('')
 const position = { of: 'window' }
 const totalGroupCount = ref(0)
 const totalRecord = ref(0)
 const activeGroupField = ref<string | null>(null)
 const grupVisible = ref(false)
+
+// --- İlk yükleme overlay readiness ---
+const firstLoadDone = ref(false)
+const dataFetchDone = ref(false) // getData tamamlandı (başarılı veya hatalı)
+const stateRestored = ref(false) // grid state restore edildi
+const postMountIdle = ref(false) // ilk render sonrası bir frame
+const safetyTimeoutHit = ref(false)
+// Grid ilk veri setiyle içerik oluşturduğunda (content-ready) true olacak
+const gridHydrated = ref(false)
+
+// Overlay yalnızca: veri çekimi bitti + düzen yüklendi + ilk frame + grid içerik hazır
+const allReady = computed(() => dataFetchDone.value && stateRestored.value && postMountIdle.value && gridHydrated.value)
+watch(allReady, (v) => { if (v && !firstLoadDone.value) firstLoadDone.value = true })
+
+// Kullanıcıya durum metni
+const readinessProgress = computed(() => {
+  const steps: string[] = []
+  steps.push(dataFetchDone.value ? 'Veri ✓' : 'Veri...')
+  steps.push(stateRestored.value ? 'Düzen ✓' : 'Düzen...')
+  steps.push(postMountIdle.value ? 'Render ✓' : 'Render...')
+  return steps.join(' / ')
+})
+
+// Güvenlik timeout: 12sn sonra hala bitmediyse göster
+setTimeout(() => {
+  if (!firstLoadDone.value) {
+    safetyTimeoutHit.value = true
+    firstLoadDone.value = true
+  }
+}, 12000)
+
+// Yükleme panelini anında göstermek için yardımcılar
+async function beginLoading(message: string) {
+  loadingMessage.value = message
+  loadingVisible.value = true
+  await nextTick()
+  await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+}
+function endLoading() {
+  loadingVisible.value = false
+  loadingMessage.value = ''
+}
 
 // const selectedRow = ref<any | null>(null);
 const selectedRows = ref<any[]>([])
@@ -898,7 +916,10 @@ const istasyonlar = ref<any[]>([])
 const istasyon = ref<number>(0)
 const merkezler = ref<any[]>([])
 const merkez = ref<number>(0)
-const mekanikVerileri = ref<any[]>([])
+const montajVerileri = ref<any[]>([])
+// le = "OFT - Montaj"document.tit;
+
+// Seçili Satırların ID'leri
 const selectedRowKeys = ref<any[]>([])
 
 function onValueChanged(e: any) {
@@ -1687,12 +1708,17 @@ const onContentReady = (e: any): void => {
     activeGroupField.value = null
     totalGroupCount.value = 0
   }
+
+  // İlk veri yüklemesi bittikten sonra grid içerik hazır olduğunda bir kez işaretle
+  if (dataFetchDone.value && !gridHydrated.value) {
+    gridHydrated.value = true
+  }
 }
 
 const handleOptionChanged = (e: any): void => {
-  if (e.fullName === 'dataSource') {
-    // e.component.option('loadPanel.enabled', false)
-  }
+  // Grid içi loadPanel mesajını göstermek için devre dışı bırakmıyoruz
+  // if (e.fullName === 'dataSource')
+  //   e.component.option('loadPanel.enabled', false)
 }
 
 const getGroupCount = (groupField: string) => query(gridData.value)
@@ -1766,29 +1792,42 @@ const AksesuarGoster = (): void => {
 
 const getData = async () => {
   try {
-    await beginLoading('Veriler yükleniyor…')
+    await beginLoading('Veriler yükleniyor...')
     const response = await axios.get('/api/data', {
       params: {
-        tablo: 'DETAY',
-        isMerkezi: ['1100', '1150', '1200', '1500'],
+        tablo: 'MASTER',
+        isMerkezi: ['4001'],
       },
     })
 
     gridData.value = response.data.emirler
     gridDataS.value = response.data.siparisler
     notlar.value = response.data.notlar
+    // await fetchMontajVerileri();
+    // gridData.value.forEach(grid => { grid.aktif = 0; });
+    // montajVerileri.value.forEach(montaj => {
+    //   gridData.value.forEach(grid => {
+    //     if (grid.isemri_id === Number(montaj.isEmriId)) {
+    //       grid.aktif = 1;
+    //     }
+    //   });
+    // });
   }
   catch (error) {
     console.error('Veri çekilirken hata oluştu: ', error)
   }
   finally {
     endLoading()
+    dataFetchDone.value = true
+
+    // const now1 = new Date();
+    // console.log(now1.toLocaleTimeString());
   }
 }
-const fetchMekanikVerileri = async () => {
+const fetchMontajVerileri = async () => {
   try {
     const response = await axios.get('/api/aktifleri-al', { params: { istasyon: userData.value.istasyon_id, planlama: 1, } })
-    mekanikVerileri.value = response.data.data.map((veri: any, index: number) => ({
+    montajVerileri.value = response.data.data.map((veri: any, index: number) => ({
       id: index, // Eğer benzersiz bir ID varsa kullan
       isEmriNo: veri.IS_EMRI_NO,
       urunAdi: veri.URUN_ADI,
@@ -1820,7 +1859,7 @@ const getDetay = async () => {
 }
 
 const getMerkezler = async () => {
-  await beginLoading('İş merkezleri yükleniyor…')
+  await beginLoading('İş merkezleri yükleniyor...')
   try {
     const response = await axios.get('/api/merkezal')
 
@@ -1836,7 +1875,7 @@ const getMerkezler = async () => {
 
 const getIstasyonlar = async () => {
   istasyon.value = 0
-  await beginLoading('İstasyonlar yükleniyor…')
+  await beginLoading('İstasyonlar yükleniyor...')
   try {
     const response = await axios.get('/api/istasyonal', {
       params: {
@@ -1879,10 +1918,13 @@ const refreshGrid = (): void => {
 onMounted(async () => {
   await getData()
   loadGridState()
+  stateRestored.value = true
   nextTick(() => {
     if (dataGridRef.value && dataGridRef.value.instance) {
       dataGridRef.value.instance.clearSelection()
     }
+    // Bir frame sonra render tamam say
+    requestAnimationFrame(() => { postMountIdle.value = true })
   })
   console.log('Kullanıcı bilgileri:', userData.value)
 })
@@ -1903,7 +1945,7 @@ const userData = useCookie<any>('userData')
 
 const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
   const workbook = new Workbook()
-  const worksheet = workbook.addWorksheet('MekanikIsEmirleri')
+  const worksheet = workbook.addWorksheet('MasterIsEmirleri')
 
   exportDataGrid({
     component: e.component,
@@ -1913,7 +1955,7 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
     workbook.xlsx.writeBuffer().then(buffer => {
       saveAs(
         new Blob([buffer], { type: 'application/octet-stream' }),
-        'MekanikIsEmirleri.xlsx',
+        'MasterIsEmirleri.xlsx',
       )
     })
   })
@@ -1922,9 +1964,7 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
 }
 
 const ability = useAbility()
-const canManagePlanlama = computed(() =>
-  ability.can('manage', 'planlama') || ability.can('update', 'mekanik')
-)
+const canManagePlanlama = computed(() => ability.can('manage', 'planlama'))
 
 const baseMenuItems = [
   { text: 'Yenile' },
@@ -2006,7 +2046,7 @@ function groupByWeek(): void {
 }
 
 const RalKodlariGuncelle = async () => {
-  await beginLoading('RAL kodları güncelleniyor…')
+  loadingVisible.value = true
   const userID = userData.value.id
   try {
     const response = await axios.post('/api/ralguncelle', { userID })
@@ -2017,7 +2057,7 @@ const RalKodlariGuncelle = async () => {
   catch (error) {
     console.error('Güncelleme sırasında hata oluştu:', error)
   }
-  endLoading()
+  loadingVisible.value = false
 }
 
 
@@ -2026,6 +2066,127 @@ const RalKodlariGuncelle = async () => {
 <style>
 .v-progress-linear {
   inline-size: 100% !important;
+}
+
+/* İlk yükleme overlay stilleri */
+.montaj-loading-overlay {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: montaj-fade-in 0.4s ease;
+  backdrop-filter: blur(3px);
+  background: radial-gradient(circle at 35% 30%, rgba(90 130 200 / 12%), rgba(10 15 25 / 92%));
+  inset: 0;
+}
+
+.montaj-loading-content {
+  border: 1px solid rgba(255 255 255 / 8%);
+  border-radius: 18px;
+  animation: montaj-scale-in 0.5s cubic-bezier(0.4, 0.14, 0.3, 1.2);
+  background: rgba(20 28 40 / 70%);
+  box-shadow: 0 8px 32px -4px rgba(0 0 0 / 55%), 0 0 0 1px rgba(255 255 255 / 6%) inset;
+  max-inline-size: 520px;
+  padding-block: 32px 40px;
+  padding-inline: 36px;
+  text-align: center;
+}
+
+.montaj-spinner {
+  position: relative;
+  border: 5px solid rgba(255 255 255 / 12%);
+  border-radius: 50%;
+  animation: montaj-spin 1.05s linear infinite, montaj-pulse 2.2s ease-in-out infinite;
+  block-size: 68px;
+  border-block-start-color: #3b82f6;
+  box-shadow: 0 0 0 0 rgba(59 130 246 / 35%);
+  inline-size: 68px;
+  margin-block-end: 26px;
+  margin-inline: auto;
+}
+
+.montaj-loading-title {
+  background: linear-gradient(92deg, #fff, #d0e4ff 28%, #9fc5ff 67%, #fff);
+  background-clip: text;
+  color: transparent;
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: 0.5px;
+  margin-block: 0 14px;
+  margin-inline: 0;
+  text-shadow: 0 2px 12px rgba(30 55 105 / 35%);
+}
+
+.montaj-loading-hint {
+  color: #d6e1f2;
+  font-size: 15px;
+  font-weight: 400;
+  margin-block: 0 8px;
+  margin-inline: 0;
+}
+
+.montaj-loading-sub {
+  color: #95a6bc;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  margin-block: 0 6px;
+  margin-inline: 0;
+}
+
+.montaj-loading-timeout {
+  color: #f0c674;
+  font-size: 12px;
+  margin-block: 14px 0;
+  margin-inline: 0;
+}
+
+.montaj-loading-timeout .warn {
+  color: #ffc266;
+  font-weight: 600;
+}
+
+@keyframes montaj-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes montaj-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59 130 246 / 35%);
+  }
+
+  50% {
+    box-shadow: 0 0 0 12px rgba(59 130 246 / 0%);
+  }
+}
+
+@keyframes montaj-scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes montaj-fade-in {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 #grid {
@@ -2054,6 +2215,16 @@ const RalKodlariGuncelle = async () => {
 
 .custom-col {
   flex: 0 0 12.5%;
+
+  /* DevExtreme LoadPanel message visibility tweaks */
+  .dx-loadpanel-content .dx-loadpanel-message {
+    color: #fff !important;
+    font-weight: 600;
+  }
+
+  .dx-loadpanel-content {
+    background-color: rgba(0, 0, 0, 65%) !important;
+  }
 
   /* 1.5 sütun genişliği */
   max-inline-size: 12.5%;

@@ -1964,7 +1964,7 @@ const userData = useCookie<any>('userData')
 
 const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
   const workbook = new Workbook()
-  const worksheet = workbook.addWorksheet('KompleIsEmirleri')
+  const worksheet = workbook.addWorksheet('MontajIsEmirleri')
 
   exportDataGrid({
     component: e.component,
@@ -1974,7 +1974,7 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
     workbook.xlsx.writeBuffer().then(buffer => {
       saveAs(
         new Blob([buffer], { type: 'application/octet-stream' }),
-        'KompleIsEmirleri.xlsx',
+        'MontajIsEmirleri.xlsx',
       )
     })
   })

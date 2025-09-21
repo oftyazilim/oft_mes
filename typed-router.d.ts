@@ -149,6 +149,8 @@ declare module 'vue-router/auto-routes' {
     'personel-roller': RouteRecordInfo<'personel-roller', '/personel/roller', Record<never, never>, Record<never, never>>,
     'personel-yetki-yonetimi': RouteRecordInfo<'personel-yetki-yonetimi', '/personel/yetki-yonetimi', Record<never, never>, Record<never, never>>,
     'planlama-ihtiyac-listesi': RouteRecordInfo<'planlama-ihtiyac-listesi', '/planlama/ihtiyac-listesi', Record<never, never>, Record<never, never>>,
+    'planlama-is-emirleri-kapanmislar': RouteRecordInfo<'planlama-is-emirleri-kapanmislar', '/planlama/is-emirleri-kapanmislar', Record<never, never>, Record<never, never>>,
+    'planlama-is-emirleri-master': RouteRecordInfo<'planlama-is-emirleri-master', '/planlama/is-emirleri-master', Record<never, never>, Record<never, never>>,
     'planlama-is-emirleri-mekanik': RouteRecordInfo<'planlama-is-emirleri-mekanik', '/planlama/is-emirleri-mekanik', Record<never, never>, Record<never, never>>,
     'planlama-is-emirleri-montaj': RouteRecordInfo<'planlama-is-emirleri-montaj', '/planlama/is-emirleri-montaj', Record<never, never>, Record<never, never>>,
     'planlama-is-emirleri-tumu': RouteRecordInfo<'planlama-is-emirleri-tumu', '/planlama/is-emirleri-tumu', Record<never, never>, Record<never, never>>,

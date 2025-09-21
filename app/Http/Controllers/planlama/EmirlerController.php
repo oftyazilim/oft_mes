@@ -37,7 +37,7 @@ class EmirlerController extends Controller
     // Map to actual table names to avoid missing-table errors
     $tableMap = [
       'DETAY' => 'uyumsoft.OFTV_ISEMIRLERI_DETAY',
-      'MASTER' => 'uyumsoft.OFTV_ISEMIRLERI_MASTER2',
+      'MASTER' => 'uyumsoft.OFTV_ISEMIRLERI_MASTER',
       'KAPANMISLAR' => 'uyumsoft.OFTV_ISEMIRLERI_KAPANMISLAR',
     ];
 
@@ -67,7 +67,7 @@ class EmirlerController extends Controller
         ->distinct()
         ->get();
     } else {
-      // DETAY dışındaki kaynaklar için de güvenli limit uygula
+      // Log::info('DETAY dışındaki tablo için sorgu çalıştırılıyor: ' . $tableMap[$tabloRaw]);
       $emirler = $query
         ->distinct()
         ->get();
