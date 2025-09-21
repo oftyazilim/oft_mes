@@ -151,6 +151,7 @@ declare module 'vue-router/auto-routes' {
     'planlama-ihtiyac-listesi': RouteRecordInfo<'planlama-ihtiyac-listesi', '/planlama/ihtiyac-listesi', Record<never, never>, Record<never, never>>,
     'planlama-is-emirleri-mekanik': RouteRecordInfo<'planlama-is-emirleri-mekanik', '/planlama/is-emirleri-mekanik', Record<never, never>, Record<never, never>>,
     'planlama-is-emirleri-montaj': RouteRecordInfo<'planlama-is-emirleri-montaj', '/planlama/is-emirleri-montaj', Record<never, never>, Record<never, never>>,
+    'planlama-is-emirleri-tumu': RouteRecordInfo<'planlama-is-emirleri-tumu', '/planlama/is-emirleri-tumu', Record<never, never>, Record<never, never>>,
     'planlama-kapasite-hesapla': RouteRecordInfo<'planlama-kapasite-hesapla', '/planlama/kapasite-hesapla', Record<never, never>, Record<never, never>>,
     'planlama-surec-cell': RouteRecordInfo<'planlama-surec-cell', '/planlama/SurecCell', Record<never, never>, Record<never, never>>,
     'register': RouteRecordInfo<'register', '/register', Record<never, never>, Record<never, never>>,

@@ -827,8 +827,8 @@ const initialValue = ref<Date[]>([])
 const disabledDates = ref<null | ((data: { view: string; date: Date }) => boolean)>(null)
 const calendarRef = ref<any>(null)
 const pageTitleStore = usePageTitleStore()
-const pageName = 'Mekanik İş Emirleri'
-const pageAlias = 'PLN-MEKANIK'
+const pageName = 'İş Emirleri'
+const pageAlias = 'MEKANIK'
 
 pageTitleStore.setTitle(`${pageName} (${pageAlias})`)
 document.title = `OFT - ${pageName} | ${pageAlias}`

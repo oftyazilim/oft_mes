@@ -1,13 +1,13 @@
 <template>
   <VCard class="mt-0 pa-0 pt-0">
     <VCardText class="pa-1 ma-2 mt-0">
-      <DxContextMenu :data-source="menuItems" :width="200" target="#gridusers" @item-click="itemClick" />
+
 
       <DxDataGrid id="gridusers" :data-source="gridData" key-expr="id" :show-borders="true" ref="dataGridRef"
         @rowUpdating="onRowUpdating" @rowRemoving="onRowRemoving" :focused-row-enabled="true" :column-auto-width="false"
         :row-alternation-enabled="true" @exporting="onExporting" :allow-column-reordering="true"
-        @contextMenuPreparing="onContextMenuPreparing" @focused-row-changed="onFocusedRowChanged"
-        :allow-column-resizing="true" column-resizing-mode="widget" @content-ready="onContentReady">
+        @focused-row-changed="onFocusedRowChanged" :allow-column-resizing="true" column-resizing-mode="widget"
+        @content-ready="onContentReady">
 
         <DxColumn data-field="AKTIF" caption="AKTİF" data-type="boolean" :visible="true" :width="70"
           cell-template="aktifTemplate" />
@@ -59,6 +59,10 @@
           <DxItem location="before" template="totalRecordTemplate" />
           <DxItem location="after" locate-in-menu="auto" template="yenileTemplate"
             menu-item-template="menuYenileTemplate" @click="getData()" />
+          <DxItem location="after" locate-in-menu="auto" template="addUserTemplate" />
+          <DxItem location="after" locate-in-menu="auto" template="editUserTemplate" />
+          <!-- <DxItem location="after" locate-in-menu="auto" template="toggleActiveTemplate" /> -->
+          <DxItem location="after" locate-in-menu="auto" template="resetPasswordTemplate" />
           <DxItem name="exportButton" />
           <DxItem name="columnChooserButton" />
           <DxItem name="searchPanel" />
@@ -100,6 +104,22 @@
         <template #collapseTemplate>
           <DxButton :icon="expandAll ? 'collapse' : 'expand'" hint="expandAll ? 'Daralt' : 'Genişlet'" width="40"
             height="40" styling-mode="text" @click="toggleExpandAll" />
+        </template>
+
+        <template #addUserTemplate>
+          <DxButton styling-mode="text" hint="Kullanıcı Ekle" text="Kullanıcı Ekle" @click="onAddClick" />
+        </template>
+        <template #editUserTemplate>
+          <DxButton styling-mode="text" :disabled="!selectedRow" hint="Kullanıcı Düzenle" text="Düzenle"
+            @click="onEditClick" />
+        </template>
+        <template #toggleActiveTemplate>
+          <DxButton styling-mode="text" :disabled="!selectedRow" hint="Aktif/Pasif Yap" text="Aktif/Pasif"
+            @click="onToggleActiveClick" />
+        </template>
+        <template #resetPasswordTemplate>
+          <DxButton styling-mode="text" :disabled="!selectedRow" hint="Şifreyi Sıfırla" text="Şifreyi Sıfırla"
+            @click="onResetPasswordClick" />
         </template>
 
       </DxDataGrid>
@@ -155,7 +175,7 @@
 
 <script setup lang="ts">
 import axios from 'axios';
-import DxContextMenu, { DxContextMenuTypes } from 'devextreme-vue/context-menu';
+import { DxContextMenuTypes } from 'devextreme-vue/context-menu';
 import {
   DxColumn,
   DxColumnChooser,
@@ -184,7 +204,7 @@ import { exportDataGrid } from "devextreme/excel_exporter";
 import notify from 'devextreme/ui/notify';
 import { Workbook } from "exceljs";
 import { saveAs } from "file-saver-es";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import AddNewUserDrawer from './kullanici-ekle.vue';
 // import { usePageTitleStore } from "@/stores/pageTitle";
 import { DxButton } from "devextreme-vue/button";
@@ -215,6 +235,7 @@ const availableGridRef = ref<DxDataGrid | null>(null);
 const assignedGridRef = ref<DxDataGrid | null>(null);
 const expandAll = ref(true);
 const totalRecord = ref(0);
+const prevMaxId = ref<number | null>(null);
 
 // Global yükleme durumu ve mesajı
 const loading = ref(false);
@@ -287,9 +308,114 @@ const removePermission = async (e: any) => {
   await axios.delete(`/api/users/${selectedRow.value.id}/permissions/${permission.id}`);
 };
 
-const openAddNewUserDrawer = async () => {
-  isAddNewUserDrawerVisible.value = true
-  await getData();
+const getMaxId = (): number => {
+  const ids = gridData.value.map((u: any) => Number(u.id) || 0);
+  return ids.length ? Math.max(...ids) : 0;
+}
+
+const onAddClick = async () => {
+  prevMaxId.value = getMaxId();
+  selectedRow.value = null;
+  isAddNewUserDrawerVisible.value = true;
+}
+
+const onEditClick = async () => {
+  if (!selectedRow.value) {
+    notify('Lütfen düzenlemek için bir satır seçin', 'warning', 1500)
+    return;
+  }
+  isAddNewUserDrawerVisible.value = true;
+}
+
+const onToggleActiveClick = async () => {
+  if (!selectedRow.value) return;
+  const swalWithBootstrapButtons = Swal.mixin({
+    customClass: {
+      confirmButton: "btn btn-primary",
+      cancelButton: "btn btn-error",
+    },
+    buttonsStyling: true,
+  });
+  swalWithBootstrapButtons
+    .fire({
+      title: "Emin misiniz?",
+      text: "İstersen sonra yine değiştirirsin :)",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#88efb3",
+      cancelButtonColor: "#ed9595",
+      reverseButtons: true,
+      confirmButtonText: "Evet, yap gitsin!",
+      cancelButtonText: "Hayır, vazcaydım!",
+    })
+    .then((result: any) => {
+      if (result.isConfirmed) {
+        durumDegistir(selectedRow.value.id, selectedRow.value.AKTIF);
+        swalWithBootstrapButtons.fire({
+          confirmButtonColor: "#88efb3",
+          title: "Durum değiştirildi!",
+          text: "Yoksa pişman mı oldun :)",
+          icon: "success",
+        });
+      } else if (result.dismiss === (Swal as any).DismissReason.cancel) {
+        swalWithBootstrapButtons.fire({
+          confirmButtonColor: "#88efb3",
+          title: "Vazgeçildi",
+          text: "Birşey yapmadım merak etmeyin :)",
+          icon: "error",
+        });
+      }
+    });
+}
+
+const onResetPasswordClick = async () => {
+  if (!selectedRow.value) return;
+  const swalWithBootstrapButtons1 = Swal.mixin({
+    customClass: {
+      confirmButton: "btn btn-primary",
+      cancelButton: "btn btn-error",
+    },
+    buttonsStyling: true,
+  });
+  swalWithBootstrapButtons1
+    .fire({
+      title: "Emin misiniz?",
+      text: "Şifre sıfırlanacak!!!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#88efb3",
+      cancelButtonColor: "#ed9595",
+      reverseButtons: true,
+      confirmButtonText: "Evet, yap gitsin!",
+      cancelButtonText: "Hayır, vazcaydım!",
+    })
+    .then(async (result: any) => {
+      if (result.isConfirmed) {
+        const ok = await sifreSifirla(selectedRow.value.id);
+        if (ok) {
+          swalWithBootstrapButtons1.fire({
+            confirmButtonColor: "#88efb3",
+            title: "Şifre Sıfırlandı!",
+            text: "pass1234",
+            icon: "success",
+          });
+        } else {
+          swalWithBootstrapButtons1.fire({
+            confirmButtonColor: "#88efb3",
+            title: "Hata",
+            text: "Şifre sıfırlanamadı",
+            icon: "error",
+          });
+        }
+      } else if (result.dismiss === (Swal as any).DismissReason.cancel) {
+        swalWithBootstrapButtons1.fire({
+          confirmButtonColor: "#88efb3",
+          title: "Vazgeçildi",
+          text: "Birşey yapmadım merak etmeyin :)",
+          icon: "error",
+        });
+      }
+    });
 }
 
 const onRowUpdating = async (e: any) => {
@@ -312,10 +438,13 @@ const editorOptions: DxTextBoxTypes.Properties = { placeholder: "Sütun ara" };
 const getData = async () => {
   try {
     showLoading('Veri yükleniyor...');
-    const response = await axios.get(apiUrl);
+    const response = await axios.get(apiUrl, { params: { _: Date.now() } });
     gridData.value = response.data.data;
     kademeler.value = response.data.kademeler;
     notify(`Veri başarıyla alındı`, 'success', 1500)
+    // Yeni kayıtların anında görünmesi için refresh
+    await nextTick();
+    dataGridRef.value?.instance?.refresh();
   } catch (error) {
     console.error('Error fetching data:', error);
     notify(`Kullanıcılar verisi alınamadı`, 'error', 1500)
@@ -498,21 +627,35 @@ watch(isAddNewUserDrawerVisible, (newValue, oldValue) => {
   if (!newValue && oldValue) {
     (async () => {
       await getData();
-      // Drawer kapandıktan sonra seçili kullanıcı bağlamını tazele
-      const id = selectedRow.value?.id;
-      if (id) {
-        const updatedRow = gridData.value.find((u: any) => u.id === id);
-        if (updatedRow) {
-          selectedRow.value = updatedRow;
+      // Drawer kapandı: yeni kayıt eklenmiş mi kontrol et
+      const newMax = getMaxId();
+      if (prevMaxId.value !== null && newMax > prevMaxId.value) {
+        const newRow = gridData.value.find((u: any) => Number(u.id) === newMax);
+        if (newRow) {
+          selectedRow.value = newRow;
+          dataGridRef.value?.instance?.option('focusedRowKey', newRow.id);
+          notify('Kullanıcı eklendi', 'success', 1500)
           // Sağdaki "Atanmış Roller" listesini güncelle
-          const roles = (updatedRow.roles || "").split(",");
+          const roles = (newRow.roles || "").split(",");
           users.value = roles
             .map((role: string) => ({ name: role.trim() }))
             .filter((r: { name: string }) => r.name);
-          // Kullanıcı izinlerini yeniden yükle
           await loadPermissions();
-          // Grid odak satırını koru
-          dataGridRef.value?.instance?.option('focusedRowKey', id);
+        }
+      } else {
+        // Yeni kayıt yoksa önceki seçimi koru
+        const id = selectedRow.value?.id;
+        if (id) {
+          const updatedRow = gridData.value.find((u: any) => u.id === id);
+          if (updatedRow) {
+            selectedRow.value = updatedRow;
+            const roles = (updatedRow.roles || "").split(",");
+            users.value = roles
+              .map((role: string) => ({ name: role.trim() }))
+              .filter((r: { name: string }) => r.name);
+            await loadPermissions();
+            dataGridRef.value?.instance?.option('focusedRowKey', id);
+          }
         }
       }
     })();
@@ -520,19 +663,33 @@ watch(isAddNewUserDrawerVisible, (newValue, oldValue) => {
 });
 
 function onContextMenuPreparing(e: any) {
-  selectedRow.value = e.row.data;
-  // selectedRow.value = {
-  //   id: e.row.data.id,
-  //   name: e.row.data.name,
-  //   email: e.row.data.email,
-  //   unvan: e.row.data.unvan,
-  //   ismerkezi: e.row.data.is_merkezi_id,
-  //   istasyon: e.row.data.istasyon_id,
-  //   proses: e.row.data.proses,
-  //   tip: e.row.data.tip,
-  //   roles: e.row.data.roles,
-  //   aktif: e.row.data.AKTIF,
-  // };
+  // Yalnızca grid içeriğinde sağ tık menüsü göster
+  if (e.target !== 'content') return;
+  const rowData = e?.row?.data || null;
+  const hasRow = !!rowData;
+  if (hasRow) {
+    selectedRow.value = rowData;
+    // Odak satırını hizala
+    try {
+      dataGridRef.value?.instance?.option('focusedRowKey', rowData.id);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const mk = (text: string, disabled = false) => ({
+    text,
+    disabled,
+    onItemClick: () => itemClick({ itemData: { text } } as any),
+  });
+
+  e.items = [
+    mk('Yenile'),
+    mk('Kullanıcı Ekle'),
+    mk('Kullanıcı Düzenle', !hasRow),
+    mk('Aktif/Pasif Yap', !hasRow),
+    mk('Şifreyi Sıfırla', !hasRow),
+  ];
 }
 
 const modalParametre = computed(() => {
@@ -550,20 +707,13 @@ const modalParametre = computed(() => {
   };
 });
 
-const menuItems = [
-  { text: 'Yenile' },
-  { text: 'Kullanıcı Ekle' },
-  { text: 'Kullanıcı Düzenle' },
-  { text: 'Aktif/Pasif Yap' },
-  { text: 'Şifreyi Sıfırla' },
-];
-
 const sifreSifirla = async (id: any) => {
   try {
-    const response = await axios.put(`/api/sifresifirla/${id}`);
-  }
-  catch (error) {
-    console.error("Veri silinirken hata oluştu: ", error);
+    await axios.put(`/api/users/sifresifirla/${id}`);
+    return true;
+  } catch (error) {
+    console.error('Şifre sıfırlama hatası:', error);
+    return false;
   }
 };
 
@@ -578,11 +728,10 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
         getData()
         break;
       case 'Kullanıcı Ekle':
-        selectedRow.value = null;
-        openAddNewUserDrawer();
+        onAddClick();
         break;
       case 'Kullanıcı Düzenle':
-        openAddNewUserDrawer();
+        onEditClick();
         break;
       case 'Aktif/Pasif Yap':
         // if (parseInt(selectedRow.value.AKTIF) === 0) {

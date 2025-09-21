@@ -124,8 +124,8 @@ onMounted(() => {
 
   /* Zıplamayı önlemek için sabit blok yüksekliği */
   block-size: 1.6rem;
-  color: #475569;
-  font-size: 0.95rem;
+  color: #479753b4;
+  font-size: 24px;
   font-weight: 600;
   letter-spacing: 0.5px;
   line-height: 1.6rem;

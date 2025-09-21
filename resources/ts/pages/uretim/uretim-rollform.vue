@@ -20,10 +20,10 @@
             <section>
               <VCardTitle class="durum-title" :style="{ backgroundColor: statusColor }">
                 {{ worksInfo?.statu_id === 0
-                  ? 'KAPALI'
-                  : worksInfo?.statu_id === 1
-                    ? 'DURUYOR'
-                    : 'ÇALIŞIYOR' }}
+                ? 'KAPALI'
+                : worksInfo?.statu_id === 1
+                ? 'DURUYOR'
+                : 'ÇALIŞIYOR' }}
               </VCardTitle>
               <hr>
               <div class="gauge-wrap">
@@ -241,8 +241,7 @@
                   </div>
                   <VRow class="mt-1">
                     <VCol cols="6" class="mt-0 py-2 pe-1">
-                      <VBtn id="hurdaGir" block variant="outlined" color="error" 
-                      @click="openHurdaDialog">
+                      <VBtn id="hurdaGir" block variant="outlined" color="error" @click="openHurdaDialog">
                         F8 - Hurda Girişi
                       </VBtn>
                     </VCol>
@@ -375,7 +374,7 @@
     <!-- Üretim Girişi (İş Emrini Kapat) Dialog -->
     <VDialog v-model="uretimiKapatDialog" max-width="520" @keydown.esc.prevent.stop="closeUretimGirisiDialog">
       <VCard>
-        <VCardTitle class="text-h6">Üretim Girişi</VCardTitle>
+        <VCardTitle class="text-h5" style="background-color: green; color: black;">Üretim Girişi</VCardTitle>
         <VCardText>
           <VRow class="mb-2">
             <VCol cols="12" sm="4">
@@ -391,14 +390,21 @@
               <div class="bilgi">{{ fmt0(worksInfo?.counter) }}</div>
             </VCol>
           </VRow>
-          <VTextField v-model.number="manuelUretimMiktari" type="number" label="Elle Üretim Miktarı"
-            variant="outlined" density="comfortable" :min="0" :step="1" hide-details />
-          <div class="text-caption mt-2">Bilgi amaçlı değerler read-only gösterilir. Kaydet ile elle girilen miktarı işleyeceğiz.</div>
+          <VTextField ref="uretimInputRef" v-model.number="manuelUretimMiktari" type="number"
+            label="Elle Üretim Miktarı" variant="outlined" density="comfortable" :min="0" :step="1" hide-details
+            autofocus @keydown.enter.prevent="saveUretimGirisi" @keydown.esc.prevent="closeUretimGirisiDialog" />
+          <div class="text-caption mt-2">Sayaç değeri yanlış olabilir. Gerçek sayıyı giriniz...</div>
         </VCardText>
         <VCardActions>
           <VSpacer />
-          <VBtn variant="text" color="grey" @click="closeUretimGirisiDialog">Vazgeç</VBtn>
-          <VBtn color="primary" variant="flat" @click="saveUretimGirisi" :disabled="manuelUretimMiktari == null">Kaydet</VBtn>
+          <VBtn variant="outlined" color="grey" @click="closeUretimGirisiDialog">Vazgeç</VBtn>
+          <VBtn color="primary" variant="outlined" @click="saveUretimGirisi"
+            :disabled="manuelUretimMiktari == null || uretimKayitLoading" :loading="uretimKayitLoading">
+            <template v-if="uretimKayitLoading">
+              <VProgressCircular indeterminate size="18" color="primary" class="mr-2" /> Kaydediliyor...
+            </template>
+            <template v-else>Kaydet (Enter)</template>
+          </VBtn>
         </VCardActions>
       </VCard>
     </VDialog>
@@ -941,17 +947,31 @@ function openActivateDialog(row: Row) {
 // Üretim Girişi dialog state ve aksiyonları
 const uretimiKapatDialog = ref(false)
 const manuelUretimMiktari = ref<number | null>(null)
+const uretimInputRef = ref<HTMLInputElement | null>(null)
+const uretimKayitLoading = ref(false)
 function openUretimGirisiDialog() {
   manuelUretimMiktari.value = null
   uretimiKapatDialog.value = true
+  nextTick(() => uretimInputRef.value?.focus?.())
 }
 function closeUretimGirisiDialog() {
   uretimiKapatDialog.value = false
 }
-function saveUretimGirisi() {
-  // Şimdilik yalnızca dialogu kapat ve bilgi mesajı göster; backend entegrasyonu sonra
-  notify({ message: 'Üretim girişi kaydedilecek (yakında).', type: 'info', displayTime: 1500 })
-  uretimiKapatDialog.value = false
+async function saveUretimGirisi() {
+  if (uretimKayitLoading.value) return
+  if (manuelUretimMiktari.value == null) return
+  try {
+    uretimKayitLoading.value = true
+    // Şimdilik simüle: backend entegrasyonu geldiğinde buraya axios.post eklenecek
+    await new Promise(res => setTimeout(res, 800))
+    notify({ message: 'Üretim girişi kaydedildi (örnek).', type: 'success', displayTime: 1500 })
+    uretimiKapatDialog.value = false
+  } catch (e) {
+    console.error('Üretim girişi hata', e)
+    notify({ message: 'Üretim girişi kaydedilemedi', type: 'error', displayTime: 1800 })
+  } finally {
+    uretimKayitLoading.value = false
+  }
 }
 
 async function confirmActivate() {

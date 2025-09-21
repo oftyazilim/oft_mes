@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import navItems from '@/navigation/horizontal'
-
-import { usePageTitleStore } from '@/stores/pageTitle'
 import { themeConfig } from '@themeConfig'
-import { onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { usePageTitleStore } from '@/stores/pageTitle'
+// import { onMounted, watch } from 'vue'
+// import { useRoute } from 'vue-router'
 
 // Components
 import Footer from '@/layouts/components/Footer.vue'
@@ -17,11 +16,7 @@ import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 
 // Store: current page title/alias
 const pageTitleStore = usePageTitleStore()
-const route = useRoute()
-
-// Sayfa değişince önceki başlık kalmasın
-onMounted(() => pageTitleStore.setTitle(''))
-watch(() => route.fullPath, () => pageTitleStore.setTitle(''))
+// Başlık artık route değişiminde sıfırlanmıyor; her sayfa kendi başlığını ayarlasın
 </script>
 
 <template>
@@ -38,7 +33,7 @@ watch(() => route.fullPath, () => pageTitleStore.setTitle(''))
       <VSpacer />
 
       <!-- Kalıcı sayfa bilgisi: logoya dokunmadan sağ tarafta gösterilir -->
-      <div v-if="pageTitleStore.title" class="page-title-badge me-3 d-none d-sm-flex">
+      <div v-if="pageTitleStore.title" class="page-title-badge me-3 d-flex">
         <span class="badge-text">{{ pageTitleStore.title }}</span>
       </div>
 
@@ -75,8 +70,9 @@ watch(() => route.fullPath, () => pageTitleStore.setTitle(''))
 
 .badge-text {
   border-radius: 9999px;
-  background-color: rgba(25, 118, 210, 12%);
-  color: rgb(25, 118, 210);
+/* Vuetify primary rengini kullan */
+  background-color: rgba(var(--v-theme-primary), 0.12);
+  color: rgb(var(--v-theme-primary));
   font-size: 0.8rem;
   line-height: 1;
   padding-block: 6px;

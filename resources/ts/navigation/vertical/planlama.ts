@@ -6,12 +6,20 @@ export default [
     subject: ["planlama", "mekanik", "montaj"],
     children: [
       {
+        title: "İş Emirleri - Tümü",
+        to: "planlama-is-emirleri-tumu",
+        icon: { icon: "tabler-list" },
+        action: "read",
+        subject: ["planlama"],
+        target: "_blank",
+      },
+      {
         title: "İş Emirleri - Montaj",
         to: "planlama-is-emirleri-montaj",
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama", "montaj"],
-        target: '_blank',
+        target: "_blank",
       },
       {
         title: "İş Emirleri - Mekanik",
@@ -19,7 +27,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama", "mekanik"],
-        target: '_blank',
+        target: "_blank",
       },
       {
         title: "Malzeme İhtiyaç Listesi",
@@ -27,7 +35,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama"],
-        target: '_blank',
+        target: "_blank",
       },
       {
         title: "Kapasite Hesapla",
@@ -35,9 +43,8 @@ export default [
         icon: { icon: "tabler-list" },
         action: "create",
         subject: ["planlama"],
-        target: '_blank',
+        target: "_blank",
       },
     ],
   },
 ];
-  

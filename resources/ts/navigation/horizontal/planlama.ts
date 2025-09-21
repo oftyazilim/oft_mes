@@ -6,6 +6,14 @@ export default [
     subject: ["planlama", "mekanik", "montaj"],
     children: [
       {
+        title: "İş Emirleri - Tümü",
+        to: "planlama-is-emirleri-tumu",
+        icon: { icon: "tabler-list" },
+        action: "read",
+        subject: ["planlama"],
+        target: '_blank',
+      },
+      {
         title: "İş Emirleri - Montaj",
         to: "planlama-is-emirleri-montaj",
         icon: { icon: "tabler-list" },

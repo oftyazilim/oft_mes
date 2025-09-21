@@ -27,6 +27,12 @@ class EmirlerController extends Controller
     // Normalize and validate incoming params
     $tabloRaw = strtoupper((string) $request->input('tablo', 'DETAY'));
     $isMerkezi = $request->input('isMerkezi', []);
+    // İstenilen şekilde zaman aşımı artırımı: PHP yürütme 60 sn
+    @set_time_limit(60);
+    // Opsiyonel: PostgreSQL statement timeout (ms) — çok uzun sorguları sınırlamak isterseniz açın
+    // DB::connection('pgsql')->statement("SET statement_timeout TO 60000");
+
+    // Log::info('getData parametreleri', ['tablo' => $tabloRaw, 'isMerkezi' => $isMerkezi]);
 
     // Map to actual table names to avoid missing-table errors
     $tableMap = [
@@ -44,20 +50,24 @@ class EmirlerController extends Controller
 
     $query = DB::connection('pgsql')->table($tableMap[$tabloRaw]);
 
-    if ($tabloRaw === 'DETAY' && $isMerkezi !== ['Tümü']) {
-      if ($isMerkezi === ['1100', '1200', '1500', '2200', '3200', '4001'])
-        $query->whereNotIn('IS_MERKEZI_KODU', $isMerkezi);
-      else
-        $query->whereIn('IS_MERKEZI_KODU', $isMerkezi);
+    if ($tabloRaw === 'DETAY') {
+      // İsteğe bağlı iş merkezi filtresi
+      if ($isMerkezi !== ['Tümü']) {
+        if ($isMerkezi === ['1100', '1200', '1500', '2200', '3200', '4001'])
+          $query->whereNotIn('IS_MERKEZI_KODU', $isMerkezi);
+        else
+          $query->whereIn('IS_MERKEZI_KODU', $isMerkezi);
+      }
 
+      // Büyük datasetlerde deterministik sıralama + limit
       $emirler = $query
         ->orderBy('hafta', 'asc')
         ->orderBy('IS_ISTASYONU_KODU', 'asc')
         ->orderBy('planlanan_baslangic', 'asc')
-        ->distinct() //->limit(100)
+        ->distinct()
         ->get();
     } else {
-      // For non-DETAY sources, avoid ordering by columns that may not exist
+      // DETAY dışındaki kaynaklar için de güvenli limit uygula
       $emirler = $query
         ->distinct()
         ->get();
