@@ -22,6 +22,14 @@ export default [
         target: '_blank',
       },
       {
+        title: "İş Emirleri - Kapanmışlar",
+        to: "planlama-is-emirleri-kapanmislar",
+        icon: { icon: "tabler-list" },
+        action: "read",
+        subject: ["planlama"],
+        target: '_blank',
+      },
+      {
         title: "İş Emirleri - Montaj",
         to: "planlama-is-emirleri-montaj",
         icon: { icon: "tabler-list" },
@@ -35,14 +43,6 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama", "mekanik"],
-        target: '_blank',
-      },
-      {
-        title: "İş Emirleri - Kapanmışlar",
-        to: "planlama-is-emirleri-kapanmislar",
-        icon: { icon: "tabler-list" },
-        action: "read",
-        subject: ["planlama"],
         target: '_blank',
       },
       {
