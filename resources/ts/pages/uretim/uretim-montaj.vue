@@ -58,7 +58,7 @@ const readinessProgress = computed(() => [
 .montaj2-loading-content {
   border: 1px solid rgba(255 255 255 / 10%);
   border-radius: 18px;
-  background: rgba(20 28 40 / 72%);
+  background: rgb(36, 46, 60);
   box-shadow: 0 8px 28px -4px rgba(0 0 0 / 55%), 0 0 0 1px rgba(255 255 255 / 6%) inset;
   max-inline-size: 480px;
   padding-block: 34px 42px;

@@ -1,206 +1,117 @@
 <template>
-  <!-- template starts above -->
-  <div
-    class="carousel-scroll pa-2 mb-2 mt-0"
-    ref="carouselScroll"
-    @mouseenter="pauseAutoScroll"
-    @mouseleave="resumeAutoScroll"
-  >
-    <div
-      v-for="(item, index) in items"
-      :key="index"
-      class="carousel-card"
-      @click="detaylariGoster(item)"
-    >
-      <ProductionCard
-        :isemriNo="item.isemriNo"
-        :isemriId="item.isemriId"
-        :runTime="item.runTime"
-        :totalDown="item.totalDown"
-        :totalTime="item.totalTime"
-        :sonDurumSuresi="item.sonDurumSuresi"
-        :target="item.target"
-        :actual="item.actual"
-        :efficiency="item.efficiency"
-        :quality="item.quality"
-        :partId="item.partId"
-        :partCode="item.partCode"
-        :partName="item.partName"
-        :sebep="item.sebep"
-        :baslikArkarenk="item.baslikArkarenk"
-        :barData="item.barData"
-        :barTotal="item.barTotal"
-        :guid="item.guid"
-        :isSelected="selectedIsemriNo === item.isemriNo"
-        v-bind="item"
-        @show-details="onShowDetails"
-        :kontrolGerekli="item.is_use_quality"
-        :kontrolcuCagrildi="item.is_check_quality_opr"
-        :plnNote="item.plnNote"
-        :prdNote="item.prdNote"
-        :personelName="item.personelName"
-        :personelId="item.personelId"
-        :aksesuarli="item.aksesuarli"
-        @ekipGuncellendi="onCardAction"
-        @panelKapatildi="panelKapat(item)"
-        :baslangicZamani="item.baslangicZamani"
-        @durusGirildi="onDurusGirildi"
-        :ekipSayisi="item.ekipSayisi"
-      />
-    </div>
+  <!-- Sol detay kartı -->
+  <div class="pa-0 ma-0">
+    <VRow class="mt-0" align="stretch">
+      <VCol cols="12" md="8" class="d-flex">
+        <!-- template starts above -->
+        <div class="carousel-scroll pa-2 mb-2 mt-0" ref="carouselScroll" @mouseenter="pauseAutoScroll"
+          @mouseleave="resumeAutoScroll">
+          <div v-for="(item, index) in items" :key="index" class="carousel-card" @click="detaylariGoster(item)">
+            <ProductionCard :isemriNo="item.isemriNo" :isemriId="item.isemriId" :runTime="item.runTime"
+              :totalDown="item.totalDown" :totalTime="item.totalTime" :sonDurumSuresi="item.sonDurumSuresi"
+              :target="item.target" :actual="item.actual" :efficiency="item.efficiency" :quality="item.quality"
+              :partId="item.partId" :partCode="item.partCode" :partName="item.partName" :sebep="item.sebep"
+              :baslikArkarenk="item.baslikArkarenk" :barData="item.barData" :barTotal="item.barTotal" :guid="item.guid"
+              :isSelected="selectedIsemriNo === item.isemriNo" v-bind="item" @show-details="onShowDetails"
+              :kontrolGerekli="item.is_use_quality" :kontrolcuCagrildi="item.is_check_quality_opr"
+              :plnNote="item.plnNote" :prdNote="item.prdNote" :personelName="item.personelName"
+              :personelId="item.personelId" :aksesuarli="item.aksesuarli" @ekipGuncellendi="onCardAction"
+              @panelKapatildi="panelKapat(item)" :baslangicZamani="item.baslangicZamani" @durusGirildi="onDurusGirildi"
+              :ekipSayisi="item.ekipSayisi" />
+          </div>
+        </div>
+      </VCol>
+
+      <VCol cols="12" md="2" class="d-flex ps-0">
+        <VCard class="gosterge pa-0 ma-0 flex-grow-1" height="318">
+          <VCardTitle class="text-h5 mb-4" style="border-block-end: 2px solid #ccc;">
+            <div class="d-flex justify-space-between align-center mt-0">
+              Verimlilik (OEE)
+            </div>
+          </VCardTitle>
+          <div class="ps-4 pe-2 text-center mb-1">
+            <Grafik :barData="barVeri"/>
+          </div>
+        </VCard>
+      </VCol>
+
+      <VCol cols="12" md="2" class="d-flex ps-0">
+        <VCard class="gosterge pa-0 ma-0 flex-grow-1" height="318">
+          <VCardTitle class="text-h5 mb-4" style="border-block-end: 2px solid #ccc;">
+            <div class="d-flex justify-space-between align-center mt-0">
+              <div>
+                {{ currentDate }}
+              </div>
+              <div>
+                {{ currentTime }}
+              </div>
+            </div>
+          </VCardTitle>
+          <div class="ps-4 pe-2">
+              <VCol cols="12" class="text-center mb-1">
+                <div class=" text-centerpa-0">
+                  <VueSpeedometer :value="uretimHizi" :max-value="100" :min-value="-100" :segments="6"
+                    :needle-transition-duration="1000" needle-transition="easeElastic"
+                    current-value-text="${value} adet/saat" ring-width="30" width="200" height="200" />
+                  <div style="margin-block: -25px -20px; margin-inline-start: -5px;" class="me-3">
+                    <h3 class="text-h4 ma-0 pa-0 text-center">
+                      <span style="font-size: 14px;">%</span> {{ uretimHizi }}
+                    </h3>
+                  </div>
+                  <div style="margin-block: -1px -20px; margin-inline-start: -5px;" class="me-3">
+                    <h3 class="text-h6 ma-2 pa-0 text-center">Hedeften Sapma</h3>
+                  </div>
+                </div>
+              </VCol>
+              <VCol cols="6" class="d-flex align-center justify-center pa-0 pt-4" style="block-size: 100%;">
+                <div class="d-flex flex-column justify-center mt-2" style="gap: 18px;">
+                  <div class="d-flex justify-space-between">
+                    <strong>Anlık Üretim:</strong>
+                    <span class="ms-2 miktar">{{ anlikUretim }}</span>
+                  </div>
+                  <div class="d-flex justify-space-between">
+                    <strong>Anlık Hedef:</strong>
+                    <span class="ms-2 miktar">{{ anlikHedef }}</span>
+                  </div>
+                  <div class="d-flex justify-space-between">
+                    <strong>Günlük hedef:</strong>
+                    <span class="ms-2 miktar">{{ gunlukHedef }}</span>
+                  </div>
+                </div>
+              </VCol>
+          </div>
+        </VCard>
+      </VCol>
+
+
+      <!-- 
+      <VCol cols="12" md="4" class="d-flex">
+        <VCard class="gosterge pa-0 flex-grow-1" height="250">
+          <VCardTitle class="text-h5 mb-4" style="border-block-end: 2px solid #ccc;">
+            <VRow>
+              <VCol cols="6" class="text-start">
+                <div class="d-flex align-center">
+                  <span>Haftalık Üretimlər</span>
+                </div>
+              </VCol>
+              <VCol cols="6" class="text-end pa-1 pe-0">
+                <VSelect v-model="seciliHafta" :items="[
+                  { title: 'Bu Hafta', value: 'bu' },
+                  { title: 'Geçen Hafta', value: 'gecen' },
+                ]" class="mt-1" />
+              </VCol>
+            </VRow>
+          </VCardTitle>
+          <VCardText class="pa-2 pt-0 ma-0" height="100">
+            <GunlukToplamGrafik :veri="grafikVerisi" />
+          </VCardText>
+        </VCard>
+      </VCol> -->
+    </VRow>
   </div>
 
   <!-- Detay ve sekmeli alan -->
   <div class="detail-section pa-0 ma-0">
-    <!-- Sol detay kartı -->
-    <div class="pa-0 ma-0">
-      <VCard class="gosterge pa-0 ma-0" height="220">
-        <VCardTitle
-          class="text-h4 mb-4"
-          style="border-block-end: 2px solid #ccc"
-        >
-          <div class="d-flex justify-space-between align-center mt-0">
-            <div>
-              {{ currentDate }}
-            </div>
-            <div>
-              {{ currentTime }}
-            </div>
-          </div>
-        </VCardTitle>
-        <div class="ps-4 pe-2">
-          <VRow>
-            <VCol cols="6" class="text-center mb-1">
-              <div class="pa-0">
-                <VueSpeedometer
-                  :value="uretimHizi"
-                  :max-value="100"
-                  :min-value="-100"
-                  :segments="6"
-                  :needle-transition-duration="1000"
-                  needle-transition="easeElastic"
-                  current-value-text="${value} adet/saat"
-                  ring-width="30"
-                  width="200"
-                  height="12"
-                />
-                <div
-                  style="margin-block: -25px -20px; margin-inline-start: -5px"
-                  class="me-3"
-                >
-                  <h3 class="text-h4 ma-0 pa-0 text-center">
-                    <span style="font-size: 14px">%</span> {{ uretimHizi }}
-                  </h3>
-                </div>
-                <div
-                  style="margin-block: -1px -20px; margin-inline-start: -5px"
-                  class="me-3"
-                >
-                  <h3 class="text-h6 ma-2 pa-0 text-center">Hedeften Sapma</h3>
-                </div>
-              </div>
-            </VCol>
-            <VCol
-              cols="6"
-              class="d-flex align-center justify-center pa-0 pt-4"
-              style="block-size: 100%"
-            >
-              <div
-                class="d-flex flex-column justify-center mt-2"
-                style="gap: 18px"
-              >
-                <div class="d-flex justify-space-between">
-                  <strong>Anlık Üretim:</strong>
-                  <span class="ms-2 miktar">{{ anlikUretim }}</span>
-                </div>
-                <div class="d-flex justify-space-between">
-                  <strong>Anlık Hedef:</strong>
-                  <span class="ms-2 miktar">{{ anlikHedef }}</span>
-                </div>
-                <div class="d-flex justify-space-between">
-                  <strong>Günlük hedef:</strong>
-                  <span class="ms-2 miktar">{{ gunlukHedef }}</span>
-                </div>
-              </div>
-            </VCol>
-          </VRow>
-        </div>
-      </VCard>
-
-      <VCard class="gosterge pa-0 ma-0 mt-3" height="238">
-        <VCardTitle
-          class="text-h5 mb-4"
-          style="border-block-end: 2px solid #ccc"
-        >
-          <div class="d-flex justify-space-between align-center mt-0">
-            Verimlilik
-          </div>
-        </VCardTitle>
-        <div class="ps-4 pe-2">
-          <VRow>
-            <VCol cols="6" class="text-center mb-1">
-              <div class="pa-0 pt-3">
-                <VueSpeedometer
-                  :value="oee"
-                  :max-value="100"
-                  :min-value="0"
-                  :segments="10"
-                  :needle-transition-duration="1000"
-                  needle-transition="easeElastic"
-                  current-value-text="${value} adet/saat"
-                  ring-width="30"
-                  width="200"
-                  height="12"
-                  style="margin-block-end: 0"
-                />
-                <h3
-                  class="text-h6 ma-0 pa-0 text-center"
-                  style="margin-block-start: -30px"
-                >
-                  OEE %
-                </h3>
-              </div>
-            </VCol>
-            <VCol cols="6" class="text-center mb-1">
-              <!-- <VCardText class="pa-2 pt-0 ma-0" height="100">
-                <Grafik :barData="barVeri" />
-              </VCardText> -->
-              <div class="text-center pa-0 mb-3">
-                <Grafik :barData="barVeri" />
-              </div>
-            </VCol>
-          </VRow>
-        </div>
-      </VCard>
-
-      <VCard class="gosterge pa-0 mt-3" height="250">
-        <VCardTitle
-          class="text-h5 mb-4"
-          style="border-block-end: 2px solid #ccc"
-        >
-          <VRow>
-            <VCol cols="6" class="text-start">
-              <div class="d-flex align-center">
-                <span>Haftalık Üretimlər</span>
-              </div>
-            </VCol>
-            <VCol cols="6" class="text-end pa-1 pe-0">
-              <VSelect
-                v-model="seciliHafta"
-                :items="[
-                  { title: 'Bu Hafta', value: 'bu' },
-                  { title: 'Geçen Hafta', value: 'gecen' },
-                ]"
-                class="mt-1"
-              />
-            </VCol>
-          </VRow>
-        </VCardTitle>
-        <VCardText class="pa-2 pt-0 ma-0" height="100">
-          <GunlukToplamGrafik :veri="grafikVerisi" />
-        </VCardText>
-      </VCard>
-    </div>
 
     <VCard class="pa-0">
       <VTabs v-model="currentTab" fixed-tabs class="baslik">
@@ -212,177 +123,46 @@
       <VWindow v-model="currentTab">
         <VWindowItem value="tab-1">
           <VCardText class="pa-2">
-            <DxContextMenu
-              :data-source="menuItems"
-              :width="200"
-              target="#grid"
-              @item-click="itemClick"
-            />
-            <DxDataGrid
-              id="grid"
-              class="grid"
-              ref="dataGridRef"
-              :key="gridKey"
-              :data-source="gridData"
-              key-expr="satir_id"
-              :show-borders="true"
-              :focused-row-enabled="true"
-              :row-alternation-enabled="true"
-              :min-width="200"
-              @exporting="onExporting"
-              :allow-column-reordering="true"
-              :column-auto-width="false"
-              @content-ready="onContentReady"
-              @focused-row-changed="onFocusedRowChanged"
-              :allow-column-resizing="true"
-              column-resizing-mode="widget"
-              @cell-prepared="onCellPrepared"
-              @selection-changed="onSelectionChanged"
-              :auto-navigate-to-focused-row="true"
-              v-model:focused-row-key="focusedRowKey"
-              height="670"
-            >
+            <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" />
+            <DxDataGrid id="grid" class="grid" ref="dataGridRef" :key="gridKey" :data-source="gridData"
+              key-expr="satir_id" :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true"
+              :min-width="200" @exporting="onExporting" :allow-column-reordering="true" :column-auto-width="false"
+              @content-ready="onContentReady" @focused-row-changed="onFocusedRowChanged" :allow-column-resizing="true"
+              column-resizing-mode="widget" @cell-prepared="onCellPrepared" @selection-changed="onSelectionChanged"
+              :auto-navigate-to-focused-row="true" v-model:focused-row-key="focusedRowKey" height="670">
               <!-- <DxColumn type="selection" :fixed="true" fixedPosition="left" /> -->
-              <DxColumn
-                data-field="id"
-                caption="ID"
-                :visible="false"
-                :min-width="90"
-              />
-              <DxColumn
-                data-field="aktif"
-                caption="AKTIF"
-                :visible="true"
-                :min-width="50"
-                cell-template="aktifTemplate"
-              />
-              <DxColumn
-                data-field="hafta"
-                caption="HAFTA"
-                :fixed="true"
-                :width="130"
-                :visible="true"
-                alignment="left"
-                :cell-template="weekCellTemplate"
-              />
-              <DxColumn
-                data-field="aksesuar"
-                caption="AKSESUAR"
-                :visible="true"
-                :width="60"
-                cell-template="aksesuarTemplate"
-                alignment="center"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="eksikler"
-                caption="EKSİKLER"
-                :visible="false"
-                :width="60"
-                alignment="center"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="grup_id"
-                caption="GRUP ID"
-                data-type="string"
-                :visible="false"
-                :width="40"
-              />
-              <DxColumn
-                data-field="IS_ISTASYONU"
-                caption="İST. ADI"
-                :visible="false"
-                :width="130"
-              />
-              <DxColumn
-                data-field="IS_ISTASYONU_ID"
-                caption="İSTASYON ID"
-                data-type="number"
-                :visible="false"
-                :width="150"
-              />
-              <DxColumn
-                data-field="IS_ISTASYONU_KODU"
-                caption="İSTASYON KODU"
-                :visible="false"
-                :width="150"
-              />
-              <DxColumn
-                data-field="IS_ISTASYONU_ADI"
-                caption="İSTASYON ADIx"
-                :visible="false"
-                :width="150"
-              />
-              <DxColumn
-                data-field="OPERASYON"
-                caption="OPRSYN"
-                :visible="true"
-                :width="120"
-              />
-              <DxColumn
-                data-field="siparis_belge_no"
-                caption="SİPARİŞ NO"
-                :width="90"
-                :visible="true"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="marka"
-                caption="MARKA"
-                :visible="true"
-                :min-width="120"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="cari_ad"
-                caption="MÜŞTERİ"
-                :visible="true"
-                :min-width="140"
-                :allow-sorting="false"
-              />
+              <DxColumn data-field="id" caption="ID" :visible="false" :min-width="90" />
+              <DxColumn data-field="aktif" caption="AKTIF" :visible="true" :min-width="50"
+                cell-template="aktifTemplate" />
+              <DxColumn data-field="hafta" caption="HAFTA" :fixed="true" :width="130" :visible="true" alignment="left"
+                :cell-template="weekCellTemplate" />
+              <DxColumn data-field="aksesuar" caption="AKSESUAR" :visible="true" :width="60"
+                cell-template="aksesuarTemplate" alignment="center" :allow-sorting="false" />
+              <DxColumn data-field="eksikler" caption="EKSİKLER" :visible="false" :width="60" alignment="center"
+                :allow-sorting="false" />
+              <DxColumn data-field="grup_id" caption="GRUP ID" data-type="string" :visible="false" :width="40" />
+              <DxColumn data-field="IS_ISTASYONU" caption="İST. ADI" :visible="false" :width="130" />
+              <DxColumn data-field="IS_ISTASYONU_ID" caption="İSTASYON ID" data-type="number" :visible="false"
+                :width="150" />
+              <DxColumn data-field="IS_ISTASYONU_KODU" caption="İSTASYON KODU" :visible="false" :width="150" />
+              <DxColumn data-field="IS_ISTASYONU_ADI" caption="İSTASYON ADIx" :visible="false" :width="150" />
+              <DxColumn data-field="OPERASYON" caption="OPRSYN" :visible="true" :width="120" />
+              <DxColumn data-field="siparis_belge_no" caption="SİPARİŞ NO" :width="90" :visible="true"
+                :allow-sorting="false" />
+              <DxColumn data-field="marka" caption="MARKA" :visible="true" :min-width="120" :allow-sorting="false" />
+              <DxColumn data-field="cari_ad" caption="MÜŞTERİ" :visible="true" :min-width="140"
+                :allow-sorting="false" />
 
-              <DxColumn
-                data-field="renk_kodu"
-                caption="RENK KODU"
-                :visible="true"
-                :min-width="110"
-                :allow-sorting="false"
-                :cell-template="renkleriGoster"
-              />
-              <DxColumn
-                data-field="stok_kodu"
-                caption="STOK KODU"
-                :visible="true"
-                :width="120"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="stok_adi"
-                caption="STOK ADI"
-                :min-width="200"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="isemri_id"
-                caption="İŞ EMRİ ID"
-                :width="150"
-                :visible="false"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="isemri_no"
-                caption="İŞ EMRİ NO"
-                :width="120"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="teslim_tarihi"
-                caption="TESLİM TARİHİ"
-                data-type="date"
-                :width="140"
-                :visible="false"
-                :format="{
+              <DxColumn data-field="renk_kodu" caption="RENK KODU" :visible="true" :min-width="110"
+                :allow-sorting="false" :cell-template="renkleriGoster" />
+              <DxColumn data-field="stok_kodu" caption="STOK KODU" :visible="true" :width="120"
+                :allow-sorting="false" />
+              <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="200" :allow-sorting="false" />
+              <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="150" :visible="false"
+                :allow-sorting="false" />
+              <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" :allow-sorting="false" />
+              <DxColumn data-field="teslim_tarihi" caption="TESLİM TARİHİ" data-type="date" :width="140"
+                :visible="false" :format="{
                   formatter: (date: any) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
@@ -391,15 +171,8 @@
                     }).format(new Date(date));
                     return formattedDate.replace(/\//g, '.');
                   },
-                }"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="planlanan_baslangic"
-                caption="PLN BŞL"
-                data-type="date"
-                :width="130"
-                :visible="true"
+                }" :allow-sorting="false" />
+              <DxColumn data-field="planlanan_baslangic" caption="PLN BŞL" data-type="date" :width="130" :visible="true"
                 :format="{
                   formatter: (date: any) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
@@ -412,15 +185,9 @@
 
                     return formattedDate.replace(/\//g, '.');
                   },
-                }"
-              />
-              <DxColumn
-                data-field="planlanan_bitis_tarihi"
-                caption="PLN BTŞ"
-                data-type="date"
-                :width="110"
-                :visible="true"
-                :format="{
+                }" />
+              <DxColumn data-field="planlanan_bitis_tarihi" caption="PLN BTŞ" data-type="date" :width="110"
+                :visible="true" :format="{
                   formatter: (date: any) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
@@ -430,235 +197,89 @@
 
                     return formattedDate.replace(/\//g, '.');
                   },
-                }"
-                alignment="left"
-                :cell-template="getIconType"
-              />
-              <DxColumn
-                data-field="kalan_miktar"
-                caption="KALAN MİKTAR"
-                data-type="number"
-                :width="60"
-                :visible="true"
-                :allow-sorting="false"
-              />
+                }" alignment="left" :cell-template="getIconType" />
+              <DxColumn data-field="kalan_miktar" caption="KALAN MİKTAR" data-type="number" :width="60" :visible="true"
+                :allow-sorting="false" />
               <!-- <DxColumn data-field="surec" caption="SÜREÇ" data-type="number" :width="150" :visible="true"
                   cell-template="surecCellTemplate" alignment="center" :allow-sorting="false" /> -->
-              <DxColumn
-                data-field="siparis_miktari"
-                caption="SİPARİŞ MİKTARI"
-                data-type="number"
-                :width="60"
-                :visible="true"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="isemri_miktari"
-                caption="İŞ EMRİ MİKTARI"
-                data-type="number"
-                :width="60"
-                :visible="true"
-              />
-              <DxColumn
-                data-field="uretilen_toplam_miktar"
-                caption="TOPLAM URETİLEN"
-                data-type="number"
-                :width="60"
-                :visible="false"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="uretilen_net_miktar"
-                caption="NET URETILEN"
-                data-type="number"
-                :width="60"
-                :visible="true"
-              />
-              <DxColumn
-                data-field="toplam_hurda_miktari"
-                caption="HURDA MİKTARI"
-                data-type="number"
-                :width="60"
-                :visible="true"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="operasyon_hazirlik_suresi"
-                caption="HAZIRLIK SÜRESİ"
-                data-type="number"
-                :width="60"
-                :visible="true"
-                :format="{
+              <DxColumn data-field="siparis_miktari" caption="SİPARİŞ MİKTARI" data-type="number" :width="60"
+                :visible="true" :allow-sorting="false" />
+              <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MİKTARI" data-type="number" :width="60"
+                :visible="true" />
+              <DxColumn data-field="uretilen_toplam_miktar" caption="TOPLAM URETİLEN" data-type="number" :width="60"
+                :visible="false" :allow-sorting="false" />
+              <DxColumn data-field="uretilen_net_miktar" caption="NET URETILEN" data-type="number" :width="60"
+                :visible="true" />
+              <DxColumn data-field="toplam_hurda_miktari" caption="HURDA MİKTARI" data-type="number" :width="60"
+                :visible="true" :allow-sorting="false" />
+              <DxColumn data-field="operasyon_hazirlik_suresi" caption="HAZIRLIK SÜRESİ" data-type="number" :width="60"
+                :visible="true" :format="{
                   type: 'fixedPoint',
                   precision: 1,
                   thousandsSeparator: ',',
-                }"
-              />
-              <DxColumn
-                data-field="operasyon_suresi"
-                caption="OPERASYON SÜRESİ"
-                data-type="number"
-                :width="60"
-                :visible="true"
-                :format="{
+                }" />
+              <DxColumn data-field="operasyon_suresi" caption="OPERASYON SÜRESİ" data-type="number" :width="60"
+                :visible="true" :format="{
                   type: 'fixedPoint',
                   precision: 1,
                   thousandsSeparator: ',',
-                }"
-                :allow-sorting="false"
-              />
+                }" :allow-sorting="false" />
               <!-- <DxColumn data-field="sip_detay_id" :min-width="120" :width="140" :allow-sorting="false" /> -->
-              <DxColumn
-                data-field="isemri_tipi"
-                caption="İŞ EMRİ TİPİ"
-                :min-width="120"
-                :width="140"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="teknik_not1"
-                caption="PLN NOTU"
-                :width="60"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="teknik_not2"
-                caption="OPR NOTU"
-                :width="90"
-                :visible="true"
-                alignment="center"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="kaydi_giren_kullanici"
-                caption="KAYIT YAPAN"
-                :min-width="120"
-                :width="140"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="item_id"
-                caption="ITEM ID"
-                :visible="false"
-                :min-width="90"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="satir_id"
-                caption="SATIR ID"
-                :visible="false"
-                :min-width="90"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="sip_not1"
-                caption="SİP NOT 1"
-                :min-width="120"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="sip_not2"
-                caption="SİP NOT 2"
-                :min-width="120"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="sip_not3"
-                caption="SİP NOT 3"
-                :min-width="120"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="sip_not4"
-                caption="SİP NOT 4"
-                :min-width="120"
-                :allow-sorting="false"
-              />
-              <DxColumn
-                data-field="CIKIS_DEPO"
-                caption="ÇIKIŞ DEPO"
-                :min-width="80"
-                :allow-sorting="false"
-              />
+              <DxColumn data-field="isemri_tipi" caption="İŞ EMRİ TİPİ" :min-width="120" :width="140"
+                :allow-sorting="false" />
+              <DxColumn data-field="teknik_not1" caption="PLN NOTU" :width="60" :allow-sorting="false" />
+              <DxColumn data-field="teknik_not2" caption="OPR NOTU" :width="90" :visible="true" alignment="center"
+                :allow-sorting="false" />
+              <DxColumn data-field="kaydi_giren_kullanici" caption="KAYIT YAPAN" :min-width="120" :width="140"
+                :allow-sorting="false" />
+              <DxColumn data-field="item_id" caption="ITEM ID" :visible="false" :min-width="90"
+                :allow-sorting="false" />
+              <DxColumn data-field="satir_id" caption="SATIR ID" :visible="false" :min-width="90"
+                :allow-sorting="false" />
+              <DxColumn data-field="sip_not1" caption="SİP NOT 1" :min-width="120" :allow-sorting="false" />
+              <DxColumn data-field="sip_not2" caption="SİP NOT 2" :min-width="120" :allow-sorting="false" />
+              <DxColumn data-field="sip_not3" caption="SİP NOT 3" :min-width="120" :allow-sorting="false" />
+              <DxColumn data-field="sip_not4" caption="SİP NOT 4" :min-width="120" :allow-sorting="false" />
+              <DxColumn data-field="CIKIS_DEPO" caption="ÇIKIŞ DEPO" :min-width="80" :allow-sorting="false" />
 
-              <DxLoadPanel
-                key="grid-main-load"
-                v-model:visible="loadingVisible"
-                :show-indicator="true"
-                :show-pane="true"
-                :shading="true"
-              />
+              <DxLoadPanel key="grid-main-load" v-model:visible="loadingVisible" :show-indicator="true"
+                :show-pane="true" :shading="true" />
               <DxHeaderFilter :visible="true" />
               <DxFilterPanel :visible="true" />
               <DxFilterRow :visible="goster" />
               <DxSearchPanel :visible="true" :width="240" />
-              <DxScrolling
-                mode="virtual"
-                row-rendering-mode="virtual"
-                show-scrollbar="always"
-              />
+              <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
               <DxSorting mode="none" />
               <DxExport :enabled="true" :allow-export-selected-data="false" />
 
               <DxColumnChooser height="540px" :enabled="true" mode="select">
                 <DxColumnChooserSearch :enabled="true" />
-                <DxColumnChooserSelection
-                  :allow-select-all="true"
-                  :select-by-click="true"
-                  :recursive="true"
-                />
+                <DxColumnChooserSelection :allow-select-all="true" :select-by-click="true" :recursive="true" />
               </DxColumnChooser>
 
               <DxToolbar>
                 <DxItem location="before" template="totalRecordTemplate" />
-                <DxItem
-                  location="before"
-                  template="eksikKontroluTemplate"
-                  @click="getEksikler"
-                />
+                <DxItem location="before" template="eksikKontroluTemplate" @click="getEksikler" />
                 <DxItem location="before" template="depoTemplate" />
-                <DxItem
-                  location="after"
-                  locate-in-menu="auto"
-                  template="yenileTemplate"
-                  menu-item-template="menuYenileTemplate"
-                  @click="Yenile"
-                />
-                <DxItem
-                  location="after"
-                  locate-in-menu="auto"
-                  template="filtreTemizleTemplate"
-                  menu-item-template="menuFiltreTemizleTemplate"
-                  @click="FiltreTemizle"
-                />
-                <DxItem
-                  location="after"
-                  locate-in-menu="auto"
-                  template="filtreGosterTemplate"
-                  menu-item-template="menuFiltreGosterTemplate"
-                  @click="toggleGoster"
-                />
+                <DxItem location="after" locate-in-menu="auto" template="yenileTemplate"
+                  menu-item-template="menuYenileTemplate" @click="Yenile" />
+                <DxItem location="after" locate-in-menu="auto" template="filtreTemizleTemplate"
+                  menu-item-template="menuFiltreTemizleTemplate" @click="FiltreTemizle" />
+                <DxItem location="after" locate-in-menu="auto" template="filtreGosterTemplate"
+                  menu-item-template="menuFiltreGosterTemplate" @click="toggleGoster" />
                 <DxItem name="exportButton" />
                 <DxItem name="columnChooserButton" />
                 <DxItem name="searchPanel" />
               </DxToolbar>
 
               <template #depoTemplate>
-                <span style="display: flex"
-                  >Koltukaltı&nbsp;&nbsp;
-                  <DxSwitch
-                    v-model:value="depolar"
-                    text="Tüm Depolar"
-                  />&nbsp;&nbsp;Tüm Depolar
+                <span style="display: flex;">Koltukaltı&nbsp;&nbsp;
+                  <DxSwitch v-model:value="depolar" text="Tüm Depolar" />&nbsp;&nbsp;Tüm Depolar
                 </span>
               </template>
 
               <template #eksikKontroluTemplate>
-                <DxButton
-                  icon="taskhelpneeded"
-                  styling-mode="text"
-                  hint="Eksikleri Kontrol Et"
-                />
+                <DxButton icon="taskhelpneeded" styling-mode="text" hint="Eksikleri Kontrol Et" />
               </template>
 
               <template #totalRecordTemplate>
@@ -669,47 +290,33 @@
               </template>
 
               <template #filtreTemizleTemplate>
-                <DxButton
-                  icon="notequal"
-                  styling-mode="text"
-                  hint="Filtre Temizle"
-                  id="filtretemizle"
-                />
+                <DxButton icon="notequal" styling-mode="text" hint="Filtre Temizle" id="filtretemizle" />
                 <!-- <VIcon size="24" icon="tabler-x" /> -->
               </template>
               <template #menuFiltreTemizleTemplate>
-                <div style="display: flex; align-items: center">
+                <div style="display: flex; align-items: center;">
                   <i class="dx-icon dx-icon-undo"></i>
-                  <span style="margin-inline-start: 8px">Filtre Temizle</span>
+                  <span style="margin-inline-start: 8px;">Filtre Temizle</span>
                 </div>
               </template>
 
               <template #yenileTemplate>
-                <DxButton
-                  icon="refresh"
-                  styling-mode="text"
-                  hint="Yenile"
-                  id="sayim"
-                />
+                <DxButton icon="refresh" styling-mode="text" hint="Yenile" id="sayim" />
               </template>
               <template #menuYenileTemplate>
-                <div style="display: flex; align-items: center">
+                <div style="display: flex; align-items: center;">
                   <i class="dx-icon dx-icon-refresh"></i>
-                  <span style="margin-inline-start: 8px">Yenile</span>
+                  <span style="margin-inline-start: 8px;">Yenile</span>
                 </div>
               </template>
 
               <template #filtreGosterTemplate>
-                <DxButton
-                  icon="filter"
-                  styling-mode="text"
-                  hint="Filtre Goster"
-                />
+                <DxButton icon="filter" styling-mode="text" hint="Filtre Goster" />
               </template>
               <template #menuFiltreGosterTemplate>
-                <div style="display: flex; align-items: center">
+                <div style="display: flex; align-items: center;">
                   <i class="dx-icon dx-icon-filter"></i>
-                  <span style="margin-inline-start: 8px">Filtre Göster</span>
+                  <span style="margin-inline-start: 8px;">Filtre Göster</span>
                 </div>
               </template>
               <!-- 
@@ -719,34 +326,24 @@
 
               <template #notlarPTemplate="{ data }">
                 <template v-if="data.value === '1' || data.value === 1">
-                  <i
-                    :class="['dx-icon', 'dx-icon-belloutline']"
-                    :style="{ fontSize: '20px', color: 'green' }"
-                  ></i>
+                  <i :class="['dx-icon', 'dx-icon-belloutline']" :style="{ fontSize: '20px', color: 'green' }"></i>
                 </template>
               </template>
               <template #notlarOTemplate="{ data }">
                 <template v-if="data.value === '1' || data.value === 1">
-                  <i
-                    :class="['dx-icon', 'dx-icon-belloutline']"
-                    :style="{ fontSize: '20px', color: staticPrimaryColor }"
-                  ></i>
+                  <i :class="['dx-icon', 'dx-icon-belloutline']"
+                    :style="{ fontSize: '20px', color: staticPrimaryColor }"></i>
                 </template>
               </template>
               <template #aksesuarTemplate="{ data }">
                 <template v-if="data.value === 'Aksesuarlı'">
-                  <i
-                    :class="['dx-icon', 'dx-icon-gift']"
-                    :style="{ fontSize: '20px', color: staticPrimaryColor }"
-                  ></i>
+                  <i :class="['dx-icon', 'dx-icon-gift']" :style="{ fontSize: '20px', color: staticPrimaryColor }"></i>
                 </template>
               </template>
               <template #aktifTemplate="{ data }">
                 <template v-if="data.value === 1">
-                  <i
-                    :class="['dx-icon', 'dx-icon-runner']"
-                    :style="{ fontSize: '20px', color: staticPrimaryColor }"
-                  ></i>
+                  <i :class="['dx-icon', 'dx-icon-runner']"
+                    :style="{ fontSize: '20px', color: staticPrimaryColor }"></i>
                 </template>
               </template>
             </DxDataGrid>
@@ -759,133 +356,48 @@
                 Gereksiz beklemeleri engellemek için otomatik yükleme
                 kaldırılmıştır...
               </div>
-              <VBtn
-                color="primary"
-                variant="outlined"
-                size="small"
-                @click="getMalzemeListesi"
-              >
+              <VBtn color="primary" variant="outlined" size="small" @click="getMalzemeListesi">
                 Listeyi Yükle
               </VBtn>
             </div>
-            <DxContextMenu
-              :data-source="menuItemsM"
-              :width="200"
-              target="#gridMalzemeler"
-              @item-click="itemClickM"
-            />
-            <DxDataGrid
-              id="gridMalzemeler"
-              ref="dataGridRefM"
-              :data-source="gridDataEksikListesi"
-              key-expr="item_id"
-              :show-borders="true"
-              :min-width="400"
-              :column-auto-width="false"
-              :allow-column-resizing="true"
-              column-resizing-mode="widget"
-              height="625"
-              @cell-prepared="onCellPreparedM"
-              :focused-row-enabled="true"
-              :row-alternation-enabled="true"
-              @contextMenuPreparing="onContextMenuPreparing"
-            >
-              <DxColumn
-                data-field="tipi"
-                caption="TİPİ"
-                data-type="string"
-                :visible="true"
-                :width="65"
-                :cell-template="tipCellTemplate"
-              />
-              <DxColumn
-                data-field="user_line_no"
-                caption="LINE NO"
-                :width="60"
-                :visible="false"
-              />
-              <DxColumn
-                data-field="item_id"
-                caption="ITEM ID"
-                :width="180"
-                :visible="false"
-              />
-              <DxColumn
-                data-field="stok_kodu"
-                caption="STOK KODU"
-                :width="140"
-              />
-              <DxColumn
-                data-field="stok_adi"
-                caption="STOK ADI"
-                :min-width="180"
-              />
-              <DxColumn
-                data-field="isemri_id"
-                caption="İŞ EMRİ ID"
-                :width="150"
-                :visible="false"
-              />
-              <DxColumn
-                data-field="qty_base_bom"
-                caption="BOM"
-                :width="120"
-                data-type="number"
-                :format="{
-                  type: 'fixedPoint',
-                  precision: 2,
-                  thousandsSeparator: ',',
-                }"
-              />
-              <DxColumn
-                data-field="qty_net"
-                caption="İHTİYAÇ"
-                :width="120"
-                data-type="number"
-                :format="{
-                  type: 'fixedPoint',
-                  precision: 2,
-                  thousandsSeparator: ',',
-                }"
-              />
-              <DxColumn
-                data-field="qty_prm"
-                caption="STOK"
-                :width="120"
-                data-type="number"
-                :format="{
-                  type: 'fixedPoint',
-                  precision: 2,
-                  thousandsSeparator: ',',
-                }"
-              />
-              <DxColumn
-                data-field="bakiye"
-                caption="BAKİYE"
-                :width="120"
-                data-type="number"
-                sort-order="asc"
-                :format="{
-                  type: 'fixedPoint',
-                  precision: 2,
-                  thousandsSeparator: ',',
-                }"
-              />
+            <DxContextMenu :data-source="menuItemsM" :width="200" target="#gridMalzemeler" @item-click="itemClickM" />
+            <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataEksikListesi" key-expr="item_id"
+              :show-borders="true" :min-width="400" :column-auto-width="false" :allow-column-resizing="true"
+              column-resizing-mode="widget" height="625" @cell-prepared="onCellPreparedM" :focused-row-enabled="true"
+              :row-alternation-enabled="true" @contextMenuPreparing="onContextMenuPreparing">
+              <DxColumn data-field="tipi" caption="TİPİ" data-type="string" :visible="true" :width="65"
+                :cell-template="tipCellTemplate" />
+              <DxColumn data-field="user_line_no" caption="LINE NO" :width="60" :visible="false" />
+              <DxColumn data-field="item_id" caption="ITEM ID" :width="180" :visible="false" />
+              <DxColumn data-field="stok_kodu" caption="STOK KODU" :width="140" />
+              <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="180" />
+              <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="150" :visible="false" />
+              <DxColumn data-field="qty_base_bom" caption="BOM" :width="120" data-type="number" :format="{
+                type: 'fixedPoint',
+                precision: 2,
+                thousandsSeparator: ',',
+              }" />
+              <DxColumn data-field="qty_net" caption="İHTİYAÇ" :width="120" data-type="number" :format="{
+                type: 'fixedPoint',
+                precision: 2,
+                thousandsSeparator: ',',
+              }" />
+              <DxColumn data-field="qty_prm" caption="STOK" :width="120" data-type="number" :format="{
+                type: 'fixedPoint',
+                precision: 2,
+                thousandsSeparator: ',',
+              }" />
+              <DxColumn data-field="bakiye" caption="BAKİYE" :width="120" data-type="number" sort-order="asc" :format="{
+                type: 'fixedPoint',
+                precision: 2,
+                thousandsSeparator: ',',
+              }" />
               -->
 
               <DxGroupPanel :visible="false" />
-              <DxScrolling
-                mode="virtual"
-                row-rendering-mode="virtual"
-                show-scrollbar="always"
-              />
-              <DxLoadPanel
-                key="grid-malzeme-load"
-                v-model:visible="loadingVisible"
-                :show-indicator="true"
-                :show-pane="true"
-                :shading="true"
-              />
+              <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
+              <DxLoadPanel key="grid-malzeme-load" v-model:visible="loadingVisible" :show-indicator="true"
+                :show-pane="true" :shading="true" />
             </DxDataGrid>
           </VCardText>
         </VWindowItem>
@@ -896,52 +408,17 @@
                 Gereksiz beklemeleri engellemek için otomatik yükleme
                 kaldırılmıştır...
               </div>
-              <VBtn
-                color="primary"
-                variant="outlined"
-                size="small"
-                @click="duruslariAl"
-              >
+              <VBtn color="primary" variant="outlined" size="small" @click="duruslariAl">
                 Listeyi Yükle
               </VBtn>
             </div>
-            <DxDataGrid
-              id="gridDuruslar"
-              ref="dataGridRefD"
-              :data-source="gridDataDuruslar"
-              key-expr="id"
-              :show-borders="true"
-              :focused-row-enabled="true"
-              :row-alternation-enabled="true"
-              :min-width="200"
-              :allow-column-reordering="true"
-              :column-auto-width="false"
-              height="625"
-            >
-              <DxColumn
-                data-field="id"
-                caption="ID"
-                :visible="false"
-                :min-width="90"
-              />
-              <DxColumn
-                data-field="is_emri_no"
-                caption="İŞ EMRİ NO"
-                :visible="true"
-                width="120"
-              />
-              <DxColumn
-                data-field="durus_sebebi"
-                caption="SEBEP"
-                :visible="true"
-                :min-width="250"
-              />
-              <DxColumn
-                data-field="durum_bas_tarihi"
-                caption="BAŞLANGIÇ"
-                data-type="date"
-                width="130"
-                :visible="true"
+            <DxDataGrid id="gridDuruslar" ref="dataGridRefD" :data-source="gridDataDuruslar" key-expr="id"
+              :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true" :min-width="200"
+              :allow-column-reordering="true" :column-auto-width="false" height="625">
+              <DxColumn data-field="id" caption="ID" :visible="false" :min-width="90" />
+              <DxColumn data-field="is_emri_no" caption="İŞ EMRİ NO" :visible="true" width="120" />
+              <DxColumn data-field="durus_sebebi" caption="SEBEP" :visible="true" :min-width="250" />
+              <DxColumn data-field="durum_bas_tarihi" caption="BAŞLANGIÇ" data-type="date" width="130" :visible="true"
                 :format="{
                   formatter: (date: any) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
@@ -954,14 +431,8 @@
 
                     return formattedDate.replace(/\//g, '.');
                   },
-                }"
-              />
-              <DxColumn
-                data-field="durum_bit_tarihi"
-                caption="BİTİŞ"
-                data-type="date"
-                width="130"
-                :visible="true"
+                }" />
+              <DxColumn data-field="durum_bit_tarihi" caption="BİTİŞ" data-type="date" width="130" :visible="true"
                 :format="{
                   formatter: (date: any) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
@@ -974,63 +445,31 @@
 
                     return formattedDate.replace(/\//g, '.');
                   },
-                }"
-              />
-              <DxColumn
-                data-field="dakika"
-                caption="SÜRE(dk)"
-                data-type="number"
-                :visible="true"
-                :width="120"
-                :format="{
-                  type: 'fixedPoint',
-                  precision: 1,
-                  thousandsSeparator: ',',
-                }"
-              />
+                }" />
+              <DxColumn data-field="dakika" caption="SÜRE(dk)" data-type="number" :visible="true" :width="120" :format="{
+                type: 'fixedPoint',
+                precision: 1,
+                thousandsSeparator: ',',
+              }" />
 
-              <DxLoadPanel
-                key="grid-durus-load"
-                v-model:visible="loadingVisible"
-                :show-indicator="true"
-                :show-pane="true"
-                :shading="true"
-              />
+              <DxLoadPanel key="grid-durus-load" v-model:visible="loadingVisible" :show-indicator="true"
+                :show-pane="true" :shading="true" />
               <DxHeaderFilter :visible="true" />
-              <DxScrolling
-                mode="virtual"
-                row-rendering-mode="virtual"
-                show-scrollbar="always"
-              />
+              <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
               <DxSorting mode="none" />
 
               <DxSummary>
-                <DxTotalItem
-                  :align-by-column="true"
-                  column="durus_sebebi"
-                  summary-type="count"
-                  display-format="{0} duruş"
-                  :alignment="right"
-                />
-                <DxTotalItem
-                  :align-by-column="true"
-                  column="dakika"
-                  summary-type="sum"
-                  display-format="{0} dk"
-                  :alignment="right"
-                  :customize-text="formatSummaryText"
-                />
+                <DxTotalItem :align-by-column="true" column="durus_sebebi" summary-type="count"
+                  display-format="{0} duruş" :alignment="right" />
+                <DxTotalItem :align-by-column="true" column="dakika" summary-type="sum" display-format="{0} dk"
+                  :alignment="right" :customize-text="formatSummaryText" />
               </DxSummary>
             </DxDataGrid>
           </VCardText>
         </VWindowItem>
         <VWindowItem value="tab-4">
           <VCardText class="pa-2">
-            <VDataTable
-              :headers="tableHeaders"
-              :items="tabloVerisi"
-              item-value="tarih"
-            />
+            <VDataTable :headers="tableHeaders" :items="tabloVerisi" item-value="tarih" />
             <br />
             <!-- <VContainer fluid>
               <VRow>
@@ -1042,15 +481,10 @@
               </VRow>
             </VContainer> -->
             <div>
-              <VSelect
-                v-model="seciliHafta"
-                :items="[
-                  { title: 'Bu Hafta', value: 'bu' },
-                  { title: 'Geçen Hafta', value: 'gecen' },
-                ]"
-                label="Hafta Seçin"
-                class="mb-4"
-              />
+              <VSelect v-model="seciliHafta" :items="[
+                { title: 'Bu Hafta', value: 'bu' },
+                { title: 'Geçen Hafta', value: 'gecen' },
+              ]" label="Hafta Seçin" class="mb-4" />
 
               <GunlukToplamGrafik :veri="grafikVerisi" />
             </div>
@@ -1153,62 +587,29 @@
     <!-- </div> -->
   </div>
 
-  <PersonelSecDialog
-    v-model="ekipSecDialog"
-    :isemriID="Number(selectedRow.isemri_id)"
-    :istasyon-id="Number(selectedRow.IS_ISTASYONU_ID)"
-    :guid="guid"
-    @kaydedildi="onEkipKaydedildi"
-    @iptal="onEkipIptal"
-  />
+  <PersonelSecDialog v-model="ekipSecDialog" :isemriID="Number(selectedRow.isemri_id)"
+    :istasyon-id="Number(selectedRow.IS_ISTASYONU_ID)" :guid="guid" @kaydedildi="onEkipKaydedildi"
+    @iptal="onEkipIptal" />
 
-  <DxPopup
-    v-model:visible="popupNotGirVisible"
-    :width="600"
-    :height="300"
-    :hide-on-outside-click="false"
-    :show-close-button="true"
-  >
+  <DxPopup v-model:visible="popupNotGirVisible" :width="600" :height="300" :hide-on-outside-click="false"
+    :show-close-button="true">
     <template #title>
       <p class="popup-title">Notunuzu Giriniz</p>
     </template>
     <template #content>
       <VCol cols="12" class="pa-0">
         <div class="popup-center mt-0 pa-0">
-          <DxTextArea
-            :height="155"
-            :max-length="999"
-            v-model="uretimNotu"
-            :auto-resize-enabled="false"
-            aria-required="true"
-          />
+          <DxTextArea :height="155" :max-length="999" v-model="uretimNotu" :auto-resize-enabled="false"
+            aria-required="true" />
         </div>
       </VCol>
     </template>
-    <DxToolbarItem
-      widget="dxButton"
-      toolbar="bottom"
-      location="center"
-      :options="kaydetOptions"
-      @click="NotKaydet()"
-    />
-    <DxToolbarItem
-      widget="dxButton"
-      toolbar="bottom"
-      location="center"
-      :options="vazgecOptions"
-    />
+    <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="kaydetOptions" @click="NotKaydet()" />
+    <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="vazgecOptions" />
   </DxPopup>
 
-  <DxPopup
-    v-model:visible="popupDepolarGosterVisible"
-    :hide-on-outside-click="true"
-    title="Diğer Depo Bakiyeleri"
-    :show-close-button="false"
-    :show-title="true"
-    :width="800"
-    :height="620"
-  >
+  <DxPopup v-model:visible="popupDepolarGosterVisible" :hide-on-outside-click="true" title="Diğer Depo Bakiyeleri"
+    :show-close-button="false" :show-title="true" :width="800" :height="620">
     <template #title>
       <p class="popup-title">Diğer Depo Bakiyeleri</p>
     </template>
@@ -1219,87 +620,32 @@
     <br />
     <VRow class="text-center py-0">
       <VCol class="text-center py-0">
-        <DxDataGrid
-          id="gridBakiyeler"
-          ref="dataGridRefB"
-          :data-source="gridBakiyeler"
-          :show-borders="true"
-          :column-auto-width="true"
-          :allow-column-resizing="true"
-          column-resizing-mode="widget"
-          @cell-prepared="onCellPreparedB"
-          :row-alternation-enabled="true"
-          height="400"
-          show-scrollbar="always"
-        >
-          <DxColumn
-            data-field="whouse_id"
-            caption="DEPO ID"
-            :width="80"
-            alignment="left"
-          />
-          <DxColumn
-            data-field="whouse_code"
-            caption="DEPO KODU"
-            :width="100"
-            alignment="left"
-          />
+        <DxDataGrid id="gridBakiyeler" ref="dataGridRefB" :data-source="gridBakiyeler" :show-borders="true"
+          :column-auto-width="true" :allow-column-resizing="true" column-resizing-mode="widget"
+          @cell-prepared="onCellPreparedB" :row-alternation-enabled="true" height="400" show-scrollbar="always">
+          <DxColumn data-field="whouse_id" caption="DEPO ID" :width="80" alignment="left" />
+          <DxColumn data-field="whouse_code" caption="DEPO KODU" :width="100" alignment="left" />
           <DxColumn data-field="description" caption="DEPO ADI" />
-          <DxColumn
-            data-field="qty_prm"
-            caption="STOK"
-            :width="100"
-            data-type="number"
-            :format="{
-              type: 'fixedPoint',
-              precision: 2,
-              thousandsSeparator: ',',
-            }"
-          />
+          <DxColumn data-field="qty_prm" caption="STOK" :width="100" data-type="number" :format="{
+            type: 'fixedPoint',
+            precision: 2,
+            thousandsSeparator: ',',
+          }" />
 
           <DxGroupPanel :visible="false" />
-          <DxScrolling
-            mode="virtual"
-            row-rendering-mode="virtual"
-            show-scrollbar="always"
-          />
-          <DxLoadPanel
-            key="grid-bakiye-load"
-            v-model:visible="loadingVisible"
-            :show-indicator="true"
-            :show-pane="true"
-            :shading="true"
-          />
+          <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
+          <DxLoadPanel key="grid-bakiye-load" v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true"
+            :shading="true" />
         </DxDataGrid>
       </VCol>
     </VRow>
-    <DxToolbarItem
-      widget="dxButton"
-      toolbar="bottom"
-      location="center"
-      :options="kapatOptions"
-      @click="popupDepolarGosterVisible = false"
-    />
+    <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="kapatOptions"
+      @click="popupDepolarGosterVisible = false" />
   </DxPopup>
 
-  <VOverlay
-    :model-value="loadingVisible"
-    class="align-center justify-center"
-    persistent
-    scrim="rgba(0,0,0,0.35)"
-  >
-    <VCard
-      class="pa-6 d-flex flex-column align-center"
-      elevation="8"
-      width="320"
-    >
-      <VProgressCircular
-        indeterminate
-        color="primary"
-        size="48"
-        width="5"
-        class="mb-4"
-      />
+  <VOverlay :model-value="loadingVisible" class="align-center justify-center" persistent scrim="rgba(0,0,0,0.35)">
+    <VCard class="pa-6 d-flex flex-column align-center" elevation="8" width="320">
+      <VProgressCircular indeterminate color="primary" size="48" width="5" class="mb-4" />
       <div class="text-subtitle-1 font-weight-medium">{{ loadingMessage }}</div>
     </VCard>
   </VOverlay>
@@ -1339,6 +685,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import VueSpeedometer from "vue-speedometer";
 import { VSelect } from "vuetify/components";
 import Grafik from "./Grafik.vue";
+// @ts-ignore: SFC tipleri shims.d.ts üzerinden çözülüyor
 import GunlukToplamGrafik from "./GunlukToplamGrafik.vue";
 import PersonelSecDialog from "./PersonelSecDialog.vue";
 import ProductionCard from "./ProductionCard.vue";
@@ -1645,7 +992,7 @@ function vardiyadaKacinciDakika(now: Date = new Date()): number {
   const Molalar = [
     [createTime(10, 0), createTime(10, 15)], // 15 dk çay
     [createTime(12, 45), createTime(13, 15)], // 30 dk yemek
-    [createTime(14, 0), createTime(14, 2)], // 15 dk çay
+    [createTime(15, 0), createTime(15, 15)], // 15 dk çay
   ];
 
   // Geçen süre (dakika)
@@ -2130,8 +1477,8 @@ const tipCellTemplate = (cellElement: HTMLElement, cellInfo: any): void => {
 // Zamanlanmış molalar: saat HH:mm, dakika, sebep açıklaması ve kodu
 const molalar = [
   { saat: "10:00", dakika: 15, sebep: "ÇAY MOLASI", sebep_kodu: "003" },
-  { saat: "13:05", dakika: 2, sebep: "YEMEK MOLASI", sebep_kodu: "0102" },
-  { saat: "14:00", dakika: 2, sebep: "ÇAY MOLASI", sebep_kodu: "003" },
+  { saat: "12:45", dakika: 30, sebep: "YEMEK MOLASI", sebep_kodu: "0102" },
+  { saat: "15:00", dakika: 15, sebep: "ÇAY MOLASI", sebep_kodu: "003" },
 ];
 
 const aktifMolalar = ref<Record<string, string>>({});
@@ -2299,18 +1646,18 @@ const MolaKontrol = async () => {
         returnDurus:
           upperStatus === "DURUYOR"
             ? {
-                break_reason_code:
-                  (item as any)?.sebep_kodu ||
-                  (item as any)?.break_reason_code ||
-                  "0000",
-                description:
-                  (item as any)?.sebep ||
-                  (item as any)?.durus_sebebi ||
-                  "GİRİLMEDİ",
-              }
+              break_reason_code:
+                (item as any)?.sebep_kodu ||
+                (item as any)?.break_reason_code ||
+                "0000",
+              description:
+                (item as any)?.sebep ||
+                (item as any)?.durus_sebebi ||
+                "GİRİLMEDİ",
+            }
             : upperStatus === "AYAR"
-            ? { break_reason_code: "", description: "HAZIRLIK ÇALIŞMASI" }
-            : null,
+              ? { break_reason_code: "", description: "HAZIRLIK ÇALIŞMASI" }
+              : null,
       };
       originalItems.value[item.isemriNo] = snapshot;
 
@@ -2857,7 +2204,7 @@ const onCellPreparedM = (e: any) => {
     e.rowType === "data" &&
     e.column.dataField === "diger_depo" &&
     Number(e.data.diger_depo) + Number(e.data.ana_depo) + Number(e.data.stok) <
-      Number(e.data.ihtiyac)
+    Number(e.data.ihtiyac)
   ) {
     e.cellElement.style.backgroundColor = "red";
     e.cellElement.style.color = "white";
@@ -2917,6 +2264,7 @@ const onContextMenuPreparing = (e: any) => {
   background-size: auto;
   block-size: 318px;
   gap: 16px;
+  inline-size: 1200px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
 }

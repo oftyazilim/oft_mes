@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
-import { watch, ref } from 'vue';
 
 // Reaktif tema renk değişkenleri ve grafik ayarları
 const borderColor = 'rgba(var(--v-border-color), var(--v-border-opacity))';
@@ -10,6 +10,23 @@ const props = defineProps<{
   barData: number[];
   // verimData: number[];
 }>();
+
+// Kategori etiketleri (yatay bar için Y ekseninde gösterilecek)
+const CATEGORIES = ['Klln %', 'Ürtk %', 'Klte %', 'OEE %'];
+
+const clampPercent = (n: number) => Math.max(0, Math.min(100, n));
+
+const computeOee = (values: number[]) => {
+  const [a, p, q] = values.map(v => Number.isFinite(v) ? v : 0);
+  const raw = (a * p * q) / 10000; // (A% * P% * Q%)
+  return Math.round(clampPercent(raw));
+};
+
+const buildSeriesData = (values: number[]) => {
+  const base = values.slice(0, 3).map((y, i) => ({ x: CATEGORIES[i], y: clampPercent(Number(y) || 0) }));
+  const oee = computeOee(values);
+  return [...base, { x: CATEGORIES[3], y: oee }];
+};
 
 // Grafik seçenekleri
 const topicsChartConfig = ref({
@@ -22,15 +39,18 @@ const topicsChartConfig = ref({
   },
   plotOptions: {
     bar: {
-      horizontal: false,
+      horizontal: true,
       barHeight: '70%',
       distributed: true,
-      borderRadius: 4,
+      borderRadius: 15,
       borderRadiusApplication: 'end',
     },
   },
   colors: [
-    'rgba(var(--v-theme-primary),1)', 'rgba(var(--v-theme-warning),1)', 'rgba(var(--v-theme-error),1)',
+    'rgba(var(--v-theme-info),1)',
+    'rgba(var(--v-theme-warning),1)',
+    'rgba(var(--v-theme-error),1)',
+    'rgba(var(--v-theme-success),1)',
   ],
   grid: {
     borderColor,
@@ -44,15 +64,15 @@ const topicsChartConfig = ref({
     padding: {
       top: -30,
       bottom: 35,
-      left: -1,
-      right: -3,
+      left: 5,
+      right: 10,
     },
   },
   dataLabels: {
     enabled: true,
     style: {
-      colors: ['#fff'],
-      fontWeight: 300,
+      colors: ['#eee'],
+      fontWeight: 600,
       fontSize: '22px',
     },
     offsetX: 0,
@@ -63,12 +83,11 @@ const topicsChartConfig = ref({
       return `${val}`;
     },
   },
-  labels: props.barData,
   xaxis: {
-    categories: ['Klln %', 'Ürtk %', 'Klte %'],
     axisBorder: { show: false },
     axisTicks: { show: false },
     labels: {
+      show: false,
       style: {
         colors: 'rgba(var(--v-theme-on-background), var(--v-disabled-opacity))',
         fontSize: '16px',
@@ -77,9 +96,9 @@ const topicsChartConfig = ref({
   },
   yaxis: {
     labels: {
-      show: false,
+      show: true,
       style: {
-        colors: 'rgba(var(--v-theme-on-background), var(--v-disabled-opacity))',
+        colors: 'gray',
         fontSize: '14px',
       },
     },
@@ -99,7 +118,7 @@ const topicsChartConfig = ref({
 // Serileri reaktif olarak başlat
 const topicsChartSeries = ref([
   {
-    data: props.barData,
+    data: buildSeriesData(props.barData),
   },
 ]);
 
@@ -107,32 +126,21 @@ const topicsChartSeries = ref([
 watch(
   () => props.barData,
   (newData) => {
-    topicsChartSeries.value = [{ data: newData }];
+    topicsChartSeries.value = [{ data: buildSeriesData(newData) }];
   }
 );
 
 </script>
 
 <template>
-  <!-- <VCard> -->
-
   <VCardText class="mt-0 pa-0 pb-4">
     <VRow>
       <VCol cols="12">
-        <VueApexCharts class="ma-0 mt-2 pa-0" type="bar" height="200" :options="topicsChartConfig"
+        <VueApexCharts class="ma-0 pa-0 " type="bar" height="300" :options="topicsChartConfig"
           :series="topicsChartSeries" />
       </VCol>
-
-      <!-- <VCol cols="6">
-              <VueSpeedometer :value="uretimHizi" :max-value="100" :min-value="0" :segments="5"
-                :needle-transition-duration="1000" needle-transition="easeElastic"
-                current-value-text="${value} adet/saat" ring-width="30" width="200" height="12"
-                style="margin-block-end: -30px" />
-              <h3 class="text-h6 mb-2 text-center">OEE %</h3>
-        </VCol> -->
     </VRow>
   </VCardText>
-  <!-- </VCard> -->
 </template>
 
 <style scoped>

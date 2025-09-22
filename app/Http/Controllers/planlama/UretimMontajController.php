@@ -845,7 +845,7 @@ class UretimMontajController extends Controller
       ->get()
       ->groupBy('is_emri_id');
 
-    // Log::info('Çalışmalar:', $calismalar->toArray());
+    Log::info('Çalışmalar:', $calismalar->toArray());
 
     $isemriIDs = $calismalar->keys()->toArray();
     // Log::info('İş Emirleri ID Listesi:', $isemriIDs);

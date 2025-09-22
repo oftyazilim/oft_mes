@@ -50,7 +50,7 @@ export default [
         to: "planlama-ihtiyac-listesi",
         icon: { icon: "tabler-list" },
         action: "read",
-        subject: ["planlama"],
+        subject: ["planlama", "montaj"],
         target: '_blank',
       },
       {
