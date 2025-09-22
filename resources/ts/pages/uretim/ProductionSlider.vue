@@ -30,7 +30,7 @@
             </div>
           </VCardTitle>
           <div class="ps-4 pe-2 text-center mb-1">
-            <Grafik :barData="barVeri"/>
+            <Grafik :barData="barVeri" />
           </div>
         </VCard>
       </VCol>
@@ -47,38 +47,36 @@
               </div>
             </div>
           </VCardTitle>
-          <div class="ps-4 pe-2">
-              <VCol cols="12" class="text-center mb-1">
-                <div class=" text-centerpa-0">
-                  <VueSpeedometer :value="uretimHizi" :max-value="100" :min-value="-100" :segments="6"
-                    :needle-transition-duration="1000" needle-transition="easeElastic"
-                    current-value-text="${value} adet/saat" ring-width="30" width="200" height="200" />
-                  <div style="margin-block: -25px -20px; margin-inline-start: -5px;" class="me-3">
-                    <h3 class="text-h4 ma-0 pa-0 text-center">
-                      <span style="font-size: 14px;">%</span> {{ uretimHizi }}
-                    </h3>
-                  </div>
-                  <div style="margin-block: -1px -20px; margin-inline-start: -5px;" class="me-3">
-                    <h3 class="text-h6 ma-2 pa-0 text-center">Hedeften Sapma</h3>
-                  </div>
-                </div>
-              </VCol>
-              <VCol cols="6" class="d-flex align-center justify-center pa-0 pt-4" style="block-size: 100%;">
-                <div class="d-flex flex-column justify-center mt-2" style="gap: 18px;">
-                  <div class="d-flex justify-space-between">
-                    <strong>Anlık Üretim:</strong>
-                    <span class="ms-2 miktar">{{ anlikUretim }}</span>
-                  </div>
-                  <div class="d-flex justify-space-between">
-                    <strong>Anlık Hedef:</strong>
-                    <span class="ms-2 miktar">{{ anlikHedef }}</span>
-                  </div>
-                  <div class="d-flex justify-space-between">
-                    <strong>Günlük hedef:</strong>
-                    <span class="ms-2 miktar">{{ gunlukHedef }}</span>
-                  </div>
-                </div>
-              </VCol>
+          <div class="px-2 py-0">
+            <div class=" text-center pa-0 ma-0">
+              <DxLinearGauge id="gauge" :value="uretimHizi">
+                <DxScale :start-value="-100" :end-value="100" :tick-interval="100" :minor-tick-interval="0.1">
+                  <DxMinorTick :visible="true" />
+                  <DxLabel :use-range-colors="false">
+                    <DxFont :color="gaugeLabelColor" />
+                  </DxLabel>
+                </DxScale>
+                <DxExport :enabled="false" />
+                <DxTitle :text="'Başarı Oranımız: %' + uretimHizi">
+                  <DxFont :size="18" />
+                </DxTitle>
+              </DxLinearGauge>
+
+            </div>
+            <div class="d-flex flex-column justify-center mt-10" style="gap: 18px;">
+              <div class="d-flex justify-space-between uretim">
+                <strong>Anlık Üretim:</strong>
+                <span class="miktar">{{ anlikUretim }}</span>
+              </div>
+              <div class="d-flex justify-space-between uretim">
+                <strong>Anlık Hedef:</strong>
+                <span class="miktar">{{ anlikHedef }}</span>
+              </div>
+              <div class="d-flex justify-space-between uretim">
+                <strong>Günlük hedef:</strong>
+                <span class="miktar">{{ gunlukHedef }}</span>
+              </div>
+            </div>
           </div>
         </VCard>
       </VCol>
@@ -682,10 +680,16 @@ import DxTextArea from "devextreme-vue/text-area";
 import notify from "devextreme/ui/notify";
 import { v4 as uuidv4 } from "uuid";
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import VueSpeedometer from "vue-speedometer";
 import { VSelect } from "vuetify/components";
 import Grafik from "./Grafik.vue";
 // @ts-ignore: SFC tipleri shims.d.ts üzerinden çözülüyor
+import {
+  DxFont, DxLabel,
+  DxLinearGauge,
+  DxMinorTick,
+  DxScale,
+  DxTitle,
+} from 'devextreme-vue/linear-gauge';
 import GunlukToplamGrafik from "./GunlukToplamGrafik.vue";
 import PersonelSecDialog from "./PersonelSecDialog.vue";
 import ProductionCard from "./ProductionCard.vue";
@@ -2250,7 +2254,7 @@ const onContextMenuPreparing = (e: any) => {
 .gosterge {
   display: flex;
   flex-direction: column;
-  inline-size: 30rem;
+  inline-size: 100%;
 }
 
 .carousel-scroll {
@@ -2264,7 +2268,7 @@ const onContextMenuPreparing = (e: any) => {
   background-size: auto;
   block-size: 318px;
   gap: 16px;
-  inline-size: 1200px;
+  inline-size: 100%;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
 }
@@ -2361,5 +2365,15 @@ const onContextMenuPreparing = (e: any) => {
   color: white;
   font-size: 20px;
   font-weight: bold;
+}
+.uretim {
+  /* color: #efc002; */
+  margin-block-start: -10px;
+  padding-inline: 10px;
+  text-align: center;
+}
+
+#gauge {
+  padding: 0%;
 }
 </style>

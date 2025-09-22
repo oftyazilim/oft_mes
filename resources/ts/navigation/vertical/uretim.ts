@@ -11,7 +11,6 @@ export default [
         icon: { icon: "tabler-assembly" },
         action: "read",
         subject: ["montaj"],
-        target: '_blank',
       },
       {
         title: "Rollform",
@@ -19,7 +18,6 @@ export default [
         icon: { icon: "tabler-brand-bebo" },
         action: "read",
         subject: ["mekanik"],
-        target: '_blank',
       },
     ],
   },

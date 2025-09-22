@@ -42,7 +42,7 @@ const topicsChartConfig = ref({
       horizontal: true,
       barHeight: '70%',
       distributed: true,
-      borderRadius: 15,
+      borderRadius: 20,
       borderRadiusApplication: 'end',
     },
   },
@@ -65,7 +65,7 @@ const topicsChartConfig = ref({
       top: -30,
       bottom: 35,
       left: 5,
-      right: 10,
+      right: 20,
     },
   },
   dataLabels: {
