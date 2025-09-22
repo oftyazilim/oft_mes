@@ -7,17 +7,19 @@ export default [
     children: [
       {
         title: "Montaj",
-        to: "uretim-uretim-montaj",
+        href: `${import.meta.env.BASE_URL}uretim/uretim-montaj`,
         icon: { icon: "tabler-assembly" },
         action: "read",
         subject: ["montaj"],
+        target: "oft-montaj",
       },
       {
         title: "Rollform",
-        to: "uretim-uretim-rollform",
+        href: `${import.meta.env.BASE_URL}uretim/uretim-rollform`,
         icon: { icon: "tabler-brand-bebo" },
         action: "read",
         subject: ["mekanik"],
+        target: "oft-rollform",
       },
     ],
   },

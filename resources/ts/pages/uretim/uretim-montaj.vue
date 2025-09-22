@@ -15,10 +15,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import ProductionSlider from './ProductionSlider.vue'
 
 definePage({ meta: { action: ['manage', 'read'], subject: ['montaj', 'all'] } })
+
+// Bu pencereyi isimlendir: menüden target: 'oft-montaj' ile çağrılınca mevcut sekme odaklansın
+onMounted(() => { try { if (window.name !== 'oft-montaj') window.name = 'oft-montaj' } catch (e) { /* noop */ } })
 
 // Readiness bayrakları: child içinde emit ile tetiklenecek plan (şimdilik sadece ilk veri sinyali)
 const firstLoadDone = ref(false)
@@ -126,7 +129,6 @@ const readinessProgress = computed(() => [
 }
 
 @keyframes montaj2-pulse {
-
   0%,
   100% {
     box-shadow: 0 0 0 0 rgba(59 130 246 / 35%);

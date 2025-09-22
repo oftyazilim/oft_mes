@@ -85,6 +85,16 @@
 			"label": "Build Frontend (Vite)",
 			"type": "shell",
 			"command": "pnpm -s build"
+		},
+		{
+			"label": "Build Frontend (Vite)",
+			"type": "shell",
+			"command": "pnpm -s build"
+		},
+		{
+			"label": "Build Frontend (Vite)",
+			"type": "shell",
+			"command": "pnpm -s build"
 		}
 	]
 }
