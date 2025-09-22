@@ -18,7 +18,7 @@ class TechnicalDrawingController extends BaseController
 
     public function __construct()
     {
-        $this->baseDir = rtrim(env('TECHNICAL_DRAWINGS_DIR', "\\\\192.6.2.4\\canovate_elektronik\\12_DOKUMANTASYON\\YAYINLI RESİMLER\\ÜRETİM"), '\\/\u{00A0}');
+        $this->baseDir = rtrim(config('app.technical_drawings_dir', "\\\\192.6.2.4\\canovate_elektronik\\12_DOKUMANTASYON\\YAYINLI RESİMLER\\ÜRETİM"), '\\/\u{00A0}');
     }
 
     public function show(Request $request)

@@ -29,8 +29,8 @@ class PhotoController extends Controller
 
     private function buildDir(string $isEmriNo): string
     {
-        // Base'i .env PHOTO_KK_DIR ile override et, ayırıcıları normalize et
-        $base = rtrim(env('PHOTO_KK_DIR', self::BASE_NETWORK_DIR), '\\/');
+        // Base'i config(app.photo_kk_dir) ile al, ayırıcıları normalize et
+        $base = rtrim(config('app.photo_kk_dir', self::BASE_NETWORK_DIR), '\\/');
         $cleanIsEmri = trim($isEmriNo, '\\/');
         return rtrim($base, '\\/') . DIRECTORY_SEPARATOR . $cleanIsEmri . DIRECTORY_SEPARATOR;
     }
@@ -51,7 +51,7 @@ class PhotoController extends Controller
 
     private function stockDirFor(string $code): string
     {
-        $base = rtrim(env('PHOTO_SK_DIR', self::BASE_SK_NETWORK_DIR), '\\/');
+        $base = rtrim(config('app.photo_sk_dir', self::BASE_SK_NETWORK_DIR), '\\/');
         return $base . DIRECTORY_SEPARATOR . $this->cleanCode($code) . DIRECTORY_SEPARATOR;
     }
 

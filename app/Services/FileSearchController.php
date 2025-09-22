@@ -17,7 +17,7 @@ class FileSearchController
         // Ağdaki paylaşılan ana klasör (.env: FILE_SEARCH_BASE_DIR)
         // Örn Windows: \\\\192.6.2.110\\oft\\TeknikResimler
         // Örn Linux/macOS: /mnt/oft/TeknikResimler
-        $basePath = rtrim(env('FILE_SEARCH_BASE_DIR', '\\192.6.2.110\oft\TeknikResimler'), '\\/');
+    $basePath = rtrim(config('app.file_search_base_dir', '\\192.6.2.110\oft\TeknikResimler'), '\\/');
 
         // Dosyayı arama işlemi
         $filePath = $this->searchFile($basePath, $fileName);

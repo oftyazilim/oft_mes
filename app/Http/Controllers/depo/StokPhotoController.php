@@ -22,7 +22,7 @@ class StokPhotoController extends Controller
     {
         // .env PHOTO_SK_DIR varsa onu kullan, değilse Windows UNC default'u kullan
         // Sağ ve sol ayırıcıları temizleyip platforma uygun ayırıcı ile bağlayacağız
-        return rtrim(env('PHOTO_SK_DIR', self::BASE_NETWORK_DIR), '\\/');
+    return rtrim(config('app.photo_sk_dir', self::BASE_NETWORK_DIR), '\\/');
     }
 
     private function cleanItemCode(string $code): string

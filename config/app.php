@@ -130,6 +130,18 @@ return [
     | Fotoğrafların servis edildiği public URL kökü. .env'de PHOTO_BASE_URL ile
     | override edilebilir. Örn: http://your-host:8080/photos/
     */
-    // 'photo_base_url' => env('PHOTO_BASE_URL', 'http://192.6.2.110:8080/photos/'),
+    'photo_base_url' => env('PHOTO_BASE_URL', 'http://192.6.2.110:8080/photos/'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | File System External Mounts (SMB/CIFS)
+    |--------------------------------------------------------------------------
+    | Bu değerler kod içinde env() yerine config() ile okunur; config:cache ile
+    | birlikte güvenli ve öngörülebilir davranır.
+    */
+    'photo_kk_dir' => env('PHOTO_KK_DIR', '\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\kk-fotolari\\'),
+    'photo_sk_dir' => env('PHOTO_SK_DIR', '\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\sk-fotolari\\'),
+    'technical_drawings_dir' => env('TECHNICAL_DRAWINGS_DIR', '\\\\192.6.2.4\\canovate_elektronik\\12_DOKUMANTASYON\\YAYINLI RESİMLER\\ÜRETİM'),
+    'file_search_base_dir' => env('FILE_SEARCH_BASE_DIR', '\\\\192.6.2.110\\oft\\TeknikResimler'),
 
 ];
