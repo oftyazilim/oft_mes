@@ -22,10 +22,13 @@ const computeOee = (values: number[]) => {
   return Math.round(clampPercent(raw));
 };
 
-const buildSeriesData = (values: number[]) => {
-  const base = values.slice(0, 3).map((y, i) => ({ x: CATEGORIES[i], y: clampPercent(Number(y) || 0) }));
-  const oee = computeOee(values);
-  return [...base, { x: CATEGORIES[3], y: oee }];
+// ApexCharts ile daha geniş sürüm uyumluluğu için düz sayısal dizi kullan
+const buildSeriesArray = (values: number[]) => {
+  const a = clampPercent(Number(values?.[0]) || 0);
+  const p = clampPercent(Number(values?.[1]) || 0);
+  const q = clampPercent(Number(values?.[2]) || 0);
+  const oee = computeOee([a, p, q]);
+  return [a, p, q, oee];
 };
 
 // Grafik seçenekleri
@@ -93,6 +96,8 @@ const topicsChartConfig = ref({
         fontSize: '16px',
       },
     },
+    // Yatay barda kategori isimleri y ekseninde görünür; categories yine xaxis altından verilir
+    categories: CATEGORIES,
   },
   yaxis: {
     labels: {
@@ -118,7 +123,7 @@ const topicsChartConfig = ref({
 // Serileri reaktif olarak başlat
 const topicsChartSeries = ref([
   {
-    data: buildSeriesData(props.barData),
+    data: buildSeriesArray(props.barData),
   },
 ]);
 
@@ -126,7 +131,7 @@ const topicsChartSeries = ref([
 watch(
   () => props.barData,
   (newData) => {
-    topicsChartSeries.value = [{ data: buildSeriesData(newData) }];
+    topicsChartSeries.value = [{ data: buildSeriesArray(newData || []) }];
   }
 );
 

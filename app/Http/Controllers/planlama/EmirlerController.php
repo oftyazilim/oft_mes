@@ -619,7 +619,7 @@ class EmirlerController extends Controller
 
       $kontrol = DB::connection('pgsql_oft')
         ->table('oftt_kontrol_isemri')
-        ->select('is_use_quality', 'is_check_quality_opr')
+        ->select('is_use_quality', 'is_check_quality_opr', 'belge_no', 'cari_ad')
         ->where('isemri_id', $aktif->IS_EMRI_ID)
         ->first() ?? (object)[
           'is_use_quality' => "0",
@@ -647,6 +647,8 @@ class EmirlerController extends Controller
         'PERSONEL_ID' => $aktif->PERSONEL_ID,
         'KONTROL_GEREKLI' => $kontrol->is_use_quality,
         'KONTROLCU_CAGIR' => $kontrol->is_check_quality_opr,
+        'BELGE_NO' => $kontrol->belge_no,
+        'CARI_AD' => $kontrol->cari_ad,
         'GUID' => $aktif->GUID,
       ];
     }

@@ -420,6 +420,8 @@
       <DxColumn data-field="id" caption="ID" :visible="false" width="40" cell-template="secimTemplate" />
       <DxColumn data-field="isemri_id" caption=" " data-type="number" :width="30" :visible="false" />
       <DxColumn data-field="tanim" caption="İSTASYON" :min-width="130" />
+      <DxColumn data-field="belge_no" caption="BELGE NO" :min-width="130" />
+      <DxColumn data-field="cari_ad" caption="CARİ AD" :min-width="130" />
       <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :min-width="120" :allow-sorting="false" />
       <DxColumn data-field="item_name" caption="STOK ADI" :allow-sorting="false" />
       <DxColumn data-field="item_code" caption="STOK KODU" :visible="true" :min-width="120" :allow-sorting="false" />

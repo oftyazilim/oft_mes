@@ -81,6 +81,8 @@ class KaliteController extends Controller
                 'oftt_kontrol_isemri.isemri_no',
                 'oftt_kontrol_isemri.item_code',
                 'oftt_kontrol_isemri.item_name',
+                'oftt_kontrol_isemri.belge_no',
+                'oftt_kontrol_isemri.cari_ad',
                 'oftt_param_istasyon.tanim',
                 'oftt_kontrol_isemri.istasyon_id',
                 'oftt_kontrol_isemri.item_id',
@@ -300,6 +302,8 @@ class KaliteController extends Controller
                 'oftt_kontrol_isemri.is_active',
                 'oftt_kontrol_isemri.item_code',
                 'oftt_kontrol_isemri.item_name',
+                'oftt_kontrol_isemri.belge_no',
+                'oftt_kontrol_isemri.cari_ad',
                 'oftt_kontrol_isemri.created_at',
                 'oftt_param_istasyon.tanim',
                 'oftt_kontrol_isemri.istasyon_id',
@@ -504,49 +508,51 @@ class KaliteController extends Controller
         }
     }
 
-    public function KontrolGerekKaydet(Request $request)
-    {
-        // Log::info('KontrolGerekKaydet request:', $request->all());
+    // public function KontrolGerekKaydet(Request $request)
+    // {
+    //     // Log::info('KontrolGerekKaydet request:', $request->all());
 
-        $veri = $request->all();
+    //     $veri = $request->all();
 
-        $kayitVarmi = DB::connection('pgsql_oft')
-            ->table('oftt_kontrol_isemri')
-            ->where('isemri_id', $veri['isEmriID'])
-            ->where('istasyon_id', $veri['istasyonID'])
-            ->exists();
+    //     $kayitVarmi = DB::connection('pgsql_oft')
+    //         ->table('oftt_kontrol_isemri')
+    //         ->where('isemri_id', $veri['isEmriID'])
+    //         ->where('istasyon_id', $veri['istasyonID'])
+    //         ->exists();
 
-        if ($kayitVarmi === true) {
-            Log::info('Bu istasyon için kontrol kaydı zaten var.');
-            return response()->json(['status' => 'error', 'message' => 'Bu istasyon için kontrol kaydı zaten var.'], 400);
-        }
+    //     if ($kayitVarmi === true) {
+    //         Log::info('Bu istasyon için kontrol kaydı zaten var.');
+    //         return response()->json(['status' => 'error', 'message' => 'Bu istasyon için kontrol kaydı zaten var.'], 400);
+    //     }
 
 
-        $kontrol_gerekli = DB::connection('pgsql')
-            ->table('uyumsoft.invd_branch_item')
-            ->select('is_use_quality')
-            ->where('item_id', $veri['itemID'])
-            ->first();
+    //     $kontrol_gerekli = DB::connection('pgsql')
+    //         ->table('uyumsoft.invd_branch_item')
+    //         ->select('is_use_quality')
+    //         ->where('item_id', $veri['itemID'])
+    //         ->first();
 
-        $kaydet = [
-            'isemri_id' => $veri['isEmriID'],
-            'isemri_no' => $veri['isEmriNo'],
-            'item_code' => $veri['urunKodu'],
-            'item_name' => $veri['urunAdi'],
-            'istasyon_id' => $veri['istasyonID'],
-            'item_id' => $veri['itemID'],
-            'is_use_quality' => $kontrol_gerekli->is_use_quality,
-            'is_check_quality_opr' => $kontrol_gerekli->is_use_quality === 1 ? 1 : 0,
-            'olusturan_id' => $veri['userID'],
-            'created_at' => now(),
-            'updated_at' => now(),
-        ];
-        DB::connection('pgsql_oft')
-            ->table('oftt_kontrol_isemri')
-            ->insert($kaydet);
+    //     $kaydet = [
+    //         'isemri_id' => $veri['isEmriID'],
+    //         'isemri_no' => $veri['isEmriNo'],
+    //         'item_code' => $veri['urunKodu'],
+    //         'item_name' => $veri['urunAdi'],
+    //         'belge_no' => $veri['belgeNo'],
+    //         'cari_ad' => $veri['cariAd'],
+    //         'istasyon_id' => $veri['istasyonID'],
+    //         'item_id' => $veri['itemID'],
+    //         'is_use_quality' => $kontrol_gerekli->is_use_quality,
+    //         'is_check_quality_opr' => $kontrol_gerekli->is_use_quality === 1 ? 1 : 0,
+    //         'olusturan_id' => $veri['userID'],
+    //         'created_at' => now(),
+    //         'updated_at' => now(),
+    //     ];
+    //     DB::connection('pgsql_oft')
+    //         ->table('oftt_kontrol_isemri')
+    //         ->insert($kaydet);
 
-        return response()->json(['status' => 'ok']);
-    }
+    //     return response()->json(['status' => 'ok']);
+    // }
 
     public function KontrolAktifAl(Request $request)
     {

@@ -395,6 +395,8 @@ class UretimMontajController extends Controller
       'isemri_no' => $veri['isEmriNo'],
       'item_code' => $veri['urunKodu'],
       'item_name' => $veri['urunAdi'],
+      'belge_no' => $veri['belgeNo'],
+      'cari_ad' => $veri['cariAd'],
       'istasyon_id' => $veri['istasyonID'],
       'item_id' => $veri['itemID'],
       'is_use_quality' => $kontrol_gerekli->is_use_quality,
@@ -845,7 +847,7 @@ class UretimMontajController extends Controller
       ->get()
       ->groupBy('is_emri_id');
 
-    Log::info('Çalışmalar:', $calismalar->toArray());
+    // Log::info('Çalışmalar:', $calismalar->toArray());
 
     $isemriIDs = $calismalar->keys()->toArray();
     // Log::info('İş Emirleri ID Listesi:', $isemriIDs);

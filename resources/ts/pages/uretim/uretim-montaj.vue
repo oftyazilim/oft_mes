@@ -12,6 +12,7 @@
   <VContainer fluid class="pa-0 ma-0" :style="{ visibility: firstLoadDone ? 'visible' : 'hidden' }">
     <ProductionSlider @ilk-veri-hazir="onChildFirstData" />
   </VContainer>
+  
 </template>
 
 <script setup lang="ts">

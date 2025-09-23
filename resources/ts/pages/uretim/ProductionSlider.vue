@@ -641,6 +641,276 @@
       @click="popupDepolarGosterVisible = false" />
   </DxPopup>
 
+  <DxPopup v-model:visible="popupDetayGosterVisible" :width="1320" :height="800" :hide-on-outside-click="true"
+    :show-close-button="true" :title=notBaslik>
+    <template #content>
+      <VCard>
+        <VCardText class="mb-0 pb-0">
+          <!-- 👉 Stepper -->
+          <AppStepper v-model:current-step="currentStep" :items="numberedSteps" class="stepper-icon-step-bg" />
+        </VCardText>
+
+        <VDivider />
+
+        <VCardText>
+          <!-- 👉 stepper content -->
+          <VForm>
+            <VWindow v-model="currentStep" class="disable-tab-transition" style="block-size: 170px;">
+              <VWindowItem>
+                <VRow>
+                  <VCol cols="4" class="mt-0 pa-0">
+                    <VRow>
+                      <VCol cols="7">
+                        <DxTextBox class="kalin" styling-mode="underlined" label-mode="outside"
+                          :value="selectedRow.istasyon" label="İş İstasyonu" :read-only="true" :tab-index="-1" />
+                      </VCol>
+                      <VCol cols="5">
+                        <DxTextBox class="kalin" styling-mode="underlined" label-mode="outside"
+                          :value="selectedRow.siparis_belge_no" label="Sipariş Nosu" :read-only="true"
+                          :tab-index="-1" />
+                      </VCol>
+                    </VRow>
+
+                    <VRow class="mt-0">
+                      <VCol cols="7">
+                        <DxTextBox class="kalin" styling-mode="underlined" label-mode="outside"
+                          :value="selectedRow.kaydi_giren_kullanici" label="Kayıt Yapan Personel" :read-only="true"
+                          :tab-index="-1" />
+                      </VCol>
+                      <VCol cols="5">
+                        <DxTextBox class="kalin" styling-mode="underlined" label-mode="outside"
+                          :value="selectedRow.isemri_no" label="İş Emri No" :read-only="true" :tab-index="-1" />
+                      </VCol>
+                    </VRow>
+
+                    <VRow class="mt-0">
+                      <VCol cols="7">
+                        <DxTextBox class="kalin" styling-mode="underlined" label-mode="outside"
+                          :value="selectedRow.teslim_tarihi" label="Teslim Tarihi" :read-only="true" :tab-index="-1" />
+                      </VCol>
+                      <VCol cols="5">
+                        <DxTextBox class="kalin" styling-mode="underlined" label-mode="outside"
+                          :value="formatNumber(selectedRow.siparis_miktari)" label="Sipariş Miktarı" :read-only="true"
+                          :tab-index="-1" />
+                      </VCol>
+                    </VRow>
+
+                    <VRow class="mt-0">
+                      <VCol cols="6">
+                        <DxTextBox class="kalin" styling-mode="underlined" label-mode="outside"
+                          :value="selectedRow.sip_not1" label="Sipariş Notu 1" :read-only="true" :tab-index="-1" />
+                      </VCol>
+                      <VCol cols="6">
+                        <DxTextBox class="kalin" styling-mode="underlined" label-mode="outside"
+                          :value="selectedRow.sip_not2" label="Sipariş Notu 2" :read-only="true" :tab-index="-1" />
+                      </VCol>
+                    </VRow>
+
+                    <VRow class="mt-0">
+                      <VCol cols="6">
+                        <DxTextBox class="kalin" styling-mode="underlined" label-mode="outside"
+                          :value="selectedRow.sip_not3" label="Sipariş Notu 3" :read-only="true" :tab-index="-1" />
+                      </VCol>
+                      <VCol cols="6">
+                        <DxTextBox class="kalin" styling-mode="underlined" label-mode="outside"
+                          :value="selectedRow.sip_not4" label="Sipariş Notu 4" :read-only="true" :tab-index="-1" />
+                      </VCol>
+                    </VRow>
+
+                    <VRow>
+                      <VCol cols="7" class="pa-0 ps-2 pe-3">
+                        <DxSelectBox v-model="selectedNot" :items="notlar" display-expr="not" value-expr="not"
+                          :disabled="!canManagePlanlama" label="Planlama Notu Eklemeleri" class="kalin" />
+                      </VCol>
+                      <VCol cols="5" class="mt-4 pa-0 ps-0  pe-0">
+                        <VRow>
+                          <VCol cols="2" class="pe-0 ps-1">
+                            <VBtn text="" icon="tabler-arrow-down" rounded color="warning" block
+                              :disabled="!canManagePlanlama" v-model="selectedRow.teknik_not1" @click="addToTextArea" />
+                          </VCol>
+                          <VCol cols="7" class="pa-0 ps-1 pt-3 pe-1">
+                            <VBtn color="error" block @click="NotKaydet" :disabled="!canManagePlanlama">
+                              <VIcon start icon="tabler-device-floppy" />
+                              Kaydet
+                            </VBtn>
+                          </VCol>
+                          <VCol cols="3" class="pe-6 ps-0 ">
+                            <VBtn text="" icon="tabler-copy" rounded color="success" block
+                              v-model="selectedRow.teknik_not1" @click="copyToClipboard" id="kopyala" />
+                          </VCol>
+                          <DxTooltip :hide-on-outside-click="false" target="#kopyala" show-event="mouseenter"
+                            hide-event="mouseleave" position="right">
+                            <b>Malzeme listesindeki 0'dan küçük satırları kopyalar</b><br> * satırları seçmenize gerek
+                            yoktur
+                          </DxTooltip>
+                        </VRow>
+                      </VCol>
+
+                      <VCol cols="12" class="mt-0 pa-0 ps-2 pe-3  pt-3">
+                        <DxTextArea v-model="textAreaValue" label="Planlamanın Notu"
+                          style="font-weight: bold !important;" styling-mode="outlined" label-mode="static" :height="98"
+                          :max-length="950" />
+                      </VCol>
+                      <VCol cols="12" class="mt-0 pa-0 ps-2 pe-3 pt-3">
+                        <DxTextArea v-model="selectedRow.teknik_not2" label="Üretimin Notu"
+                          style="font-weight: bold !important;" styling-mode="outlined" label-mode="static"
+                          :height="98" />
+                      </VCol>
+
+                      <!-- Butonlar -->
+                      <!-- <div class="actions pa-2">
+                        <VBtn type="button" @click="copyToClipboard">Seçilmiş Eksikleri Kopyala</VBtn>
+                      </div> -->
+                    </VRow>
+                  </VCol>
+
+                  <VCol cols="8" class="mt-0 pa-0 ps-2">
+
+                    <!-- ********** Eksik Parçalar ***************************************************** -->
+                    <VRow>
+                      <VCol cols="12" class="mt-2 pa-0 ps-2 pe-3 text-center">
+                        <h4>Malzeme Listesi ({{ gridDataMalzemeler.length }} parça) (Depo ID: {{ selectedRow.CIKIS_DEPO
+                        }})</h4>
+                        <div style="block-size: 613px;">
+                          <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataMalzemeler"
+                            key-expr="item_id" :show-borders="true" :min-width="400" :column-auto-width="false"
+                            :allow-column-resizing="true" column-resizing-mode="widget" @cell-prepared="onCellPreparedM"
+                            height="100%" :row-alternation-enabled="true" @row-click="onRowClickDetay">
+
+                            <DxColumn data-field="tipi" caption="TİPİ" data-type="string" :visible="true" :width="65"
+                              :cell-template="tipCellTemplate" />
+                            <DxColumn data-field="user_line_no" caption="LINE NO" :width="60" :visible="false" />
+                            <DxColumn data-field="item_id" caption="ITEM ID" :width="180" :visible="false" />
+                            <DxColumn data-field="stok_kodu" caption="STOK KODU" :min-width="120" />
+                            <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="180" />
+                            <DxColumn data-field="worder_m_id" caption="İŞ EMRİ ID" :width="150" :visible="false" />
+                            <DxColumn data-field="qty_base_bom" caption="BOM" :width="80" data-type=number :format="{
+                              type: 'fixedPoint',
+                              precision: 2,
+                              thousandsSeparator: ',',
+                            }" />
+                            <DxColumn data-field="qty_net" caption="İHTİYAÇ" :width="80" data-type="number" :format="{
+                              type: 'fixedPoint',
+                              precision: 2,
+                              thousandsSeparator: ',',
+                            }" />
+                            <DxColumn data-field="qty_prm" caption="STOK" :width="80" data-type="number" :format="{
+                              type: 'fixedPoint',
+                              precision: 2,
+                              thousandsSeparator: ',',
+                            }" />
+                            <DxColumn data-field="bakiye" caption="BAKİYE" :width="100" data-type="number"
+                              sort-order="asc" :format="{
+                                type: 'fixedPoint',
+                                precision: 2,
+                                thousandsSeparator: ',',
+                              }" />
+                            <DxColumn data-field="qty_min_inv" :visible="false" caption="MİN STOK" :width="80"
+                              data-type="number" :format="{
+                                type: 'fixedPoint',
+                                precision: 2,
+                                thousandsSeparator: ',',
+                              }" />
+                            <DxColumn data-field="qty_max_inv" :visible="false" caption="MAX STOK" :width="80"
+                              data-type="number" :format="{
+                                type: 'fixedPoint',
+                                precision: 2,
+                                thousandsSeparator: ',',
+                              }" />
+
+                            <DxGroupPanel :visible="false" />
+                            <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
+
+
+                          </DxDataGrid>
+                        </div>
+                      </VCol>
+                    </VRow>
+                  </VCol>
+
+                </VRow>
+
+
+              </VWindowItem>
+
+
+              <VWindowItem>
+                <VRow>
+                  <DxDataGrid id="gridDetay" ref="dataGridRefD" :data-source="gridDataDetay" key-expr="satir_id"
+                    :show-borders="true" :min-width="200" :column-auto-width="false" :allow-column-resizing="true"
+                    column-resizing-mode="widget" @cell-prepared="onCellPrepared" height="195">
+
+                    <DxColumn data-field="IS_ISTASYONU" caption="İSTASYON ADI" :width="180" />
+                    <DxColumn data-field="OPERASYON" caption="OPERASYON" :width="180" />
+                    <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="200" />
+                    <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="150" :visible="false" />
+                    <DxColumn data-field="planlanan_baslangic" caption="PLN BŞL" data-type="date" :width="100"
+                      :visible="true" :format="{
+                        formatter: (date: Date | string): string => {
+                          const formattedDate = new Intl.DateTimeFormat('tr-TR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                          }).format(new Date(date as string | number | Date));
+
+                          return formattedDate.replace(/\//g, '.');
+                        },
+                      }" />
+                    <DxColumn data-field="planlanan_bitis_tarihi" caption="PLN BTŞ" data-type="date" :width="100"
+                      :visible="true" :format="{
+                        formatter: (date: Date | string): string => {
+                          const formattedDate = new Intl.DateTimeFormat('tr-TR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                          }).format(new Date(date as string | number | Date));
+
+                          return formattedDate.replace(/\//g, '.');
+                        },
+                      }" />
+                    <DxColumn data-field="kalan_miktar" caption="KALAN MİKTAR" data-type="number" :width="60"
+                      :visible="true" />
+                    <DxColumn data-field="surec" caption="SÜREÇ" data-type="number" :width="150" :visible="true"
+                      cell-template="surecCellTemplate" alignment="center" />
+                    <DxColumn data-field="aksesuar" caption="AKSESUAR" :visible="true" :width="60"
+                      cell-template="aksesuarTemplate" alignment="center" />
+                    <DxColumn data-field="operasyon_hazirlik_suresi" caption="HZRL DK" data-type="number"
+                      :min-width="90" :width="90" />
+                    <DxColumn data-field="operasyon_suresi" caption="OPRS DK" data-type="number" :min-width="90"
+                      :width="90" />
+                    <DxColumn data-field="isemri_tipi" caption="İŞ EMRİ TİPİ" :min-width="120" :width="140" />
+
+                    <DxGroupPanel :visible="false" />
+                    <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
+
+                    <template #surecCellTemplate="{ data: cellData }">
+                      <SurecCell :cell-data="cellData" :max-deger="100" />
+                    </template>
+
+                    <template #aksesuarTemplate="{ data }">
+                      <template v-if="data.value === 'Aksesuarlı'">
+                        <i :class="['dx-icon', 'dx-icon-gift']"
+                          :style="{ fontSize: '16px', color: staticPrimaryColor }"></i>
+                      </template>
+                    </template>
+
+                  </DxDataGrid>
+                </VRow>
+              </VWindowItem>
+
+              <VWindowItem>
+                <VRow>
+
+                </VRow>
+              </VWindowItem>
+            </VWindow>
+
+          </VForm>
+        </VCardText>
+      </VCard>
+    </template>
+  </DxPopup>
+
   <VOverlay :model-value="loadingVisible" class="align-center justify-center" persistent scrim="rgba(0,0,0,0.35)">
     <VCard class="pa-6 d-flex flex-column align-center" elevation="8" width="320">
       <VProgressCircular indeterminate color="primary" size="48" width="5" class="mb-4" />
@@ -690,6 +960,10 @@ import {
   DxScale,
   DxTitle,
 } from 'devextreme-vue/linear-gauge';
+// @ts-ignore: SFC tipi shims.d.ts ile sağlanır
+import DxSelectBox from "devextreme-vue/select-box";
+import DxTextBox from "devextreme-vue/text-box";
+import DxTooltip from "devextreme-vue/tooltip";
 import GunlukToplamGrafik from "./GunlukToplamGrafik.vue";
 import PersonelSecDialog from "./PersonelSecDialog.vue";
 import ProductionCard from "./ProductionCard.vue";
@@ -702,6 +976,8 @@ interface SeciliType {
   urunID: number;
   urunAdi: string;
   urunKodu: string;
+  belgeNo: string;
+  cariAdi: string;
   calSure: number;
   durSure: number;
   personelSayisi: number;
@@ -738,6 +1014,8 @@ const secili = ref<SeciliType>({
   urunID: 0,
   urunAdi: "",
   urunKodu: "",
+  belgeNo: "",
+  cariAdi: "",
   calSure: 0,
   durSure: 0,
   personelSayisi: 0,
@@ -891,6 +1169,8 @@ const right: "right" = "right";
 const planlamaNotu = ref("");
 const notBaslik = ref("");
 const popupMesajGosterVisible = ref(false);
+const popupDetayGosterVisible = ref(false)
+
 // Placeholder ikon şablonu kullanılan kolon için
 const getIconType = (cellElement: HTMLElement, cellInfo: any) => {
   cellElement.innerText = cellInfo.text;
@@ -923,6 +1203,7 @@ const selectedRow = ref({
 });
 const gridData = ref<GridDataItem[]>([]);
 const gridDataEksikListesi = ref([]);
+const gridDataMalzemeler = ref<any[]>([])
 const gridKey = ref(Date.now());
 const gridBakiyeler = ref([]);
 
@@ -953,6 +1234,55 @@ const uretimNotu = ref("");
 const eksikStokId = ref(0);
 const eksikStokKodu = ref("");
 const eksikStokAdi = ref("");
+
+// Tema rengi ve yetki bayrakları / yardımcı alanlar
+const staticPrimaryColor = '#7367F0';
+const gaugeLabelColor = '#7367F0';
+const canManagePlanlama = computed(() => true);
+
+// Planlama notu seçimi ve alanı
+const selectedNot = ref<any>(null);
+const notlar = ref<Array<{ not: string }>>([
+  { not: 'Mekanik eksik' },
+  { not: 'Satınalma eksik' },
+  { not: 'Revizyon yapıldı. Müşteri / Arge' },
+  { not: 'Ürün ağacı yok' },
+  { not: 'Beklemede - Yönetim - Fiyat' },
+  { not: 'İptal - Müşteri' },
+]);
+const textAreaValue = ref<string>("");
+const addToTextArea = () => {
+  const val = (selectedNot.value && (selectedNot.value.not || selectedNot.value)) || '';
+  if (!val) return;
+  textAreaValue.value = textAreaValue.value ? `${textAreaValue.value}\n${val}` : String(val);
+};
+const copyToClipboard = async () => {
+  try {
+    await navigator.clipboard.writeText(textAreaValue.value || "");
+    notify("Notlar panoya kopyalandı.", "success", 1200);
+  } catch (e) {
+    notify("Kopyalama başarısız.", "error", 1500);
+  }
+};
+
+// Malzeme satırına tıklamada eksik stok bilgisi güncelle
+const onRowClick = (e: any) => {
+  const data = e?.data || e?.row?.data;
+  if (!data) return;
+  eksikStokId.value = Number(data.item_id || 0);
+  eksikStokKodu.value = String(data.stok_kodu || "");
+  eksikStokAdi.value = String(data.stok_adi || "");
+};
+
+const onRowClickDetay = (e: any): void => {
+  if (e.rowType === 'data') {
+    gridBakiyeler.value = []
+    eksikStokKodu.value = e.data.stok_kodu
+    eksikStokAdi.value = e.data.stok_adi
+    getBakiyeler(e.data.item_id)
+    popupDepolarGosterVisible.value = true
+  }
+}
 
 const updateTime = () => {
   const now = new Date();
@@ -1036,6 +1366,7 @@ const vazgecOptions = {
   stylingMode: "contained",
   onClick: () => {
     popupNotGirVisible.value = false;
+    popupDetayGosterVisible.value = false
   },
 };
 const kapatOptions = {
@@ -1193,6 +1524,8 @@ const resetSeciliIsEmri = () => {
     urunID: 0,
     urunAdi: "...",
     urunKodu: "...",
+    belgeNo: "...",
+    cariAdi: "...",
     calSure: 0,
     durSure: 0,
     personelSayisi: 0,
@@ -1357,6 +1690,8 @@ const kontrolGerekKaydet = async () => {
       urunKodu: secili.value.urunKodu,
       urunAdi: secili.value.urunAdi,
       userID: userData.value.id,
+      belgeNo: secili.value.belgeNo,
+      cariAd: secili.value.cariAdi,
     });
   } catch (error) {
     // console.error('Kaydetme sırasında bir hata oluştu:', error);
@@ -1719,6 +2054,8 @@ const aktifEt = async () => {
     urunID: selectedRow.value.item_id,
     urunAdi: selectedRow.value.stok_adi,
     urunKodu: selectedRow.value.stok_kodu,
+    belgeNo: selectedRow.value.siparis_belge_no,
+    cariAdi: selectedRow.value.cari_ad,
     istasyonID: selectedRow.value.IS_ISTASYONU_ID,
     personelID: userData.value.id,
     calSure: 0,
@@ -2059,10 +2396,60 @@ const onEkipIptal = () => {
   ekipSecDialog.value = false;
 };
 
+const DetayGoster = (): void => {
+  if (selectedRow.value === null) {
+    notify('Önce iş emrini seçmelisiniz...', 'error', 1500)
+
+    return
+  }
+  gridDataMalzemeler.value = []
+  notBaslik.value = `${selectedRow.value.isemri_no} nolu iş emri detayı` + ` ( ${selectedRow.value.stok_adi} )`
+  getDetay()
+  popupDetayGosterVisible.value = true
+}
+const gridDataDetay = ref<any[]>([])
+const numberedSteps = ref([
+  {
+    title: 'Sipariş Detayı',
+    subtitle: 'Seçilmedi',
+  },
+  {
+    title: 'Alt İş Emirleri',
+    subtitle: 'Seçilmedi',
+  },
+  {
+    title: 'Rota',
+    subtitle: 'Tasarım aşamasında',
+  },
+])
+const getDetay = async () => {
+  try {
+    const response = await axios.get('/api/isEmriDetay', {
+      params: {
+        tablo: 'DETAY',
+        depo: selectedRow.value.CIKIS_DEPO || 0,
+        isemri_id: selectedRow.value.isemri_id,
+      },
+    })
+
+    gridDataDetay.value = response.data.data
+    numberedSteps.value[1].subtitle = `${response.data.toplamIsEmri} ad / ${response.data.toplamSure} dk`
+    gridDataMalzemeler.value = response.data.malzemeler
+  }
+  catch (error) {
+    console.error('Veri çekilirken hata oluştu: ', error)
+  }
+}
+
+
+const formatNumber = (num: number): string => {
+  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(num)
+}
+
 const menuItems = [
   { text: "Yenile" },
   { text: "Aktif Yap" },
-  // { text: "Detay Göster" },
+  { text: "Detay Göster" },
   // { text: "Teknik Resim Göster" },
   { text: "Not Gir" },
   { text: "Düzen Yükle" },
@@ -2095,7 +2482,7 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
         // console.log("Aktivasyon işlemi gerçekleştiriliyor...");
         break;
       case "Detay Göster":
-        // DetayGoster();
+        DetayGoster();
         break;
       case "Teknik Resim Göster":
         // ResimGoster();
@@ -2366,6 +2753,7 @@ const onContextMenuPreparing = (e: any) => {
   font-size: 20px;
   font-weight: bold;
 }
+
 .uretim {
   /* color: #efc002; */
   margin-block-start: -10px;

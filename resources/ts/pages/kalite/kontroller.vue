@@ -37,7 +37,7 @@
               cell-template="gerekliTemplate" />
             <DxColumn data-field="is_check_quality_opr" caption="Inspektor Çağrıldı" :width="30"
               cell-template="cagirTemplate" />
-            <DxColumn data-field="created_at" caption="Tarih" :width="130" data-type="date" sort-order="desc"
+            <DxColumn data-field="created_at" caption="Tarih" :width="140" data-type="date" sort-order="desc"
               :sort-index="2" :format="{
                 formatter: (date: any) => {
                   const formattedDate = new Intl.DateTimeFormat('tr-TR', {
@@ -53,8 +53,10 @@
               }" />
             <DxColumn data-field="id" caption="ID" :visible="false" :width="40" />
             <DxColumn data-field="isemri_id" caption=" " data-type="number" :width="30" :visible="false" />
-            <DxColumn data-field="TANIM" caption="İstasyon" :width="100" />
-            <DxColumn data-field="isemri_no" caption="İş Emri No" :width="110" :allow-sorting="false" />
+            <DxColumn data-field="tanim" caption="İstasyon" :width="100" :visible="true"/>
+            <DxColumn data-field="belge_no" caption="Sipariş No" :width="120" :allow-sorting="false" />
+            <DxColumn data-field="cari_ad" caption="Cari Ad" :width="120" :allow-sorting="false" />
+            <DxColumn data-field="isemri_no" caption="İş Emri No" :width="120" :allow-sorting="false" />
             <DxColumn data-field="item_name" caption="Stok Adı" :allow-sorting="false" :min-width="300" />
             <DxColumn data-field="item_code" caption="Stok Kodu" :visible="true" :width="150" :allow-sorting="false" />
             <DxColumn data-field="name" caption="Inspektor" :width="120" />
