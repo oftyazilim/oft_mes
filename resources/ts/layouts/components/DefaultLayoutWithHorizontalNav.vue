@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import navItems from '@/navigation/horizontal'
-import { themeConfig } from '@themeConfig'
 import { usePageTitleStore } from '@/stores/pageTitle'
+import { themeConfig } from '@themeConfig'
 // import { onMounted, watch } from 'vue'
 // import { useRoute } from 'vue-router'
 
 // Components
+import FeedbackWidget from '@/components/FeedbackWidget.vue'
 import Footer from '@/layouts/components/Footer.vue'
 import NavBarNotifications from '@/layouts/components/NavBarNotifications.vue'
 import NavbarShortcuts from '@/layouts/components/NavbarShortcuts.vue'
@@ -17,6 +18,12 @@ import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 // Store: current page title/alias
 const pageTitleStore = usePageTitleStore()
 // Başlık artık route değişiminde sıfırlanmıyor; her sayfa kendi başlığını ayarlasın
+
+// Not: Bu değişkenler yalnızca template içinde kullanıldığı için
+// VS Code'un "Organize Imports" aksiyonu tarafından "kullanılmıyor" sanılıp
+// import'ları silinebiliyor. Aşağıdaki dummy referans bu davranışı engeller.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const __keepTemplateRefs = { navItems, themeConfig }
 </script>
 
 <template>
@@ -45,6 +52,7 @@ const pageTitleStore = usePageTitleStore()
       /> -->
 
       <NavbarThemeSwitcher />
+      <FeedbackWidget :icon-mode="true" />
       <NavbarShortcuts />
       <NavBarNotifications class="me-2" />
       <UserProfile />
@@ -52,6 +60,8 @@ const pageTitleStore = usePageTitleStore()
 
     <!-- 👉 Pages -->
     <slot />
+
+    <!-- FeedbackWidget artık navbar içinde ikon olarak yer alıyor -->
 
     <!-- 👉 Footer -->
     <template #footer>
@@ -70,7 +80,8 @@ const pageTitleStore = usePageTitleStore()
 
 .badge-text {
   border-radius: 9999px;
-/* Vuetify primary rengini kullan */
+
+  /* Vuetify primary rengini kullan */
   background-color: rgba(var(--v-theme-primary), 0.12);
   color: rgb(var(--v-theme-primary));
   font-size: 0.8rem;

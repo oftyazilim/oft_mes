@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\FeedbackController;
+
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Dashboards\BukumDashboardController;
@@ -21,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use App\Services\FileSearchController;
 use App\Services\FileServeController;
 use App\Http\Controllers\diger\DigerController;
+use App\Http\Controllers\NotificationSettingsController;
 
 Route::group(['prefix' => 'auth'], function () {
   Route::post('login', [AuthController::class, 'login']);
@@ -41,6 +45,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
   Route::get('/dash-bukum/overview', [BukumDashboardController::class, 'overview']);
 });
 
+Route::middleware('throttle:feedback')->group(function () {
+  Route::post('/feedback', [FeedbackController::class, 'store']);
+});
+
+// Admin: Feedback listeleme ve export (auth gerektir)
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/feedback', [FeedbackController::class, 'index']);
+  Route::get('/feedback/export', [FeedbackController::class, 'exportCsv']);
+  Route::put('/feedback/{id}', [FeedbackController::class, 'update']);
+
+  // Bildirim ayarları (feedback kanalı)
+  Route::get('/settings/notifications/feedback', [NotificationSettingsController::class, 'showFeedback']);
+  Route::put('/settings/notifications/feedback', [NotificationSettingsController::class, 'updateFeedback']);
+});
 // Roles API routes
 Route::group(['prefix' => 'roles', 'middleware' => 'auth:sanctum'], function () {
   Route::get('/', [RolesController::class, 'index']);

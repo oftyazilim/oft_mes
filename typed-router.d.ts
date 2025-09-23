@@ -164,6 +164,8 @@ declare module 'vue-router/auto-routes' {
     'satis-ciro-ozettablo': RouteRecordInfo<'satis-ciro-ozettablo', '/satis/ciro-ozettablo', Record<never, never>, Record<never, never>>,
     'satis-ihtiyac-listesi-siparis': RouteRecordInfo<'satis-ihtiyac-listesi-siparis', '/satis/ihtiyac-listesi-siparis', Record<never, never>, Record<never, never>>,
     'satis-musteri-siparisleri': RouteRecordInfo<'satis-musteri-siparisleri', '/satis/musteri-siparisleri', Record<never, never>, Record<never, never>>,
+    'sistem-feedback': RouteRecordInfo<'sistem-feedback', '/sistem/feedback', Record<never, never>, Record<never, never>>,
+    'sistem-feedback-ayarlar': RouteRecordInfo<'sistem-feedback-ayarlar', '/sistem/feedback/ayarlar', Record<never, never>, Record<never, never>>,
     'uretim-grafik': RouteRecordInfo<'uretim-grafik', '/uretim/Grafik', Record<never, never>, Record<never, never>>,
     'uretim-gunluk-toplam-grafik': RouteRecordInfo<'uretim-gunluk-toplam-grafik', '/uretim/GunlukToplamGrafik', Record<never, never>, Record<never, never>>,
     'uretim-haftalik': RouteRecordInfo<'uretim-haftalik', '/uretim/Haftalik', Record<never, never>, Record<never, never>>,

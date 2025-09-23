@@ -1,0 +1,1 @@
+import{d as t}from"./dayjs.min-WZT4ZYRx.js";import"./tr-gc5XBwcp.js";t.locale("tr");const i=(r,o="DD.MM.YYYY HH:mm")=>r&&t(r).isValid()?t(r).format(o):"-",f=(r,o="DD.MM.YYYY")=>r&&t(r).isValid()?t(r).format(o):"-";export{i as a,f};

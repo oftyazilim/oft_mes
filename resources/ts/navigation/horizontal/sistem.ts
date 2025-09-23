@@ -32,6 +32,20 @@ export default [
           },
         ],
       },
+      {
+        title: "Geri Bildirimler",
+        to: { path: "/sistem/feedback" },
+        icon: { icon: "tabler-message-dots" },
+        action: "manage",
+        subject: "all",
+      },
+      {
+        title: "Bildirim Ayarları",
+        to: { path: "/sistem/feedback/ayarlar" },
+        icon: { icon: "tabler-bell" },
+        action: "manage",
+        subject: "all",
+      },
     ],
   },
 ];

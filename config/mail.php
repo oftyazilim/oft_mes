@@ -115,4 +115,7 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    // Uygulama içi geri bildirim bildirim adresi (env dışı kullanımlar için config üzerinden erişilir)
+    'feedback_notify_to' => env('FEEDBACK_NOTIFY'),
+
 ];

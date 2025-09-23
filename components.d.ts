@@ -369,6 +369,7 @@ declare module 'vue' {
     DropZone: typeof import('./resources/ts/@core/components/DropZone.vue')['default']
     EnableOneTimePasswordDialog: typeof import('./resources/ts/components/dialogs/EnableOneTimePasswordDialog.vue')['default']
     ErrorHeader: typeof import('./resources/ts/components/ErrorHeader.vue')['default']
+    FeedbackWidget: typeof import('./resources/ts/components/FeedbackWidget.vue')['default']
     I18n: typeof import('./resources/ts/@core/components/I18n.vue')['default']
     MoreBtn: typeof import('./resources/ts/@core/components/MoreBtn.vue')['default']
     Notifications: typeof import('./resources/ts/@core/components/Notifications.vue')['default']

@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    // Uygulama içi geri bildirim mail bildirimi için hedef adres
+    'feedback' => [
+        'notify_to' => env('FEEDBACK_NOTIFY'),
+    ],
+
 ];

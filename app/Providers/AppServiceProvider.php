@@ -14,6 +14,9 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Cache\RateLimiting\Limit;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,6 +43,13 @@ class AppServiceProvider extends ServiceProvider
             }
             // Eğer ileride bir login view eklenirse buraya route('login') konabilir.
             return '/';
+        });
+
+        // Feedback API için rate limit
+        RateLimiter::for('feedback', function (HttpRequest $request) {
+            $ip = $request->ip();
+            $key = 'feedback:' . $ip;
+            return Limit::perMinute(5)->by($key);
         });
         // Customize reset password URL for SPA frontend
         ResetPassword::createUrlUsing(function ($user, string $token) {
