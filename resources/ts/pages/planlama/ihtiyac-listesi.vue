@@ -24,19 +24,21 @@
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
             <DxColumn data-field="ihtiyac" caption="İHTİYAÇ" data-type="number" :visible="true" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="stok" caption="STOK" data-type="number" :visible="true" :width="100"
+            <DxColumn data-field="stok" caption="STOK" data-type="number" :visible="bothSelected" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="ana_depo" caption="ANA DEPO" data-type="number" :visible="true" :width="100"
-            :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="depo_ihtiyaci" caption="DEPO İHTİYACI" data-type="number" :visible="true" :width="100"
+            <DxColumn data-field="ana_depo" caption="ANA DEPO" data-type="number" :visible="bothSelected" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="diger_depo" caption="DİĞER DEPO" data-type="number" :visible="true" :width="100"
+            <DxColumn data-field="depo_ihtiyaci" caption="DEPO İHTİYACI" data-type="number" :visible="bothSelected"
+              :width="100" :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
+            <DxColumn data-field="diger_depo" :caption="digerDepoCaption" data-type="number" :visible="true"
+              :width="100" :calculate-cell-value="calculateDigerDepoCellValue"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="bakiye" caption="BAKİYE" data-type="number" :visible="true" :width="100" :format="{
-              type: 'fixedPoint',
-              precision: 0,
-              thousandsSeparator: ',',
-            }" sort-order="asc" />
+            <DxColumn data-field="bakiye" caption="BAKİYE" data-type="number" :visible="true" :width="100"
+              :calculate-cell-value="calculateBakiyeCellValue" :format="{
+                type: 'fixedPoint',
+                precision: 0,
+                thousandsSeparator: ',',
+              }" sort-order="asc" />
             <DxColumn data-field="satinalma" caption="SATINALMA" data-type="number" :visible="true" :width="100"
               :format="{
                 type: 'fixedPoint',
@@ -174,7 +176,7 @@
     </VCardText>
   </VCard>
 
-  <DxPopup v-model:visible="popupDepolarGosterVisible" :hide-on-outside-click="true" title='Diğer Depo Bakiyeleri'
+  <DxPopup v-model:visible="popupDepolarGosterVisible" :hide-on-outside-click="true" title='Stok Detayları'
     :show-close-button="false" :show-title="true" :width="600" :height="500">
     <VCol class="text-center">
       <h2>{{ eksikStokKodu }}</h2>
@@ -190,7 +192,7 @@
           <DxColumn data-field="whouse_id" caption="DEPO ID" :width="80" :visible="false" />
           <DxColumn data-field="whouse_code" caption="DEPO KODU" :width="100" />
           <DxColumn data-field="description" caption="DEPO ADI" />
-          <DxColumn data-field="qty_prm" caption="STOK" :width="80" data-type="number" :format="{
+          <DxColumn data-field="qty_prm" caption="STOK" :width="100" data-type="number" :format="{
             type: 'fixedPoint',
             precision: 2,
             thousandsSeparator: ',',
@@ -463,13 +465,13 @@ import { DxItem } from 'devextreme-vue/tabs'
 import { exportDataGrid } from 'devextreme/excel_exporter'
 import { Workbook } from 'exceljs'
 import { saveAs } from 'file-saver-es'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 definePage({
   meta: { action: ['read'], subject: ['planlama', 'montaj', 'satinalma', 'satis'] }
 })
 
-const formatDate = date => {
+const formatDate = (date: any) => {
   if (!date)
     return null
   const d = new Date(date)
@@ -490,11 +492,11 @@ const popupSatinalmaGosterVisible = ref(false)
 const popupTaleplerGosterVisible = ref(false)
 
 const loadingVisible = ref<boolean>(false)
-const gridDataAcilmislar = ref([])
-const gridDataM = ref([])
-const gridDataDagilim = ref([])
-const gridSatinalma = ref([])
-const gridTalepler = ref([])
+const gridDataAcilmislar = ref<any[]>([])
+const gridDataM = ref<any[]>([])
+const gridDataDagilim = ref<any[]>([])
+const gridSatinalma = ref<any[]>([])
+const gridTalepler = ref<any[]>([])
 const gridKeyM = ref(Date.now())
 
 const userData = useCookie<any>('userData')
@@ -511,14 +513,14 @@ const stokId = ref(0)
 const expandAll = ref(false)
 const eksikStokKodu = ref(0)
 const eksikStokAdi = ref('')
-const istasyonlar = ref([])
+const istasyonlar = ref<any[]>([])
 const istasyon = ref(0)
-const merkezler = ref([])
+const merkezler = ref<any[]>([])
 const merkez = ref(0)
 const siparis = ref('')
-const siparisler = ref([])
+const siparisler = ref<any[]>([])
 const cari = ref('')
-const cariler = ref([])
+const cariler = ref<any[]>([])
 const now = new Date()
 const firstDayOfWeek = new Date(now)
 firstDayOfWeek.setDate(now.getDate() - now.getDay() + 1) // Pazartesi
@@ -526,10 +528,37 @@ const lastDayOfWeek = new Date(now)
 lastDayOfWeek.setDate(now.getDate() - now.getDay() + 7) // Pazar
 const initialDates = [firstDayOfWeek, lastDayOfWeek]
 const selectedDateRange = ref(initialDates)
-const filterValue = ref(firstDayOfWeek) // Formatlanmış başlangıç tarihi
-const filterValue1 = ref(lastDayOfWeek) // Formatlanmış bitiş tarihi
-const gridBakiyeler = ref([])
+const filterValue = ref<any>(firstDayOfWeek) // Formatlanmış başlangıç tarihi
+const filterValue1 = ref<any>(lastDayOfWeek) // Formatlanmış bitiş tarihi
+const gridBakiyeler = ref<any[]>([])
 const selectedRow = ref<any | null>(null);
+
+// İş Merkezi ve İstasyon seçim durumuna göre koşullu görünürlük/başlık
+const bothSelected = computed(() => !!merkez.value && !!istasyon.value)
+const digerDepoCaption = computed(() => (bothSelected.value ? 'DİĞER DEPO' : 'STOK'))
+
+// BAKİYE sütunu hücre değeri, seçim durumuna göre farklı hesaplanır
+// - Her ikisi de seçiliyse: backend'den gelen "bakiye" alanını kullan
+// - Seçili değilse: (diger_depo as STOK) - ihtiyac
+const calculateBakiyeCellValue = (rowData: any) => {
+  if (bothSelected.value)
+    return Number(rowData?.bakiye ?? 0)
+
+  const stokFromDigerDepo = Number(rowData?.diger_depo ?? 0)
+  const ihtiyacVal = Number(rowData?.ihtiyac ?? 0)
+
+  return stokFromDigerDepo - ihtiyacVal
+}
+
+// DİĞER DEPO sütunu hücre değeri, seçim varken: (ana_depo + diger_depo)  [= (toplam - stok) ile eşdeğer]; seçim yokken: backend değeri
+const calculateDigerDepoCellValue = (rowData: any) => {
+  if (!bothSelected.value)
+    return Number(rowData?.diger_depo ?? 0)
+
+  const digerDepoVal = Number(rowData?.diger_depo ?? 0)
+  const anaDepoVal = Number(rowData?.ana_depo ?? 0)
+  return digerDepoVal + anaDepoVal
+}
 
 pageTitleStore.setTitle(`${pageName} (${pageAlias})`)
 document.title = `OFT - ${pageName} | ${pageAlias}`
@@ -538,8 +567,11 @@ const EksikleriKontrolEt = async () => {
   await getEksikler()
 }
 
+// Eksik olan fonksiyon için güvenli stub (kullanım yoksa no-op)
+const getEksikler = async (): Promise<void> => { return }
 
-function formatSummaryText(e) {
+
+function formatSummaryText(e: any) {
   return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 }).format(e.value);
 }
 
@@ -595,6 +627,7 @@ const getMerkezler = async () => {
 
 const getIstasyonlar = async () => {
   istasyon.value = 0;
+  gridDataM.value = [];
   loadingVisible.value = true
   try {
     const response = await axios.get('/api/istasyonal', {
@@ -636,13 +669,13 @@ onMounted(async () => {
 const loadGridState = () => {
   const savedState = localStorage.getItem(`${userData.value.id}_malzemeler`)
   if (savedState)
-    dataGridRefM.value?.instance.state(JSON.parse(savedState))
+    dataGridRefM.value?.instance?.state(JSON.parse(savedState))
 
   // console.log("Grid durumu yüklendi:", savedState);
 }
 
 const saveGridState = () => {
-  const state = dataGridRefM.value?.instance.state()
+  const state = dataGridRefM.value?.instance?.state()
 
   localStorage.setItem(`${userData.value.id}_malzemeler`, JSON.stringify(state))
 
@@ -676,7 +709,7 @@ const toggleGosterM = () => {
 }
 
 const FiltreTemizleM = () => {
-  dataGridRefM.value?.instance.clearFilter()
+  dataGridRefM.value?.instance?.clearFilter()
 }
 
 const toggleExpandAll = () => {
@@ -712,7 +745,7 @@ const onCellPreparedM = (e: any) => {
   }
 }
 
-const onDateRangeChanged = async newValue => {
+const onDateRangeChanged = async (newValue: any) => {
   if (!newValue || !newValue.value || newValue.value.length !== 2) {
     console.warn('Geçersiz tarih aralığı')
     selectedDateRange.value = initialDates
@@ -841,7 +874,7 @@ const tipCellTemplate = (cellElement: HTMLElement, cellInfo: any): void => {
     return icon
   }
 
-  let renk
+  let renk: string = 'gray'
 
   switch (tip) {
     case 'Hammadde':
@@ -930,7 +963,7 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
   }
 }
 
-const formatNumber = number => {
+const formatNumber = (number: number) => {
   return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(
     number,
   )

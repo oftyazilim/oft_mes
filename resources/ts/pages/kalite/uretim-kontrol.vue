@@ -702,7 +702,7 @@ import DxSelectBox from 'devextreme-vue/select-box';
 import ArrayStore from 'devextreme/data/array_store';
 import notify from "devextreme/ui/notify";
 import Swal from "sweetalert2";
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { VBtn } from "vuetify/components";
 import HataBildirimiDialog from './HataBildirimiDialog.vue';
 
