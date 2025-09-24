@@ -111,9 +111,9 @@
 
           <template #filtreKategori1>
             <div style="inline-size: 200px; margin-block-start: -10px; margin-inline-start: 5px;">
-              <DxSelectBox :data-source="kategori1" v-model:value="ktg1" :show-clear-button="true" label="Kategori 1"
+              <DxSelectBox :data-source="kategori1" v-model:value="ktg1" :show-clear-button="true" label="Kategori"
                 label-mode="floating" display-expr="kategori_ad1" value-expr="kategori_ad1" style="inline-size: 100%;"
-                search-mode="contains" search-expr="ktg_adi" :search-timeout="200" :search-enabled="true" />
+                search-mode="contains" search-expr="kategori_ad1" :search-timeout="200" :search-enabled="true" />
             </div>
           </template>
 
@@ -734,11 +734,12 @@ import {
 import { DxLoadPanel } from 'devextreme-vue/load-panel';
 import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup';
 import DxSelectBox from 'devextreme-vue/select-box';
+import CustomStore from 'devextreme/data/custom_store';
 import { exportDataGrid } from "devextreme/excel_exporter";
 import notify from 'devextreme/ui/notify';
 import { Workbook } from "exceljs";
 import { saveAs } from "file-saver-es";
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 // const pageSizes: (number | PagerPageSize)[] = [5, 10, 15, 'all'];
 document.title = 'OFT - Stok Listesi';
@@ -749,7 +750,7 @@ const focusedRowKey = ref<number | null>(null);
 const expandAll = ref(false);
 const dataGridRef = ref();
 const position = { of: 'window' };
-const gridData = ref([])
+const gridData = ref<any>(null)
 const gridDataDepo = ref([])
 const gridDataSayim = ref([])
 const gridDataSatinAlma = ref([])
@@ -887,19 +888,47 @@ const formatNumber = (numara: number, digit: number = 0) => {
   }).format(numara)
 }
 
-const getData = async () => {
-  showLoading('Liste yükleniyor...');
-  try {
-    const response = await axios.get('/api/stok-listele', {
-      params: {
-        kategoriad1: ktg1.value,
+// Server-side paging/sorting için CustomStore
+const createGridStore = () => new CustomStore({
+  key: 'item_id',
+  load: async (loadOptions: any) => {
+    try {
+      const params: any = {
+        skip: loadOptions.skip ?? 0,
+        take: loadOptions.take ?? 100,
       }
-    })
-    gridData.value = response.data.data
-  } catch (error) {
-    console.error('Veri çekilirken hata oluştu: ', error)
-  } finally {
-    hideLoading();
+      if (Array.isArray(loadOptions.sort) && loadOptions.sort.length > 0) {
+        const s = loadOptions.sort[0]
+        params.sortField = typeof s.selector === 'string' ? s.selector : 'item_id'
+        params.sortOrder = s.desc ? 'desc' : 'asc'
+      }
+      if (ktg1.value != null && ktg1.value !== '' && String(ktg1.value).toLowerCase() !== 'null') {
+        params.kategoriad1 = ktg1.value
+      }
+      const resp = await axios.get('/api/stok-listele', { params })
+      return {
+        data: resp.data?.data ?? [],
+        totalCount: resp.data?.total ?? 0,
+      }
+    } catch (e) {
+      console.error('Liste yüklenemedi', e)
+      return { data: [], totalCount: 0 }
+    }
+  },
+})
+
+const getData = async () => {
+  // Grid veri kaynağını yenile
+  const inst = dataGridRef.value?.instance
+  if (inst) {
+    showLoading('Liste yenileniyor...')
+    await inst.refresh()
+    hideLoading()
+  } else {
+    // İlk kurulum
+    showLoading('Liste yükleniyor...')
+    gridData.value = createGridStore()
+    hideLoading()
   }
 }
 
@@ -1008,12 +1037,19 @@ const clearSelection = () => {
 onMounted(async () => {
   pageTitleStore.setTitle("Stoklar");
   getVeriler()
+  // İlk yüklemede remote store bağla
+  gridData.value = createGridStore()
 });
 
 const onContentReady = (e: DxDataGridTypes.ContentReadyEvent) => {
   const gridInstance = dataGridRef.value?.instance;
   totalRecord.value = gridInstance?.getDataSource()?.totalCount();
 };
+
+// Kategori değişince grid yenile
+watch(ktg1, async () => {
+  await getData()
+})
 
 const onCellPreparedD = (e: DxDataGridTypes.CellPreparedEvent) => {
   if (e.rowType === 'data' && (

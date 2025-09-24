@@ -192,7 +192,61 @@ class DepoMamulController extends Controller
 
     public function StokListele(Request $request)
     {
+        Log::info('StokListele request', $request->all());
+
         ini_set('max_execution_time', 1500); // 5 dakika
+        // Büyük veri setleri için server-side paging
+        $take = (int) $request->input('take', 100);
+        $skip = (int) $request->input('skip', 0);
+        if ($take < 1) {
+            $take = 100;
+        }
+        // Üst sınır koymak iyi bir pratik (istemcinin aşırı yüklenmesini engellemek için)
+        if ($take > 2000) {
+            $take = 2000;
+        }
+
+        $sortField = $request->input('sortField', 'item_id');
+        $sortOrder = strtolower($request->input('sortOrder', 'asc')) === 'desc' ? 'desc' : 'asc';
+        $allowedSorts = [
+            'item_id',
+            'item_code',
+            'item_name',
+            'item_name2',
+            'add_string07',
+            'add_string08',
+            'add_dec07',
+            'add_dec08',
+            'kategori_ad1',
+            'kategori_ad2',
+            'kategori_ad3',
+            'kategori_ad4',
+            'kategori_ad5',
+            'kategori_ad6',
+            'kategori_ad7',
+            'kategori_ad8',
+            'kategori_ad9',
+            'kategori_ad10',
+            'kategori_ad11',
+            'kategori_ad12',
+            'kategori_ad13',
+            'kategori_ad14',
+            'kategori_ad15',
+            'kategori_ad16',
+            'kategori_ad17',
+            'kategori_ad18',
+            'kategori_ad19',
+            'kategori_ad20',
+            'ana_depo_miktar',
+            'ist_depo_miktar',
+            'satinalma',
+            'satislar',
+            'min_seviye',
+            'max_seviye'
+        ];
+        if (!in_array($sortField, $allowedSorts, true)) {
+            $sortField = 'item_id';
+        }
 
         $query = DB::connection('pgsql')
             ->table('uyumsoft.invd_item as itm')
@@ -335,10 +389,27 @@ class DepoMamulController extends Controller
                 'otm.min_seviye',
                 'otm.max_seviye'
             )
-            ->when($request->kategoriad1, fn($query, $kategoriad1) => $query->where('cat1.description', $kategoriad1));
+            // kategoriad1 null/boş/"null" (string) geldiğinde filtre uygulama; aksi halde cat1.description'a göre filtrele
+            ->when((function () use ($request) {
+                $val = $request->input('kategoriad1');
+                if (is_string($val)) $val = trim($val);
+                return !is_null($val) && $val !== '' && strtolower((string)$val) !== 'null';
+            })(), function ($query) use ($request) {
+                return $query->where('cat1.description', $request->input('kategoriad1'));
+            });
 
-        $total = $query->count();
-        $data = $query->get();
+        // count ve get için güvenli kullanım (count sırasında seçimi değiştirmemek için klonla)
+        $total = (clone $query)->count();
+        // Sıralama + sayfalama uygula
+        $data = $query
+            ->orderBy($sortField, $sortOrder)
+            ->offset($skip)
+            ->limit($take)
+            ->get();
+
+        Log::info('StokListele toplam', ['count' => $total]);
+        // Büyük veri loglamak yerine örnek satır sayısı
+        Log::info('StokListele data sample', ['rows' => count($data)]);
 
         return response()->json([
             'data' => $data,
