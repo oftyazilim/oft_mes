@@ -18,7 +18,7 @@
         </VCardTitle>
         <VCardText>
           <VAlert type="info" variant="tonal" class="mb-4">
-            Görüş, öneri veya bir hatayı bizimle paylaşın. Ekran görüntüsü ekleyebilir, isterseniz e‑postanızı bırakabilirsiniz.
+            Görüş, öneri veya bir hatayı bizimle paylaşın. Ekran görüntüsü ekleyebilirsiniz.
           </VAlert>
 
           <VRow @paste="onPaste">

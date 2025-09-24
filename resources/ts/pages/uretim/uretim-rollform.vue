@@ -28,30 +28,29 @@
               <hr>
               <div class="gauge-wrap">
                 <div class="badge-left">{{ pageName }}</div>
-                <DxCircularGauge class="oee-gauge" :value="worksInfo?.speed" :subvalues="worksInfo?.speed_target"
+                <DxCircularGauge class="oee-gauge" :value="speedUnitsHour" :subvalues="[speedTargetUnitsHour]"
                   :tooltip="gaugeTooltip" :size="gaugeSize">
                   <DxGeometry :start-angle="225" :end-angle="-45" />
-                  <DxScale :start-value="0" :end-value="worksInfo?.speed_max" :tick-interval="10"
-                    :minor-tick-interval="5">
+                  <DxScale :start-value="0" :end-value="speedMaxUnitsHour" :tick-interval="gaugeTickInterval"
+                    :minor-tick-interval="gaugeMinorTickInterval">
                     <DxTick :length="8" color="#666" />
                     <DxMinorTick :length="4" color="#444" />
                     <DxLabel :use-range-colors="true" :font="gaugeLabelFont" />
                   </DxScale>
                   <DxRangeContainer background-color="#20252b" :offset="10" :width="10">
-                    <DxRange :start-value="0" :end-value="0.40 * worksInfo?.speed_max" color="#ce6978" />
-                    <DxRange :start-value="0.40 * worksInfo?.speed_max" :end-value="0.70 * worksInfo?.speed_max"
+                    <DxRange :start-value="0" :end-value="0.40 * speedMaxUnitsHour" color="#ce6978" />
+                    <DxRange :start-value="0.40 * speedMaxUnitsHour" :end-value="0.70 * speedMaxUnitsHour"
                       color="#caa93b" />
-                    <DxRange :start-value="0.70 * worksInfo?.speed_max" :end-value="worksInfo?.speed_max"
-                      color="#1e8e3e" />
+                    <DxRange :start-value="0.70 * speedMaxUnitsHour" :end-value="speedMaxUnitsHour" color="#1e8e3e" />
                   </DxRangeContainer>
                   <DxValueIndicator type="triangleNeedle" :spindle-size="18" :spindle-gap-size="9" :offset="10"
                     :width="8" />
                   <!-- <DxTitle text="OEE %" /> -->
                   <DxExport :enabled="false" />
                 </DxCircularGauge>
-                <div class="gauge-center-value ">
-                  <div class="label" style="font-size: 16px; margin-block: -10px;">Hız</div>
-                  <div style="color: goldenrod;"> {{ worksInfo?.speed }} </div>
+                <div class="gauge-center-value text-center">
+                  <div class="label" style="font-size: 16px; margin-block: -10px;">Hız (ad/saat)</div>
+                  <div style="color: goldenrod;"> {{ fmt0(speedUnitsHour) }} </div>
                   <!-- <span class="unit">%</span> -->
                 </div>
               </div>
@@ -516,6 +515,39 @@ const worksInfo = ref<{
 // Başlık: istasyon bilgilerine bağla
 const pageName = computed(() => worksInfo.value?.wstation_code ?? '...')
 const pageAlias = computed(() => worksInfo.value?.wstation_name ?? '...')
+
+// --- Hız birimi dönüşüm: m/dak -> adet/saat ---
+// Not: item_length mm cinsinden geliyor; m/dak hızını adet/saat'e çevirmek için:
+// adet/saat = (speed_m_per_min * 60) / (item_length_m) = speed(m/dak) * 60000 / item_length(mm)
+function toUnitsPerHour(speedMPerMin: number | null | undefined, itemLenMm: number | null | undefined): number {
+  const v = Number(speedMPerMin ?? 0)
+  const Lmm = Number(itemLenMm ?? 0)
+  if (!Number.isFinite(v) || !Number.isFinite(Lmm) || Lmm <= 0) return 0
+  return (v * 60000) / Lmm
+}
+const speedUnitsHour = computed(() => worksInfo.value?.speed)
+const speedMaxUnitsHour = computed(() => worksInfo.value?.speed_max)
+const speedTargetUnitsHour = computed(() => worksInfo.value?.speed_target)
+// const speedUnitsHour = computed(() => toUnitsPerHour(worksInfo.value?.speed, worksInfo.value?.item_length))
+// const speedMaxUnitsHour = computed(() => toUnitsPerHour(worksInfo.value?.speed_max, worksInfo.value?.item_length))
+// const speedTargetUnitsHour = computed(() => toUnitsPerHour(worksInfo.value?.speed_target, worksInfo.value?.item_length))
+
+// Gauge görsel ayarları (mevcut tanım yoksa basit defaultlar)
+const gaugeTooltip = { enabled: false } as any
+const gaugeSize = { width: 260, height: 260 } as any
+const gaugeLabelFont = { size: 12, color: '#cfd8dc' } as any
+const gaugeTickInterval = computed(() => {
+  const max = Number(speedMaxUnitsHour.value || 0)
+  if (max <= 0) return 10
+  // 5-7 arası ana tick; yuvarla
+  const raw = Math.max(1, Math.round(max / 6))
+  // 5'in katına yakınla
+  return raw >= 5 ? Math.round(raw / 5) * 5 : raw
+})
+const gaugeMinorTickInterval = computed(() => {
+  const main = Number(gaugeTickInterval.value || 5)
+  return Math.max(1, Math.round(main / 2))
+})
 
 const statusColor = computed(() => {
   const id = worksInfo.value?.statu_id
@@ -1322,7 +1354,7 @@ async function detectStation() {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  margin-block-start: -25px;
+  margin-block-start: 15px;
 }
 
 .digital-clock {

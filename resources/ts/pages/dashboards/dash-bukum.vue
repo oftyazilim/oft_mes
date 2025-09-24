@@ -138,9 +138,10 @@
       </template>
       <template v-else>
         <article v-for="m in machines" :key="m.id" class="machine-card">
-          <div class="card-top">
+          <div class="card-top" :style="cardTopStyle(m)">
             <div class="names">
-              <h3 class="machine-name" style="font-size: 20px;">{{ m.code }} - <span class="machine-name">{{ truncate(m.name, 35) }}</span></h3>
+              <h3 class="machine-name" style="font-size: 20px;">{{ m.code }} - <span class="machine-name">{{
+                truncate(m.name, 35) }}</span></h3>
               <p class="mb-1">Operatör: <span class="operator-name" v-if="m.operator"> {{ m.operator }}</span></p>
             </div>
             <div class="status" :class="m.status">
@@ -194,13 +195,13 @@
               </div>
             </template>
 
-          <!-- Ek bilgi satırı: sadece duruşta (stopped) sebep göster -->
-          <div class="status-extra" v-if="m.status === 'stopped' && displayReason(m)">
-            <div class="extra-right">
-              <span>Sebep: </span>
-              <span class="value reason" :title="displayReason(m)">{{ displayReason(m) }}</span>
+            <!-- Ek bilgi satırı: sadece duruşta (stopped) sebep göster -->
+            <div class="status-extra" v-if="m.status === 'stopped' && displayReason(m)">
+              <div class="extra-right">
+                <span>Sebep: </span>
+                <span class="value reason" :title="displayReason(m)">{{ displayReason(m) }}</span>
+              </div>
             </div>
-          </div>
           </div>
         </article>
       </template>
@@ -481,6 +482,48 @@ function getSegmentTooltip(seg: Segment & { code?: string }, m: MachineCard) {
   return labels[t] || String(seg.type);
 }
 
+// Kart üst şeridi için statü bazlı koyu arka plan
+function statusBaseColor(s: MachineStatus): string {
+  if (s === 'running') return 'var(--v-theme-success, #22c55e)'
+  if (s === 'stopped') return 'var(--v-theme-warning, #fb923c)'
+  return 'var(--v-theme-on-surface-variant, #9e9e9e)'
+}
+
+function cardTopStyle(m: MachineCard) {
+  const base = statusBaseColor(m.status)
+  // Fallback için hex tabanlı koyulaştırma (var() fallback renkleriyle uyumlu)
+  const baseHex = (m.status === 'running') ? '#298e4e' : (m.status === 'stopped') ? '#cc3f3f' : '#605050'
+  const darkHex = darkenHexWithBlack(baseHex, 0.26)
+  return {
+    // color-mix desteklenirse bunu kullanır; desteklenmiyorsa backgroundIgnored -> backgroundColor devreye girer
+    background: `color-mix(in oklab, ${base} 26%, #000)`,
+    backgroundColor: darkHex,
+  } as const
+}
+
+function darkenHexWithBlack(hex: string, ratio: number) {
+  // ratio: 0..1 arası siyaha karışım
+  const { r, g, b } = hexToRgb(hex)
+  const rr = Math.round(r * (1 - ratio))
+  const gg = Math.round(g * (1 - ratio))
+  const bb = Math.round(b * (1 - ratio))
+  return rgbToHex(rr, gg, bb)
+}
+
+function hexToRgb(hex: string) {
+  let h = hex.replace('#', '')
+  if (h.length === 3) {
+    h = h.split('').map(c => c + c).join('')
+  }
+  const num = parseInt(h, 16)
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 }
+}
+
+function rgbToHex(r: number, g: number, b: number) {
+  const toHex = (n: number) => n.toString(16).padStart(2, '0')
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+}
+
 let slowTimer: number | null = null;
 const loadError = ref<string | null>(null);
 async function loadData(signal?: AbortSignal) {
@@ -495,6 +538,7 @@ async function loadData(signal?: AbortSignal) {
     slowTimer = window.setTimeout(() => { isSlow.value = true; }, 2500);
     loadError.value = null;
     const { data } = await axios.get('/api/dash-bukum/overview', { signal, timeout: 10000 });
+    console.log('API veri:', data);
     const newMachines = (data?.machines || []).map((m: any) => ({
       id: Number(m.id),
       name: String(m.name ?? ''),
@@ -504,7 +548,7 @@ async function loadData(signal?: AbortSignal) {
       itemCode: m.itemCode ?? m.item_code ?? undefined,
       itemName: m.itemName ?? m.item_name ?? undefined,
       counter: (m.counter !== undefined && m.counter !== null) ? Number(m.counter) : undefined,
-      status: (m.status ?? 'offline') as MachineStatus,
+      status: (m.status ?? 'stopped') as MachineStatus,
       availability: Number(m.availability) || 0,
       performance: Number(m.performance) || 0,
       quality: Number(m.quality) || 1,
@@ -694,9 +738,6 @@ onBeforeUnmount(() => {
   if (durTimer) clearInterval(durTimer);
 });
 </script>
-
-
-
 
 <style scoped>
 /* stylelint-disable order/properties-order, @stylistic/declaration-colon-space-after, declaration-block-single-line-max-declarations, at-rule-empty-line-before, rule-empty-line-before, no-descending-specificity, no-duplicate-selectors, @stylistic/max-line-length */
@@ -1033,7 +1074,7 @@ onBeforeUnmount(() => {
 }
 
 .card-top {
-  background-color: #33404d;
+  color: #88bbd3;
   border-radius: 10px 10px 0 0;
   padding-inline: 10px;
   display: flex;
@@ -1045,6 +1086,7 @@ onBeforeUnmount(() => {
 .machine-name {
   margin: 0;
   font-size: 15px;
+  color: #d4dff6;
 }
 
 .operator-name {
@@ -1337,12 +1379,12 @@ onBeforeUnmount(() => {
 
 .ticker-shell::before {
   inset-inline-start: 0;
-  background: linear-gradient(90deg, #1a1b1b, #1a1b1b00);
+  background: linear-gradient(90deg, var(--v-theme-surface-variant, #1a1b1b), var(--v-theme-font-variant, #1a1b1b00));
 }
 
 .ticker-shell::after {
   inset-inline-end: 0;
-  background: linear-gradient(270deg, #1a1b1b, #1a1b1b00);
+  background: linear-gradient(270deg, var(--v-theme-surface-variant, #1a1b1b), var(--v-theme-font-variant, #1a1b1b00));
 }
 
 .ticker-track {

@@ -499,7 +499,14 @@
 
     </DxDataGrid>
 
-    <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="kaydetOptions" @click="AgacKaydet" />
+    <DxToolbarItem
+      :disabled="isSavingAgac"
+      widget="dxButton"
+      toolbar="bottom"
+      location="center"
+      :options="{ ...kaydetOptions, text: isSavingAgac ? 'Kaydediliyor...' : 'Kaydet' }"
+      @click="AgacKaydet"
+    />
     <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="vazgecOptions" />
   </DxPopup>
 
@@ -695,7 +702,7 @@ import DxSelectBox from 'devextreme-vue/select-box';
 import ArrayStore from 'devextreme/data/array_store';
 import notify from "devextreme/ui/notify";
 import Swal from "sweetalert2";
-import { nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { VBtn } from "vuetify/components";
 import HataBildirimiDialog from './HataBildirimiDialog.vue';
 
@@ -707,6 +714,7 @@ const openHataDialog = () => {
 
 const popupIsemriSecVisible = ref(false);
 const popupUrunAgaciVisible = ref(false);
+const isSavingAgac = ref(false)
 const userData = useCookie<any>("userData");
 const loadingVisible = ref<boolean>(false);
 const gridEmirler = ref<any[]>([]);
@@ -1119,14 +1127,23 @@ const kaydetKontroller = async () => {
 }
 
 const AgacKaydet = async () => {
-  const selectedRowKeys = agacRef.value?.instance ? agacRef.value.instance.getSelectedRowKeys() : []
-
-  await axios.post('/api/urun-agaci-secim/kaydet', {
-    urunKodu: seciliIsEmri.value.urunKodu,
-    selected_ids: selectedRowKeys,
-    userId: userData.value.id,
-  })
-  popupUrunAgaciVisible.value = false
+  if (isSavingAgac.value) return
+  try {
+    isSavingAgac.value = true
+    const selectedRowKeys = agacRef.value?.instance ? agacRef.value.instance.getSelectedRowKeys() : []
+    await axios.post('/api/urun-agaci-secim/kaydet', {
+      urunKodu: seciliIsEmri.value.urunKodu,
+      selected_ids: selectedRowKeys,
+      userId: userData.value.id,
+    })
+    notify({ message: 'Ürün ağacı seçimleri kaydedildi.', type: 'success', displayTime: 1500 })
+    popupUrunAgaciVisible.value = false
+  } catch (e) {
+    console.error('AgacKaydet hata', e)
+    notify({ message: 'Kayıt başarısız. Lütfen tekrar deneyin.', type: 'error', displayTime: 2000 })
+  } finally {
+    isSavingAgac.value = false
+  }
 }
 
 const AgacYukle = async () => {

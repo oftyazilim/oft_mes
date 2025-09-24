@@ -911,6 +911,16 @@
     </template>
   </DxPopup>
 
+    <DxPopup v-model:visible="popupMesajGosterVisible" :width="400" :height="220" :hide-on-outside-click="true"
+    :show-close-button="true" :title="notBaslik">
+    <template #content>
+      <DxScrollView width="100%" height="100%">
+        <div class="caption">{{ selectedRow.isemri_no }}</div>
+        {{ planlamaNotu }}
+      </DxScrollView>
+    </template>
+  </DxPopup>
+  
   <VOverlay :model-value="loadingVisible" class="align-center justify-center" persistent scrim="rgba(0,0,0,0.35)">
     <VCard class="pa-6 d-flex flex-column align-center" elevation="8" width="320">
       <VProgressCircular indeterminate color="primary" size="48" width="5" class="mb-4" />
