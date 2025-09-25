@@ -38,6 +38,7 @@ export default [
         icon: { icon: "tabler-message-dots" },
         action: "manage",
         subject: "all",
+        target: "_blank",
       },
       {
         title: "Bildirim Ayarları",
@@ -45,6 +46,7 @@ export default [
         icon: { icon: "tabler-bell" },
         action: "manage",
         subject: "all",
+        target: "_blank",
       },
     ],
   },

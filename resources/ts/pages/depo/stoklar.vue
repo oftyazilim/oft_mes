@@ -9,7 +9,7 @@
           :allow-column-reordering="true" :allow-column-resizing="true" column-resizing-mode="widget"
           v-model:focused-row-key="focusedRowKey" @content-ready="onContentReady" :selected-rows-keys="selectedRowKeys"
           @focused-row-changed="onFocusedRowChanged" @row-prepared="onRowPrepared"
-          @selection-changed="onSelectionChanged" @exporting="onExporting">
+          @selection-changed="onSelectionChanged" @row-dbl-click="UrunSorgula" @exporting="onExporting" >
 
           <DxColumn type="buttons" :width="30">
             <DxGridButton hint="Detay Göster" icon="eyeopen" :visible="true" :disabled="false" @click="UrunSorgula" />
@@ -51,10 +51,8 @@
           <DxColumn data-field="kategori_ad19" caption="Kategori Adı 19" :width="200" :visible="false" />
           <DxColumn data-field="kategori_ad20" caption="Kategori Adı 20" :width="200" :visible="false" />
           <DxColumn data-field="add_string08" caption="Ölü Stok" :width="100" />
-          <DxColumn data-field="add_dec07" :width="80" data-type="number"
-            :format="{ type: 'fixedPoint', precision: 1, thousandsSeparator: ',', }" />
-          <DxColumn data-field="add_dec08" :width="80" data-type="number"
-            :format="{ type: 'fixedPoint', precision: 3, thousandsSeparator: ',', }" />
+          <DxColumn data-field="add_dec07"  :width="80"  data-type="number"  :format="{ type: 'fixedPoint', precision: 1, thousandsSeparator: ',', }"/>
+          <DxColumn data-field="add_dec08" :width="80"  data-type="number" :format="{ type: 'fixedPoint', precision: 3, thousandsSeparator: ',', }"/>
           <DxColumn data-field="add_string07" caption="Firma" :width="80" />
 
           <DxToolbar>
@@ -79,8 +77,8 @@
           <DxSearchPanel :visible="true" :width="240" />
           <DxSorting mode="multiple" />
           <DxExport :enabled="true" :allow-export-selected-data="false" />
-          <DxLoadPanel v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true" :shading="true"
-            :message="loadingMessage || 'Yükleniyor...'" :width="260" :height="120" />
+          <DxLoadPanel :key="loadingVisible" v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true"
+            :shading="true" />
 
           <DxColumnChooser height="540px" :enabled="true" mode="select">
             <DxColumnChooserSearch :enabled="true" />
@@ -89,7 +87,7 @@
 
           <DxSummary>
             <DxGroupItem :align-by-column="true" column="item_name" summary-type="count" display-format="{0} adet"
-              alignment="right" :customize-text="formatSummaryText" />
+              :alignment="right" :customize-text="formatSummaryText" />
             <!-- <DxTotalItem :align-by-column="true" column="item_name" summary-type="count" display-format="{0} adet"
               :alignment="right" :customize-text="formatSummaryText" /> -->
           </DxSummary>
@@ -113,7 +111,7 @@
             <div style="inline-size: 200px; margin-block-start: -10px; margin-inline-start: 5px;">
               <DxSelectBox :data-source="kategori1" v-model:value="ktg1" :show-clear-button="true" label="Kategori"
                 label-mode="floating" display-expr="kategori_ad1" value-expr="kategori_ad1" style="inline-size: 100%;"
-                search-mode="contains" search-expr="kategori_ad1" :search-timeout="200" :search-enabled="true" />
+                search-mode="contains" search-expr="ktg_adi" :search-timeout="200" :search-enabled="true" />
             </div>
           </template>
 
@@ -181,7 +179,7 @@
               <DxColumn data-field="sorumlu" caption="Sorumlu" :visible="true" :min-width="80" />
               <DxColumn data-field="create_date" caption="Sayım Tarihi" :visible="true" :min-width="60" data-type="date"
                 :format="{
-                  formatter: (date: string | number | Date) => {
+                  formatter: (date) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -205,7 +203,7 @@
               <DxColumn data-field="create_user_id" :visible="true" :min-width="60" />
               <DxColumn data-field="update_user_id" :visible="true" :min-width="60" />
               <DxColumn data-field="update_date" :visible="true" :min-width="60" data-type="date" :format="{
-                formatter: (date: string | number | Date) => {
+                formatter: (date) => {
                   const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
                     month: '2-digit',
@@ -249,7 +247,7 @@
               column-resizing-mode="widget" height="250px" width="100%">
               <DxColumn data-field="fatura_tarih" caption="Fatura Tarihi" :visible="true" :width="100" data-type="date"
                 :format="{
-                  formatter: (date: string | number | Date) => {
+                  formatter: (date) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -290,7 +288,7 @@
               width="100%">
               <DxColumn data-field="fatura_tarih" caption="Fatura Tarihi" :visible="true" :width="100" data-type="date"
                 :format="{
-                  formatter: (date: string | number | Date) => {
+                  formatter: (date) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -333,7 +331,7 @@
               column-resizing-mode="widget" height="250px" width="100%">
               <DxColumn data-field="create_date" caption="Üretim Tarihi" :visible="true" :width="100" data-type="date"
                 :format="{
-                  formatter: (date: string | number | Date) => {
+                  formatter: (date) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -354,7 +352,7 @@
 
               <DxSummary>
                 <DxTotalItem :align-by-column="true" column="sarf" summary-type="sum" display-format="{0}"
-                  alignment="right" :customize-text="formatSummaryText" />
+                  :alignment="right" :customize-text="formatSummaryText" />
               </DxSummary>
             </DxDataGrid>
             <h5 class="text-h5 mt-2">
@@ -378,7 +376,7 @@
               column-resizing-mode="widget" height="250px" width="100%">
               <DxColumn data-field="create_date" caption="Üretim Tarihi" :visible="true" :width="100" data-type="date"
                 :format="{
-                  formatter: (date: string | number | Date) => {
+                  formatter: (date) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -399,7 +397,7 @@
 
               <DxSummary>
                 <DxTotalItem :align-by-column="true" column="sarf" summary-type="sum" display-format="{0}"
-                  alignment="right" :customize-text="formatSummaryText" />
+                  :alignment="right" :customize-text="formatSummaryText" />
               </DxSummary>
             </DxDataGrid>
             <h5 class="text-h5 mt-2">
@@ -426,7 +424,7 @@
               :allow-column-resizing="true" column-resizing-mode="widget" height="150px" width="100%">
               <DxColumn data-field="teslim_tarihi" caption="Teslim Tarihi" :visible="true" :width="100" data-type="date"
                 :format="{
-                  formatter: (date: string | number | Date) => {
+                  formatter: (date) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -466,7 +464,7 @@
               column-resizing-mode="widget" height="150px" width="100%">
               <DxColumn data-field="talep_tarihi" caption="Talep Tarihi" :visible="true" :width="110" data-type="date"
                 :format="{
-                  formatter: (date: string | number | Date) => {
+                  formatter: (date) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -477,7 +475,7 @@
                 }" sort-order="desc" />
               <DxColumn data-field="onay_tarihi" caption="Onay Tarihi" :visible="true" :width="110" data-type="date"
                 :format="{
-                  formatter: (date: string | number | Date) => {
+                  formatter: (date) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -517,7 +515,7 @@
               <DxColumn data-field="BELGE_NO" caption="Belge No" :visible="true" :width="100" />
               <DxColumn data-field="BELGE_TARIHI" caption="Belge Tarihi" :visible="true" :width="120" data-type="date"
                 :format="{
-                  formatter: (date: string | number | Date) => {
+                  formatter: (date) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -525,10 +523,10 @@
                     }).format(new Date(date));
                     return formattedDate.replace(/\//g, '.');
                   },
-                }" />
+                }"/>
               <DxColumn data-field="teslim_tarihi" caption="Teslim Tarihi" :visible="true" :width="120" data-type="date"
                 :format="{
-                  formatter: (date: string | number | Date) => {
+                  formatter: (date) => {
                     const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                       year: 'numeric',
                       month: '2-digit',
@@ -543,15 +541,15 @@
               <DxColumn data-field="satici_adi" caption="Satıcı Adı" :visible="true" :width="100" />
               <DxColumn data-field="sip_olusturan" caption="Fiş Oluşturan" :visible="true" :width="100" />
               <DxColumn data-field="MIKTAR" caption="Miktar" data-type="number" :visible="true" :width="100"
-                :format="{ type: 'fixedPoint', precision: 1, thousandsSeparator: ',', }" />
+              :format="{ type: 'fixedPoint', precision: 1, thousandsSeparator: ',', }" />
               <DxColumn data-field="KALAN_MIKTAR" caption="Kalan Miktar" data-type="number" :visible="true" :width="100"
-                :format="{ type: 'fixedPoint', precision: 1, thousandsSeparator: ',', }" />
+              :format="{ type: 'fixedPoint', precision: 1, thousandsSeparator: ',', }" />
               <DxColumn data-field="BIRIM_KOD" caption="Birim" :visible="true" :min-width="100" />
               <DxColumn data-field="birim_fiyat" data-type="number" caption="Birim Fiyat $" :visible="true" :width="100"
-                :format="{ type: 'fixedPoint', precision: 3, thousandsSeparator: ',', }" />
+              :format="{ type: 'fixedPoint', precision: 3, thousandsSeparator: ',', }" />
               <DxColumn data-field="USD_NET_TUTAR" data-type="number" caption="Net Tutar $" :visible="true" :width="100"
-                :format="{ type: 'fixedPoint', precision: 2, thousandsSeparator: ',', }" />
-
+              :format="{ type: 'fixedPoint', precision: 2, thousandsSeparator: ',', }" />
+          
               <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
             </DxDataGrid>
             <h5 class="text-h5 mt-2">
@@ -576,13 +574,12 @@
 
             <DxDataGrid :data-source="hareketOzet" :show-borders="true" :column-auto-width="true"
               :word-wrap-enabled="true" height="250px">
-              <DxColumn data-field="hareket" caption="" width="50" />
+              <DxColumn data-field="hareket" caption="" width="50"/>
 
-              <DxColumn :data-field="String(new Date().getFullYear())" data-type="number"
-                :caption="`Toplam ${new Date().getFullYear()}`" :format="{ type: 'fixedPoint', precision: 0 }" />
-              <DxColumn :data-field="String(new Date().getFullYear() - 1)"
-                :caption="`Toplam ${new Date().getFullYear() - 1}`" data-type="number"
+              <DxColumn :data-field="String(new Date().getFullYear())" data-type="number" :caption="`Toplam ${new Date().getFullYear()}`"
                 :format="{ type: 'fixedPoint', precision: 0 }" />
+              <DxColumn :data-field="String(new Date().getFullYear() - 1)"
+                :caption="`Toplam ${new Date().getFullYear() - 1}`" data-type="number" :format="{ type: 'fixedPoint', precision: 0 }" />
 
               <DxColumn v-for="(ay, i) in ayKolonlari.slice().reverse()" :key="i" :data-field="ay" :caption="ay"
                 data-type="number" alignment="right" :format="{ type: 'fixedPoint', precision: 0 }" />
@@ -599,26 +596,25 @@
             <h5 class="text-h5 mb-2">
               Yıllık Hareket Grafiği
             </h5>
+            
+            <DxChart id="chart" :data-source="tersDataSource" palette="Soft" height="300" style="margin-block-start: -50px;">
+            <DxCommonSeriesSettings argument-field="ay" />
 
-            <DxChart id="chart" :data-source="tersDataSource" palette="Soft" height="300"
-              style="margin-block-start: -50px;">
-              <DxCommonSeriesSettings argument-field="ay" />
+            <DxValueAxis :tick-interval="300" name="frequency" position="left" sort-order="asc" />
+            
+            <DxSeries name="Giriş" value-field="girisDeger" axis="frequency" type="bar" color="#fac29a" />
+            <DxSeries name="Çıkış" value-field="cikisDeger" axis="frequency" type="bar" color="#6b71c3" />
 
-              <DxValueAxis :tick-interval="300" name="frequency" position="left" sort-order="asc" />
-
-              <DxSeries name="Giriş" value-field="girisDeger" axis="frequency" type="bar" color="#fac29a" />
-              <DxSeries name="Çıkış" value-field="cikisDeger" axis="frequency" type="bar" color="#6b71c3" />
-
-              <DxArgumentAxis>
-                <DxLabel overlapping-behavior="stagger" />
-              </DxArgumentAxis>
+            <DxArgumentAxis>
+              <DxLabel overlapping-behavior="stagger" />
+            </DxArgumentAxis>
 
 
-              <DxTooltip :enabled="true" :shared="true" :customize-tooltip="customizeTooltip" />
+            <DxTooltip :enabled="true" :shared="true" :customize-tooltip="customizeTooltip" />
 
-              <DxLegend horizontal-alignment="center" />
-            </DxChart>
-          </div>
+            <DxLegend  horizontal-alignment="center"/>
+          </DxChart>
+        </div>
 
         </VCardText>
       </VCard>
@@ -681,14 +677,6 @@
     <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="vazgecOptions" />
   </DxPopup>
 
-  <!-- Global overlay fallback for clearer loading message -->
-  <VOverlay :model-value="loadingVisible" class="d-flex align-center justify-center" persistent scrim>
-    <VCard class="pa-6 text-center" elevation="12" width="300">
-      <VProgressCircular indeterminate color="primary" size="48" />
-      <div class="mt-4 text-h6">{{ loadingMessage || 'Yükleniyor...' }}</div>
-    </VCard>
-  </VOverlay>
-
 </template>
 
 
@@ -696,24 +684,12 @@
 import { usePageTitleStore } from "@/stores/pageTitle";
 import axios from "axios";
 import { DxButton } from "devextreme-vue/button";
-import DxChart, {
-  DxArgumentAxis,
-  DxCommonSeriesSettings,
-  DxLabel,
-  DxLegend,
-  DxSeries,
-  DxTooltip,
-  DxValueAxis
-} from 'devextreme-vue/chart';
-import type { DxContextMenuTypes } from 'devextreme-vue/context-menu';
-import DxContextMenu from 'devextreme-vue/context-menu';
 import {
   DxColumn,
   DxColumnChooser,
   DxColumnChooserSearch,
   DxColumnChooserSelection,
   DxDataGrid,
-  DxDataGridTypes,
   DxExport,
   DxFilterPanel,
   DxFilterRow,
@@ -725,21 +701,33 @@ import {
   DxItem,
   DxScrolling,
   DxSearchPanel,
-  DxSelection,
   DxSorting,
   DxSummary,
   DxToolbar,
-  DxTotalItem
+  DxSelection,
+  DxTotalItem,
+  DxDataGridTypes
 } from 'devextreme-vue/data-grid';
 import { DxLoadPanel } from 'devextreme-vue/load-panel';
-import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup';
 import DxSelectBox from 'devextreme-vue/select-box';
-import CustomStore from 'devextreme/data/custom_store';
-import { exportDataGrid } from "devextreme/excel_exporter";
-import notify from 'devextreme/ui/notify';
-import { Workbook } from "exceljs";
-import { saveAs } from "file-saver-es";
+import {exportDataGrid} from "devextreme/excel_exporter";
 import { computed, onMounted, ref, watch } from 'vue';
+import type { DxContextMenuTypes } from 'devextreme-vue/context-menu';
+import DxContextMenu from 'devextreme-vue/context-menu';
+import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup';
+import notify from 'devextreme/ui/notify';
+import DxChart, {
+  DxArgumentAxis,
+  DxCommonSeriesSettings,
+  DxLabel,
+  DxLegend,
+  DxSeries,
+  DxTooltip,
+  DxValueAxis,
+  DxConstantLine,
+} from 'devextreme-vue/chart';
+import {Workbook} from "exceljs";
+import {saveAs} from "file-saver-es";
 
 // const pageSizes: (number | PagerPageSize)[] = [5, 10, 15, 'all'];
 document.title = 'OFT - Stok Listesi';
@@ -750,7 +738,7 @@ const focusedRowKey = ref<number | null>(null);
 const expandAll = ref(false);
 const dataGridRef = ref();
 const position = { of: 'window' };
-const gridData = ref<any>(null)
+const gridData = ref([])
 const gridDataDepo = ref([])
 const gridDataSayim = ref([])
 const gridDataSatinAlma = ref([])
@@ -763,22 +751,6 @@ const gridDataTalepler = ref([])
 const kategori1 = ref([])
 const ktg1 = ref('')
 const loadingVisible = ref<boolean>(false);
-const loadingMessage = ref('');
-const loadingStartAt = ref<number>(0);
-
-const showLoading = (msg: string) => {
-  loadingMessage.value = msg;
-  loadingStartAt.value = Date.now();
-  loadingVisible.value = true;
-};
-
-const hideLoading = async () => {
-  const elapsed = Date.now() - loadingStartAt.value;
-  const min = 300; // ms minimum visible
-  if (elapsed < min) await new Promise(r => setTimeout(r, min - elapsed));
-  loadingVisible.value = false;
-  loadingMessage.value = '';
-};
 const totalRecord = ref(0);
 const toplamAlim = ref(0);
 const toplamSiparis = ref(0);
@@ -788,7 +760,7 @@ const toplamFis = ref(0);
 const toplamSatisFis = ref(0);
 const toplamTalep = ref(0);
 const selectedRows = ref([])
-const selectedRow = ref<any>(null)
+const selectedRow = ref([])
 const selectedRowKeys = ref<number[]>([])
 const popupKategoriVisible = ref(false)
 const kategori = ref('')
@@ -809,9 +781,11 @@ const ayKolonlari = ref(
   })
 )
 
-const customizeTooltip = (info: { seriesName: string; value: number }) => ({
-  text: `${info.seriesName}: ${info.value}`,
-})
+const customizeTooltip = (info: any) => {
+  return {
+    text: `${info.seriesName}: ${info.value}`,
+  }
+}
 
 const alanlar = ref([
   { kategori_alan: '1', kategori_baslik: 'Kategori Adı 1' },
@@ -848,8 +822,7 @@ const formDatam = ref({
   toplamSayim: 0,
 })
 
-interface PhotoItem { id: number; url: string }
-const photos = ref<PhotoItem[]>([])
+const photos = ref(null)
 const preview = ref('')
 const previewDialog = ref(false)
 const selectedPhoto = ref('')
@@ -876,60 +849,30 @@ const vazgecOptions = {
   },
 }
 
-function formatSummaryText(itemInfo: { value: string | number | Date; valueText: string }) {
-  const numeric = typeof itemInfo.value === 'number' ? itemInfo.value : Number(itemInfo.value) || 0
-  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(numeric);
+function formatSummaryText(e) {
+  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(e.value);
 }
 
-const formatNumber = (numara: number, digit: number = 0) => {
+const formatNumber = (numara: number, digit: number) => {
   return new Intl.NumberFormat('tr-TR', {
     minimumFractionDigits: digit,
     maximumFractionDigits: digit,
   }).format(numara)
 }
 
-// Server-side paging/sorting için CustomStore
-const createGridStore = () => new CustomStore({
-  key: 'item_id',
-  load: async (loadOptions: any) => {
-    try {
-      const params: any = {
-        skip: loadOptions.skip ?? 0,
-        take: loadOptions.take ?? 100,
-      }
-      if (Array.isArray(loadOptions.sort) && loadOptions.sort.length > 0) {
-        const s = loadOptions.sort[0]
-        params.sortField = typeof s.selector === 'string' ? s.selector : 'item_id'
-        params.sortOrder = s.desc ? 'desc' : 'asc'
-      }
-      if (ktg1.value != null && ktg1.value !== '' && String(ktg1.value).toLowerCase() !== 'null') {
-        params.kategoriad1 = ktg1.value
-      }
-      const resp = await axios.get('/api/stok-listele', { params })
-      return {
-        data: resp.data?.data ?? [],
-        totalCount: resp.data?.total ?? 0,
-      }
-    } catch (e) {
-      console.error('Liste yüklenemedi', e)
-      return { data: [], totalCount: 0 }
-    }
-  },
-})
-
 const getData = async () => {
-  // Grid veri kaynağını yenile
-  const inst = dataGridRef.value?.instance
-  if (inst) {
-    showLoading('Liste yenileniyor...')
-    await inst.refresh()
-    hideLoading()
-  } else {
-    // İlk kurulum
-    showLoading('Liste yükleniyor...')
-    gridData.value = createGridStore()
-    hideLoading()
+  loadingVisible.value = true;
+  try {
+    const response = await axios.get('/api/stok-listele', {
+      params: {
+        kategoriad1: ktg1.value,
+      }
+    })
+    gridData.value = response.data.data
+  } catch (error) {
+    console.error('Veri çekilirken hata oluştu: ', error)
   }
+  loadingVisible.value = false;
 }
 
 const getVeriler = async () => {
@@ -1037,21 +980,20 @@ const clearSelection = () => {
 onMounted(async () => {
   pageTitleStore.setTitle("Stoklar");
   getVeriler()
-  // İlk yüklemede remote store bağla
-  gridData.value = createGridStore()
+  axios
+    .post("/api/log-kayit", {
+      userId: userData.value.id,
+      sayfa: 'Stoklar',
+      eylem: 'Yükleme',
+    });
 });
 
-const onContentReady = (e: DxDataGridTypes.ContentReadyEvent) => {
+const onContentReady = (e: any) => {
   const gridInstance = dataGridRef.value?.instance;
   totalRecord.value = gridInstance?.getDataSource()?.totalCount();
 };
 
-// Kategori değişince grid yenile
-watch(ktg1, async () => {
-  await getData()
-})
-
-const onCellPreparedD = (e: DxDataGridTypes.CellPreparedEvent) => {
+const onCellPreparedD = (e: any) => {
   if (e.rowType === 'data' && (
     e.column.dataField === 'qty_prm' && e.value > 0)) {
     e.cellElement.style.fontWeight = 'bold'
@@ -1064,7 +1006,7 @@ const onCellPreparedD = (e: DxDataGridTypes.CellPreparedEvent) => {
   }
 }
 
-const onRowPrepared = (e: DxDataGridTypes.RowPreparedEvent) => {
+const onRowPrepared = (e: any) => {
   if (e.rowType !== 'data')
     return
 
@@ -1074,7 +1016,7 @@ const onRowPrepared = (e: DxDataGridTypes.RowPreparedEvent) => {
   }
 }
 
-const onFocusedRowChanged = async (e: DxDataGridTypes.FocusedRowChangedEvent) => {
+const onFocusedRowChanged = async (e: any) => {
   selectedRow.value = e.row!.data!;
   // try {
   //   const response = await axios.get('/api/urunsorgula', {
@@ -1101,12 +1043,11 @@ const onFocusedRowChanged = async (e: DxDataGridTypes.FocusedRowChangedEvent) =>
 };
 
 const UrunSorgula = async () => {
-
   if (!selectedRow.value) {
     console.warn('Seçili satır yok!')
     return
   }
-  showLoading('Ürün sorgulanıyor...');
+  loadingVisible.value = true;
   Sifirla()
   pageTitleStore.setToplam(' -> ' + selectedRow.value.item_code + ' -> ' + selectedRow.value.item_name + '')
   try {
@@ -1130,23 +1071,20 @@ const UrunSorgula = async () => {
     fetchPhotos()
   } catch (error) {
     console.error('Veri çekilirken hata oluştu: ', error)
-    hideLoading();
     throw error
-  } finally {
-    // Detay sorgusu
-    showLoading('Detaylar yükleniyor...');
   }
 }
 
-const tersDataSource = computed(() => [...hareketGrafik.value].reverse())
+const tersDataSource = computed(() => {
+  return [...hareketGrafik.value].reverse()
+})
+
+// Kategori değişince grid yenile
+watch(ktg1, async () => {
+  await getData()
+})
 
 const DetayAl = async () => {
-  if (!selectedRow.value || !selectedRow.value.item_id) {
-    console.warn('DetayAl iptal: item_id yok');
-    loadingVisible.value = false;
-    return;
-  }
-  showLoading('Detaylar yükleniyor...');
   try {
     const response = await axios.get('/api/stok-detay-al', {
       params: {
@@ -1173,31 +1111,15 @@ const DetayAl = async () => {
   } catch (error) {
     console.error('Veri çekilirken hata oluştu: ', error)
     throw error
-  } finally {
-    hideLoading();
   }
+  loadingVisible.value = false;
 }
 
 const fetchPhotos = async () => {
-  try {
-    const response = await axios.get('/api/photos', {
-      params: { itemID: Number(formDatam.value.urunID) }
-    })
-    photos.value = Array.isArray(response.data) ? response.data : []
-  } catch (err) {
-    console.error('Fotoğraflar alınamadı', err)
-  }
-}
-
-const deletePhoto = async (id: number) => { // foto sil
-  try {
-    await axios.delete(`/api/photos/${id}`)
-    photos.value = photos.value.filter(p => p.id !== id)
-    notify('Fotoğraf silindi', 'success', 1500)
-  } catch (err) {
-    console.error('Fotoğraf silme hatası', err)
-    notify('Fotoğraf silinemedi', 'error', 2000)
-  }
+  const response = await axios.get('/api/photos', {
+    params: { itemID: Number(formDatam.value.urunID) }
+  })
+  photos.value = response.data
 }
 
 const previewPhoto = (url: string) => {
@@ -1302,9 +1224,9 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
     worksheet,
     autoFilterEnabled: true,
   }).then(() => {
-    workbook.xlsx.writeBuffer().then((buffer: ArrayBuffer) => {
+    workbook.xlsx.writeBuffer().then((buffer) => {
       saveAs(
-        new Blob([buffer], { type: "application/octet-stream" }),
+        new Blob([buffer], {type: "application/octet-stream"}),
         "StokListesi.xlsx"
       );
     });
@@ -1339,20 +1261,20 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
 
 .options {
   position: relative;
-  background-color: rgba(191 191 191 / 15%);
+  padding: 20px;
+  background-color: rgba(191, 191, 191, 15%);
   margin-block-start: 20px;
-  padding-block: 20px;
-  padding-inline: 20px;
 }
 
 .toplam {
-  border: 1px solid rgb(250 174 119);
-  border-radius: 5px;
-  background-color: rgb(255 249 216);
-  color: #000;
+  background-color: rgb(255, 249, 216);
+  padding: 0 5px 0 5px;
+  color: black;
   font-weight: bold;
-  padding-block: 0;
-  padding-inline: 5px;
+  border-color: rgb(250, 174, 119);
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 5px;
 }
 
 .caption {
@@ -1380,33 +1302,33 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
 }
 
 #chart {
-  block-size: 440px;
+  height: 440px;
 }
 
 .tooltip-header {
-  border-block-end: 1px solid #c5c5c5;
+  margin-bottom: 5px;
   font-size: 16px;
   font-weight: 500;
-  margin-block-end: 5px;
-  padding-block-end: 5px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #c5c5c5;
 }
 
 .tooltip-body {
-  inline-size: 170px;
+  width: 170px;
 }
 
 .tooltip-body .series-name {
-  display: inline-block;
   font-weight: normal;
-  inline-size: 126px;
-  line-height: 1.5;
   opacity: 0.6;
-  padding-inline-end: 10px;
+  display: inline-block;
+  line-height: 1.5;
+  padding-right: 10px;
+  width: 126px;
 }
 
 .tooltip-body .value-text {
   display: inline-block;
-  inline-size: 30px;
   line-height: 1.5;
+  width: 30px;
 }
 </style>
