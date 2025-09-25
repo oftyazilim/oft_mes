@@ -2,6 +2,8 @@ import VueI18nPlugin from "@intlify/unplugin-vue-i18n/vite";
 import vue from "@vitejs/plugin-vue";
 import vueJsx from "@vitejs/plugin-vue-jsx";
 import laravel from "laravel-vite-plugin";
+import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
@@ -23,6 +25,33 @@ const buildTime = (() => {
   return `${pad(now.getDate())}.${pad(
     now.getMonth() + 1
   )}.${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+})();
+
+// Uygulama versiyonu (package.json + git kısa hash) - isteğe bağlı APP_VERSION override
+const appVersion = (() => {
+  let pkgVersion = "0.0.0";
+  try {
+    const pkgJson = JSON.parse(
+      readFileSync(new URL("./package.json", import.meta.url), "utf-8")
+    );
+    pkgVersion = pkgJson.version || pkgVersion;
+  } catch (e) {
+    // ignore
+  }
+
+  let gitHash = "";
+  try {
+    gitHash = execSync("git rev-parse --short HEAD", {
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .toString()
+      .trim();
+  } catch (e) {
+    // repo olmayabilir ya da git yok - sorun değil
+  }
+
+  const base = process.env.APP_VERSION || pkgVersion;
+  return gitHash && !base.includes(gitHash) ? `${base}+${gitHash}` : base;
 })();
 
 export default defineConfig({
@@ -128,7 +157,11 @@ export default defineConfig({
     }),
     svgLoader(),
   ],
-  define: { "process.env": {}, __BUILD_TIME__: JSON.stringify(buildTime) },
+  define: {
+    "process.env": {},
+    __BUILD_TIME__: JSON.stringify(buildTime),
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   resolve: {
     alias: {
       // Avoid bundling native fsevents in browser build
