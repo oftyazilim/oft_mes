@@ -346,11 +346,11 @@ class DepoMamulController extends Controller
         $data  = $query->get();
 
         // $total = $query->count();
-        Log::info('StokListele response', ['total' => $total]);
+        // Log::info('StokListele response', ['total' => $total]);
         // $data = $query->get()->set_time_limit(1500)->limit(1000);
 
-        Log::info('StokListele request', $request->all());
-        Log::info('StokListele response', ['data_count' => count($data)]);
+        // Log::info('StokListele request', $request->all());
+        // Log::info('StokListele response', ['data_count' => count($data)]);
 
         return response()->json([
             'data' => $data,

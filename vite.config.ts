@@ -16,6 +16,15 @@ import vuetify from "vite-plugin-vuetify";
 import svgLoader from "vite-svg-loader";
 
 // https://vitejs.dev/config/
+const buildTime = (() => {
+  // İstanbul/Türkiye saat dilimi formatı
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(now.getDate())}.${pad(
+    now.getMonth() + 1
+  )}.${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+})();
+
 export default defineConfig({
   plugins: [
     // Docs: https://github.com/posva/unplugin-vue-router
@@ -119,7 +128,7 @@ export default defineConfig({
     }),
     svgLoader(),
   ],
-  define: { "process.env": {} },
+  define: { "process.env": {}, __BUILD_TIME__: JSON.stringify(buildTime) },
   resolve: {
     alias: {
       // Avoid bundling native fsevents in browser build
