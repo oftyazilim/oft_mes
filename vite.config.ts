@@ -54,6 +54,18 @@ const appVersion = (() => {
   return gitHash && !base.includes(gitHash) ? `${base}+${gitHash}` : base;
 })();
 
+// Son commit mesaj özeti (ilk satır) - hata durumunda boş string
+const lastCommitSummary = (() => {
+  try {
+    const msg = execSync('git log -1 --pretty=%s', { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim();
+    return msg;
+  } catch (e) {
+    return '';
+  }
+})();
+
 export default defineConfig({
   plugins: [
     // Docs: https://github.com/posva/unplugin-vue-router
@@ -161,6 +173,7 @@ export default defineConfig({
     "process.env": {},
     __BUILD_TIME__: JSON.stringify(buildTime),
     __APP_VERSION__: JSON.stringify(appVersion),
+    __LAST_COMMIT_SUMMARY__: JSON.stringify(lastCommitSummary),
   },
   resolve: {
     alias: {

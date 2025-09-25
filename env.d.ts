@@ -14,6 +14,8 @@ declare module "vue-router" {
 declare const __BUILD_TIME__: string;
 // Global app version (enjekte edilir)
 declare const __APP_VERSION__: string;
+// Global last commit summary (enjekte edilir)
+declare const __LAST_COMMIT_SUMMARY__: string;
 declare module "vue-router" {
   interface RouteMeta {
     action?: string | string[];
