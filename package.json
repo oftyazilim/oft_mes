@@ -1,6 +1,6 @@
 {
-  "name": "vuexy-vuejs-laravel-admin-template",
-  "version": "9.4.0",
+  "name": "oft-mes",
+  "version": "25.1.1",
   "private": true,
   "type": "module",
   "scripts": {

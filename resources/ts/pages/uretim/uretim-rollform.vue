@@ -234,10 +234,10 @@
                       <div class="bilgi">{{ worksInfo?.item_name }}</div>
                     </div>
                   </div>
-                  <div width="60%">
+                  <!-- <div width="60%">
                     <div class="label">Ürün Boyu</div>
                     <div class="bilgi">{{ fmt0(worksInfo?.item_length) }}</div>
-                  </div>
+                  </div> -->
                   <VRow class="mt-1">
                     <VCol cols="6" class="mt-0 py-2 pe-1">
                       <VBtn id="hurdaGir" block variant="outlined" color="error" @click="openHurdaDialog">
@@ -348,24 +348,30 @@
       </VCard>
     </VDialog>
 
-    <!-- İş Emri Aktivasyon Diyaloğu -->
-    <VDialog v-model="activateDialog" max-width="420" @keydown.esc.prevent.stop="activateDialog = false">
+    <!-- İş Emri Aktivasyon Diyaloğu (Boy sorulmaz, özet gösterilir) -->
+    <VDialog v-model="activateDialog" max-width="480" @keydown.esc.prevent.stop="activateDialog = false">
       <VCard>
         <VCardTitle>İş Emrini Aktif Et</VCardTitle>
         <VCardText>
-          <form @submit.prevent="confirmActivate">
-            <div class="mb-2"><strong>{{ activateRow?.isEmriNo }}</strong> – {{ activateRow?.stokKodu }}</div>
-            <div class="mb-2">{{ activateRow?.stokAdi }}</div>
-            <VTextField ref="activateLengthInput" v-model.number="activateLength" type="number" label="Ürün Boyu (mm)"
-              variant="outlined" density="compact" autofocus @keydown.enter.prevent="confirmActivate"
-              @keydown.esc.prevent.stop="activateDialog = false" />
-            <button type="submit" style="display: none;"></button>
-          </form>
+          <div class="rf-activate-summary">
+            <div class="mb-2"><strong>İş Emri No:</strong> {{ activateRow?.isEmriNo }}</div>
+            <div class="mb-2"><strong>Stok Kodu:</strong> {{ activateRow?.stokKodu }}</div>
+            <div class="mb-2"><strong>Stok Adı:</strong> {{ activateRow?.stokAdi }}</div>
+            <div class="d-flex flex-wrap mb-1" style="font-size: 0.8rem; gap: 12px;">
+              <div><strong>Plan:</strong> {{ fmt0(activateRow?.plnAd) }}</div>
+              <div><strong>İlave:</strong> {{ fmt0(activateRow?.ilvAd) }}</div>
+              <div><strong>Kalan:</strong> {{ fmt0(activateRow?.klnAd) }}</div>
+              <div><strong>Üretilen:</strong> {{ fmt0(activateRow?.urtAd) }}</div>
+              <div><strong>Hurda:</strong> {{ fmt0(activateRow?.hurda) }}</div>
+            </div>
+            <div class="text-caption" style="opacity: 0.7;">Bu iş emrini istasyonda aktif etmek istediğinize emin
+              misiniz?</div>
+          </div>
         </VCardText>
         <VCardActions>
           <VSpacer />
-          <VBtn variant="text" @click="activateDialog = false">İptal</VBtn>
-          <VBtn color="primary" variant="flat" @click="confirmActivate" :disabled="!activateLength">Onayla</VBtn>
+          <VBtn variant="text" @click="activateDialog = false">Vazgeç</VBtn>
+          <VBtn color="primary" variant="flat" @click="confirmActivate">Onayla</VBtn>
         </VCardActions>
       </VCard>
     </VDialog>
@@ -525,12 +531,10 @@ function toUnitsPerHour(speedMPerMin: number | null | undefined, itemLenMm: numb
   if (!Number.isFinite(v) || !Number.isFinite(Lmm) || Lmm <= 0) return 0
   return (v * 60000) / Lmm
 }
-const speedUnitsHour = computed(() => worksInfo.value?.speed)
-const speedMaxUnitsHour = computed(() => worksInfo.value?.speed_max)
-const speedTargetUnitsHour = computed(() => worksInfo.value?.speed_target)
-// const speedUnitsHour = computed(() => toUnitsPerHour(worksInfo.value?.speed, worksInfo.value?.item_length))
-// const speedMaxUnitsHour = computed(() => toUnitsPerHour(worksInfo.value?.speed_max, worksInfo.value?.item_length))
-// const speedTargetUnitsHour = computed(() => toUnitsPerHour(worksInfo.value?.speed_target, worksInfo.value?.item_length))
+
+const speedUnitsHour = computed(() => toUnitsPerHour(worksInfo.value?.speed, worksInfo.value?.item_length))
+const speedMaxUnitsHour = computed(() => toUnitsPerHour(worksInfo.value?.speed_max, worksInfo.value?.item_length))
+const speedTargetUnitsHour = computed(() => toUnitsPerHour(worksInfo.value?.speed_target, worksInfo.value?.item_length))
 
 // Gauge görsel ayarları (mevcut tanım yoksa basit defaultlar)
 const gaugeTooltip = { enabled: false } as any
@@ -967,12 +971,12 @@ const actionButtons = [{
 
 // Aktivasyon diyaloğu state
 const activateDialog = ref(false)
-const activateLength = ref<number | null>(null)
+// Boy kaldırıldı, referans tutulmuyor
+const activateLength = ref<number | null>(null) // legacy (kullanılmıyor)
 const activateRow = ref<Row | null>(null)
 
 function openActivateDialog(row: Row) {
   activateRow.value = row
-  activateLength.value = null
   activateDialog.value = true
 }
 
@@ -1008,7 +1012,6 @@ async function saveUretimGirisi() {
 
 async function confirmActivate() {
   if (!activateRow.value) return
-  const length = Number(activateLength.value ?? 0)
   const stationIdValue = stationId.value
   if (!stationIdValue) return
   const payload = {
@@ -1018,7 +1021,7 @@ async function confirmActivate() {
     item_id: 0,
     item_code: activateRow.value.stokKodu,
     item_name: activateRow.value.stokAdi,
-    item_length: length,
+    // item_length kaldırıldı
     order_qty: Number(activateRow.value.plnAd ?? 0),
     net_qty: Number(activateRow.value.urtAd ?? 0),
     scrap_qty: Number(activateRow.value.hurda ?? 0),
@@ -1026,7 +1029,6 @@ async function confirmActivate() {
   try {
     await axios.post('/api/uretim-rollform/activate-workorder', payload)
     activateDialog.value = false
-    // Aktif iş emri ve sayıları tazele
     fetchWorksInfo()
   } catch (e) {
     console.error('Aktivasyon hatası', e)

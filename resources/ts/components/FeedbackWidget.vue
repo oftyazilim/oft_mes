@@ -14,7 +14,9 @@
             <VIcon color="primary" icon="tabler-stars" />
             <span>Geri Bildirim</span>
           </div>
-          <VBtn icon variant="text" @click="open = false"><VIcon icon="tabler-x" /></VBtn>
+          <VBtn icon variant="text" @click="open = false">
+            <VIcon icon="tabler-x" />
+          </VBtn>
         </VCardTitle>
         <VCardText>
           <VAlert type="info" variant="tonal" class="mb-4">
@@ -23,7 +25,8 @@
 
           <VRow @paste="onPaste">
             <VCol cols="12" md="6">
-              <VSelect v-model="form.category" :items="kategoriler" label="Kategori *" :rules="[v => !!v || 'Kategori zorunludur']" />
+              <VSelect v-model="form.category" :items="kategoriler" label="Kategori *"
+                :rules="[v => !!v || 'Kategori zorunludur']" />
             </VCol>
             <VCol cols="12" md="6">
               <VTextField v-model="form.email" label="E‑posta (opsiyonel)" type="email" clearable />
@@ -32,7 +35,7 @@
               <div class="mb-1 text-medium-emphasis">Memnuniyet</div>
               <div class="stars">
                 <VBtn v-for="n in 5" :key="n" icon variant="text" :color="n <= (form.rating||0) ? 'warning' : ''"
-                      @click="form.rating = n">
+                  @click="form.rating = n">
                   <VIcon :icon="n <= (form.rating||0) ? 'tabler-star-filled' : 'tabler-star'" size="28" />
                 </VBtn>
               </div>
@@ -41,14 +44,9 @@
               <VTextarea v-model="form.message" auto-grow rows="4" counter="5000" label="Mesajınız" />
             </VCol>
             <VCol cols="12" md="8">
-              <VFileInput
-                v-model="screenshot"
-                accept="image/*"
-                label="Ekran görüntüsü (opsiyonel) — panodan yapıştırabilirsiniz"
-                prepend-icon=""
-                readonly
-                @click.stop.prevent
-              >
+              <VFileInput v-model="screenshot" accept="image/*"
+                label="Ekran görüntüsü (opsiyonel) — panodan yapıştırabilirsiniz" prepend-icon="" readonly
+                @click.stop.prevent>
                 <template #prepend>
                   <IconBtn color="primary" @click.stop="chooseFile" :title="'Görsel seç'">
                     <VIcon icon="tabler-camera" />
@@ -72,8 +70,12 @@
           </VRow>
         </VCardText>
         <VCardActions class="justify-end">
-          <VBtn variant="text" @click="open = false">İptal</VBtn>
-          <VBtn color="primary" :loading="loading" @click="submit">Gönder</VBtn>
+          <div class="flex-grow-1 text-error text-caption" v-if="validationError">{{ validationError }}</div>
+          <VBtn variant="text" :disabled="loading" @click="open = false">İptal</VBtn>
+          <VBtn color="primary" :loading="loading" :disabled="loading || !canSubmit" @click="submit">
+            <template v-if="!loading">Gönder</template>
+            <template v-else>Gönderiliyor...</template>
+          </VBtn>
         </VCardActions>
       </VCard>
     </VDialog>
@@ -87,19 +89,20 @@
       {{ errorText || 'Gönderim sırasında bir hata oluştu.' }}
     </VSnackbar>
   </div>
-  
- </template>
+
+</template>
 
 <script setup lang="ts">
 import axios from 'axios';
 import html2canvas from 'html2canvas';
-import { onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 
 // Navbar içinde ikon olarak kullanılabilmesi için mod
 const props = defineProps<{ iconMode?: boolean }>()
 
 const open = ref(false)
 const loading = ref(false)
+const validationError = ref('')
 const snack = reactive({ success: false, error: false })
 const errorText = ref('')
 const kategoriler = [
@@ -183,13 +186,20 @@ const onFileChange = (ev: Event) => {
   if (input) input.value = ''
 }
 
+const canSubmit = computed(() => !!form.category && !!form.message && form.message.trim().length >= 5)
+
 const submit = async () => {
+  validationError.value = ''
   if (!form.category) {
+    validationError.value = 'Kategori zorunlu.'
     snack.error = true
     errorText.value = 'Lütfen kategori seçiniz.'
     return
   }
-  if (!form.message || form.message.trim().length < 5) return
+  if (!form.message || form.message.trim().length < 5) {
+    validationError.value = 'Mesaj en az 5 karakter olmalı.'
+    return
+  }
   loading.value = true
   try {
     const fd = new FormData()
