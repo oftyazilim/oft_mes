@@ -75,7 +75,7 @@ class IhtiyacController extends Controller
         })
         ->whereNot('OPERASYON', 'HAYALET')
         ->whereNot('OPERASYON_KODU', 'M12')
-        ->where('is_sub_worder', 0)
+        // ->where('is_sub_worder', 0)
         ->where('Rotadaki_Son_Operasyon', 1)
         ->groupBy('isemri_id', 'isemri_no', 'stok_id', 'stok_kodu', 'stok_adi', 'CIKIS_DEPO', 'siparis_belge_no', 'cari_ad', 'IS_MERKEZI_KODU', 'IS_MERKEZI_ADI')
         ->orderBy('stok', 'asc')
