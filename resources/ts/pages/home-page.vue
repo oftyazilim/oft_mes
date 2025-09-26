@@ -16,12 +16,59 @@ onMounted(() => {
     }, 3200) // yumuşak geçiş aralığı
   }
 })
+
+// window.setTimeout = null;
 </script>
 
 <template>
   <VCard class="welcome-page">
+
+
+<!--
+This demo was very old and overly complex
+I have updated it with a cleaner, more modern technique
+It still uses mix-blend-modes, so the basic idea hasn't changed
+
+Original:
+https://codepen.io/giana/pen/MWxONWm
+-->
+<!-- <div class="text-effect-wrapper">
+  <h1 class="text" contenteditable>oft mes</h1>
+</div>
+
+<label for="option-toggle">
+  <input type="checkbox" id="option-toggle"> Version toggle
+</label> -->
+
+
+
+
+<!-- <div class="stage">
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+  <div class="layer"></div>
+</div> -->
+
+
+ 
     <div class="welcome-card">
-      <!-- <img src="/images/svg/undraw_team_spirit.svg" alt="Motivasyon" class="welcome-image" /> -->
       <h1 class="welcome-title gradient-cycle">
         <span class="title-text">OFT MES'e Hoşgeldiniz!</span>
         <span class="shine" aria-hidden="true" />
@@ -202,4 +249,5 @@ onMounted(() => {
     inline-size: 80px;
   }
 }
+
 </style>

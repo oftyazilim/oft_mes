@@ -89,6 +89,7 @@ class KaliteController extends Controller
                 'oftt_kontrol_isemri.is_active',
                 'oftt_kontrol_isemri.isemri_id'
             )
+            ->orderBy('oftt_kontrol_isemri.id', 'desc')
             ->get();
 
         return response()->json($aktifler);
@@ -377,27 +378,54 @@ class KaliteController extends Controller
     {
         $urunKodu = $request->input('urunKodu');
         $selectedIds = $request->input('selected_ids', []);
+        $userId = (int) ($request->userId ?? 0);
 
-        // Önceki kayıtları sil
-        DB::connection('pgsql_oft')
-            ->table('oftt_urun_agaci_kontrol')
-            ->where('urun_kodu', $urunKodu)
-            ->delete();
+        try {
+            DB::connection('pgsql_oft')->beginTransaction();
 
-        // Yeni kayıtları ekle
-        foreach ($selectedIds as $itemId) {
+            // Önce bu ürün için eski kayıtları sil
             DB::connection('pgsql_oft')
                 ->table('oftt_urun_agaci_kontrol')
-                ->insert([
-                    'urun_kodu' => $urunKodu,
-                    'item_id' => $itemId,
+                ->where('urun_kodu', $urunKodu)
+                ->delete();
+
+            // Bazı ortamlarda sequence geride kalabiliyor. Primary key çakışmasını önlemek için senkronize et.
+            // Not: pg_get_serial_sequence tablo için doğru sequence adını otomatik bulur.
+            DB::connection('pgsql_oft')->statement(<<<'SQL'
+                SELECT setval(
+                    pg_get_serial_sequence('oftt_urun_agaci_kontrol','id'),
+                    COALESCE((SELECT MAX(id) FROM oftt_urun_agaci_kontrol), 0)
+                )
+            SQL);
+
+            // Yeni kayıtları ekle
+            foreach ($selectedIds as $itemId) {
+                DB::connection('pgsql_oft')
+                    ->table('oftt_urun_agaci_kontrol')
+                    ->insert([
+                    'urun_kodu'  => $urunKodu,
+                    'item_id'    => $itemId,
                     'created_at' => now(),
                     'updated_at' => now(),
-                    'personel_id' => $request->userId ?? 0,
-                ]);
-        }
+                        'personel_id' => $userId,
+                    ]);
+            }
 
-        return response()->json(['status' => 'ok']);
+            DB::connection('pgsql_oft')->commit();
+            return response()->json(['status' => 'ok']);
+        } catch (\Throwable $e) {
+            DB::connection('pgsql_oft')->rollBack();
+            Log::error('UrunAgaciKaydet hata: ' . $e->getMessage(), [
+                'urun_kodu' => $urunKodu,
+                'selected_ids' => $selectedIds,
+                'userId' => $userId,
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ürün ağacı seçimleri kaydedilemedi.',
+                'error_code' => (int) $e->getCode(),
+            ], 500);
+        }
     }
 
     public function KontrolAcKaydet(Request $request)

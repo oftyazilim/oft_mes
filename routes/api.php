@@ -184,6 +184,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/uretim-rollform/detect-station', [UretimRollFormController::class, 'detectStation']);
   Route::post('/uretim-rollform/close-and-open-down', [UretimRollFormController::class, 'closeAndOpenDown']);
   Route::post('/uretim-rollform/set-operator', [UretimRollFormController::class, 'setOperator']);
+  Route::post('/uretim-rollform/adjust-counter', [UretimRollFormController::class, 'adjustCounter']);
 });
 
 // satis

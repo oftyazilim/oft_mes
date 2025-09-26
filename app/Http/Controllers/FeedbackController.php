@@ -80,18 +80,12 @@ class FeedbackController extends Controller
             'status' => 'new',
         ]);
 
-        // Opsiyonel e-posta bildirimi: config üzerinden FEEDBACK_NOTIFY
-        $dbRecipients = optional(NotificationSetting::firstWhere('channel', 'feedback'))->recipients ?? [];
-        $notifyRaw = (!empty($dbRecipients) ? $dbRecipients : null)
-            ?: config('services.feedback.notify_to')
-            ?: (config('mail.feedback_notify_to') ?? env('FEEDBACK_NOTIFY'));
-        $notifyList = collect(is_string($notifyRaw) ? preg_split('/[,;\s]+/', $notifyRaw) : (array) $notifyRaw)
-            ->filter(fn($e) => is_string($e) && trim($e) !== '')
-            ->map(fn($e) => trim($e))
-            ->unique()
-            ->values()
-            ->all();
-        if (!empty($notifyList)) {
+        // --- Bildirim Alıcıları (çok katmanlı fallback + teşhis logları) ---
+        $notifyList = $this->resolveFeedbackRecipients();
+        Log::info('Feedback recipients resolved', ['feedback_id' => $fb->id, 'count' => count($notifyList), 'list' => $notifyList]);
+        if (empty($notifyList)) {
+            Log::warning('Feedback mail SKIPPED: recipient list empty', ['feedback_id' => $fb->id]);
+        } else {
             try {
                 $screenshotUrl = $path ? asset('storage/' . ltrim($path, '/')) : null;
                 $payload = [
@@ -104,13 +98,63 @@ class FeedbackController extends Controller
                     'screenshot_url' => $screenshotUrl,
                     'screenshot_path' => $path,
                 ];
+                Log::info('Feedback mail SEND attempt', ['feedback_id' => $fb->id, 'recipients' => $notifyList]);
                 Mail::to($notifyList)->send(new HataBildirimiMail($payload));
+                Log::info('Feedback mail SENT', ['feedback_id' => $fb->id]);
             } catch (\Throwable $e) {
-                Log::warning('Feedback mail gönderilemedi: '.$e->getMessage());
+                Log::warning('Feedback mail gönderilemedi', [
+                    'feedback_id' => $fb->id,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
 
         return response()->json(['ok' => true, 'id' => $fb->id]);
+    }
+
+    /**
+     * Çok katmanlı fallback ile feedback mail alıcılarını çözer.
+     * Katmanlar sırası:
+     * 1) notification_settings.channel=feedback (boş array ise yok sayılır)
+     * 2) config('services.feedback.notify_to')
+     * 3) config('mail.feedback_notify_to')
+     * 4) env('FEEDBACK_NOTIFY')
+     */
+    protected function resolveFeedbackRecipients(): array
+    {
+        // 1) DB
+        $db = optional(NotificationSetting::firstWhere('channel', 'feedback'))->recipients;
+        $dbList = $this->normalizeRecipients($db);
+        if (!empty($dbList)) return $dbList;
+
+        // 2) services config
+        $svc = $this->normalizeRecipients(config('services.feedback.notify_to'));
+        if (!empty($svc)) return $svc;
+
+        // 3) mail config
+        $mailCfg = $this->normalizeRecipients(config('mail.feedback_notify_to'));
+        if (!empty($mailCfg)) return $mailCfg;
+
+        // 4) env fallback
+        return $this->normalizeRecipients(env('FEEDBACK_NOTIFY'));
+    }
+
+    protected function normalizeRecipients($raw): array
+    {
+        if (empty($raw)) return [];
+        if (is_string($raw)) {
+            $raw = preg_split('/[,;\s]+/', $raw);
+        }
+        if (!is_array($raw)) return [];
+        return collect($raw)
+            ->filter(fn($e) => is_string($e) && trim($e) !== '')
+            ->map(fn($e) => strtolower(trim($e)))
+            ->filter(function ($e) {
+                return filter_var($e, FILTER_VALIDATE_EMAIL);
+            })
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public function update(Request $request, int $id)

@@ -241,7 +241,7 @@
                   <VRow class="mt-1">
                     <VCol cols="6" class="mt-0 py-2 pe-1">
                       <VBtn id="hurdaGir" block variant="outlined" color="error" @click="openHurdaDialog">
-                        F8 - Hurda Girişi
+                        F7 - Hurda Girişi
                       </VBtn>
                     </VCol>
                     <VCol cols="6" class="mt-0 py-2 ps-1">
@@ -371,7 +371,13 @@
         <VCardActions>
           <VSpacer />
           <VBtn variant="text" @click="activateDialog = false">Vazgeç</VBtn>
-          <VBtn color="primary" variant="flat" @click="confirmActivate">Onayla</VBtn>
+          <VBtn color="primary" variant="flat" @click="confirmActivate" :loading="activateLoading"
+            :disabled="activateLoading">
+            <template v-if="activateLoading">
+              <VProgressCircular indeterminate size="18" color="white" class="mr-2" /> Aktarılıyor...
+            </template>
+            <template v-else>Onayla</template>
+          </VBtn>
         </VCardActions>
       </VCard>
     </VDialog>
@@ -758,6 +764,7 @@ async function yeniDurusF8() {
   if (!stationId.value) return
   try {
     await axios.post('/api/uretim-rollform/close-and-open-down', { station_id: stationId.value })
+    // F8 kısayolu ile tetiklenir: önceki event kapatılır, yeni DOWN event kopyalanmış alanlarla açılır.
     notify({ message: 'Yeni duruş başlatıldı (F8)', type: 'success', displayTime: 1500 })
     void Promise.allSettled([fetchWorksInfo(), fetchKpiDirect()])
   } catch (e) {
@@ -885,7 +892,44 @@ async function kaydetHurda() {
 }
 
 function cancelHurda() { hurdaInput.value = ''; hurdaDialog.value = false }
-function handleHurdaShortcut(e: KeyboardEvent) { if (e.key === 'F8') { openHurdaDialog(); e.preventDefault() } }
+function handleHurdaShortcut(e: KeyboardEvent) { if (e.key === 'F7') { openHurdaDialog(); e.preventDefault() } }
+
+// --- Sayaç +/- kısayolları (F4: -1, F5: +1) 5 sn throttle ---
+const lastCounterAdjustTs = ref<number>(0)
+async function adjustCounter(delta: 1 | -1) {
+  if (!stationId.value) return
+  // 5sn throttle
+  const now = Date.now()
+  if (now - lastCounterAdjustTs.value < 5000) {
+    const kalan = Math.ceil((5000 - (now - lastCounterAdjustTs.value)) / 1000)
+    notify({ message: `Sayaç işlemi için ${kalan}s bekleyin`, type: 'warning', displayTime: 1200 })
+    return
+  }
+  lastCounterAdjustTs.value = now
+  // Optimistik güncelle (UI hızlı tepki versin)
+  const prev = worksInfo.value ? { ...worksInfo.value } : null
+  if (worksInfo.value) {
+    const nextCounter = Math.max(0, Number(worksInfo.value.counter || 0) + delta)
+    worksInfo.value = { ...worksInfo.value, counter: nextCounter } as any
+  }
+  try {
+    await axios.post('/api/uretim-rollform/adjust-counter', { station_id: stationId.value, delta })
+    // Sunucu sonrası tazele (arka planda)
+    void fetchWorksInfo()
+  } catch (err: any) {
+    console.error('Sayaç ayarlanamadı', err)
+    // Geri al
+    if (prev) worksInfo.value = prev as any
+    notify({ message: 'Sayaç güncellenemedi', type: 'error', displayTime: 1800 })
+    // Hata durumunda throttle süresini sıfırla ki tekrar denenebilsin
+    lastCounterAdjustTs.value = 0
+  }
+}
+
+window.addEventListener('keydown', (e: KeyboardEvent) => {
+  if (e.key === 'F4') { e.preventDefault(); adjustCounter(-1) }
+  else if (e.key === 'F5') { e.preventDefault(); adjustCounter(1) }
+})
 
 // Durum bilgileri
 const durusSebebi = ref('uretim-disi')
@@ -974,6 +1018,7 @@ const activateDialog = ref(false)
 // Boy kaldırıldı, referans tutulmuyor
 const activateLength = ref<number | null>(null) // legacy (kullanılmıyor)
 const activateRow = ref<Row | null>(null)
+const activateLoading = ref(false)
 
 function openActivateDialog(row: Row) {
   activateRow.value = row
@@ -1027,12 +1072,17 @@ async function confirmActivate() {
     scrap_qty: Number(activateRow.value.hurda ?? 0),
   }
   try {
+    if (activateLoading.value) return
+    activateLoading.value = true
     await axios.post('/api/uretim-rollform/activate-workorder', payload)
+    notify({ message: 'İş emri aktifleştirildi', type: 'success', displayTime: 1600 })
     activateDialog.value = false
     fetchWorksInfo()
   } catch (e) {
     console.error('Aktivasyon hatası', e)
+    notify({ message: 'İş emri aktifleştirilemedi', type: 'error', displayTime: 1800 })
   }
+  finally { activateLoading.value = false }
 }
 
 let timer: ReturnType<typeof setInterval> | null = null

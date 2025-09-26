@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use App\Services\LogService;
 use Illuminate\Auth\Events\Validated;
 use Carbon\Carbon;
@@ -360,34 +361,49 @@ class UretimRollFormController extends Controller
       'wstation_id' => 'required',
       'worder_id' => 'required',
       'worder_no' => 'required',
-      'item_id' => 'required',
+      // Boy alanı popup'tan kaldırıldığı için item_id ve item_length zorunlulukları esnetildi.
+      'item_id' => 'nullable',
       'item_code' => 'required',
       'item_name' => 'required',
-      'item_length' => 'required|numeric',
+      'item_length' => 'nullable|numeric',
       'order_qty' => 'required|numeric',
       'net_qty' => 'nullable|numeric',
       'scrap_qty' => 'nullable|numeric',
     ]);
-
+    // Güncellenecek alanları dinamik oluştur (nullable alanları boşsa dokunma)
     $payload = [
       'worder_id' => $validated['worder_id'],
       'worder_no' => $validated['worder_no'],
-      'item_id' => $validated['item_id'],
       'item_code' => $validated['item_code'],
       'item_name' => $validated['item_name'],
-      'item_length' => $validated['item_length'],
       'order_qty' => $validated['order_qty'],
       'net_qty' => $validated['net_qty'] ?? 0,
       'scrap_qty' => $validated['scrap_qty'] ?? 0,
       'counter' => 0,
     ];
+    if (array_key_exists('item_id', $validated) && $validated['item_id'] !== null && $validated['item_id'] !== '') {
+      $payload['item_id'] = $validated['item_id'];
+    }
+    if (array_key_exists('item_length', $validated) && $validated['item_length'] !== null && $validated['item_length'] !== '') {
+      $payload['item_length'] = $validated['item_length'];
+    }
 
-    DB::connection('pgsql_oft')
-      ->table('oftt_works_info')
-      ->where('wstation_id', $validated['wstation_id'])
-      ->update($payload);
-
-    return response()->json(['message' => 'Aktif iş emri güncellendi']);
+    try {
+      DB::connection('pgsql_oft')
+        ->table('oftt_works_info')
+        ->where('wstation_id', $validated['wstation_id'])
+        ->update($payload);
+      return response()->json([
+        'message' => 'Aktif iş emri güncellendi',
+        'updated_fields' => array_keys($payload),
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('activateWorkorder hata', [
+        'err' => $e->getMessage(),
+        'wstation_id' => $validated['wstation_id'] ?? null,
+      ]);
+      return response()->json(['error' => 'Aktif iş emri güncellenemedi'], 500);
+    }
   }
 
   /**
@@ -451,27 +467,45 @@ class UretimRollFormController extends Controller
     $sid = (int)$validated['station_id'];
     try {
       DB::connection('pgsql_oft')->transaction(function () use ($sid) {
-        // Mevcut aktif kaydı kapat
-        DB::connection('pgsql_oft')->update(
-          'UPDATE machine_events SET end_ts = now() WHERE id = (
-             SELECT id FROM machine_events
-             WHERE wstation_id = ? AND end_ts IS NULL
-             ORDER BY id DESC LIMIT 1
-           )',
-          [$sid]
-        );
-        // Yeni DOWN kaydını aç
-        DB::connection('pgsql_oft')->table('machine_events')->insert([
+        // Mevcut aktif kaydı al ve kapat
+        $last = DB::connection('pgsql_oft')
+          ->table('machine_events')
+          ->where('wstation_id', $sid)
+          ->whereNull('end_ts')
+          ->orderByDesc('id')
+          ->first();
+
+        if ($last) {
+          DB::connection('pgsql_oft')
+            ->table('machine_events')
+            ->where('id', $last->id)
+            ->update(['end_ts' => DB::raw('now()')]);
+        }
+
+        // Kopyalanacak alanlar: good_count_inc, scrap_count_inc dahil değil (0'dan başlatmak mantıklı) – ancak istenirse korunabilir.
+        // Field listesi bilinmiyorsa select * üstünden obje klonlanır.
+        $insert = [
           'wstation_id' => $sid,
-          'state' => 'DOWN',
+          'state' => 'DOWN', // her zaman DOWN aç
           'event_ts' => DB::raw('now()'),
           'end_ts' => null,
           'good_count_inc' => 0,
           'scrap_count_inc' => 0,
-          // Varsayılan açıklama ve kod – ilk açılışta anlamlı değerler olsun
           'break_description' => 'GİRİLMEDİ',
           'break_reason_code' => '000',
-        ]);
+        ];
+
+        if ($last) {
+          // Varsa ek alanları olduğu gibi taşı (whitelist yaklaşımı)
+          $copyFields = ['operator_id', 'shift_id', 'speed_set', 'speed_actual'];
+          foreach ($copyFields as $f) {
+            if (property_exists($last, $f)) {
+              $insert[$f] = $last->$f;
+            }
+          }
+        }
+
+        DB::connection('pgsql_oft')->table('machine_events')->insert($insert);
         // Çalışma kartında da varsayılan açıklamayı yaz (operatör seçerse sonra güncellenecek)
         DB::connection('pgsql_oft')
           ->table('oftt_works_info')
@@ -482,6 +516,58 @@ class UretimRollFormController extends Controller
     } catch (\Throwable $e) {
       Log::error('closeAndOpenDown error', ['err' => $e->getMessage(), 'station_id' => $sid]);
       return response()->json(['error' => 'İşlem tamamlanamadı'], 500);
+    }
+  }
+
+  /**
+   * Sayaç +/- 1 ayarla. Her istasyon için 5 sn aralık zorunluluğu (throttle).
+   * İstek: station_id (int), delta (-1 veya 1)
+   * Etkiler: oftt_works_info.counter += delta (>=0 sınırı)
+   *          machine_events aktif satır: good_count_inc += delta (>=0 sınırı)
+   */
+  public function adjustCounter(Request $request)
+  {
+    $validated = $request->validate([
+      'station_id' => 'required|numeric',
+      'delta' => 'required|in:-1,1',
+    ]);
+    $sid = (int)$validated['station_id'];
+    $delta = (int)$validated['delta'];
+
+    // 5 sn throttle
+    $key = "rf:counter:throttle:" . $sid;
+    $lastTs = Cache::get($key);
+    $now = time();
+    if (is_numeric($lastTs) && ($now - (int)$lastTs) < 5) {
+      $wait = 5 - ($now - (int)$lastTs);
+      return response()->json(['error' => 'Çok sık istek', 'retry_after' => $wait], 429);
+    }
+
+    try {
+      DB::connection('pgsql_oft')->transaction(function () use ($sid, $delta) {
+        // oftt_works_info.counter güncelle
+        DB::connection('pgsql_oft')->update(
+          'UPDATE oftt_works_info SET counter = GREATEST(counter + ?, 0) WHERE wstation_id = ?',
+          [$delta, $sid]
+        );
+
+        // machine_events aktif satır good_count_inc güncelle (negatif olmasın)
+        DB::connection('pgsql_oft')->update(
+          'UPDATE machine_events me
+             SET good_count_inc = GREATEST(me.good_count_inc + ?, 0)
+           WHERE me.id = (
+             SELECT id FROM machine_events
+             WHERE wstation_id = ? AND end_ts IS NULL
+             ORDER BY id DESC LIMIT 1
+           )',
+          [$delta, $sid]
+        );
+      });
+      Cache::put($key, $now, 10); // referans ts sakla; ttl opsiyonel
+      return response()->json(['ok' => true]);
+    } catch (\Throwable $e) {
+      Log::error('adjustCounter hata', ['err' => $e->getMessage(), 'station_id' => $sid, 'delta' => $delta]);
+      return response()->json(['error' => 'Sayaç güncellenemedi'], 500);
     }
   }
 }
