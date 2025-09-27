@@ -12,7 +12,7 @@ use Carbon\Carbon;
 
 class IhtiyacController extends Controller
 {
-
+  
   public function IhtiyacHesapla(Request $request)
   {
     ini_set('max_execution_time', 1500); // 5 dakika
@@ -83,34 +83,28 @@ class IhtiyacController extends Controller
         ->get();
 
       $bulkUpdates = [];
-      $bulkIndex = [];
       $hangiIsemirleri = [];
-      $dagilimIndex = [];
 
       foreach ($emirler as $emir) {
-        // CIKIS_DEPO olmayabilir; güvenli kullan
-        $cikisDepo = isset($emir->CIKIS_DEPO) ? $emir->CIKIS_DEPO : null;
         $liste = DB::connection('pgsql')
           ->table('uyumsoft.OFTV_ISEMIRLERI_MALZEMELER')
           ->where('worder_m_id', $emir->isemri_id)
-          ->when($cikisDepo, function ($q) use ($cikisDepo) {
-            return $q->where('whouse_id', $cikisDepo);
-          })
+          ->where('whouse_id', $emir->CIKIS_DEPO)
           ->get();
 
         foreach ($liste as $list) {
-          // O(1) indexler
-          $itemId = (int)$list->item_id;
-          $existingKey = $bulkIndex[$itemId] ?? false;
-          // hangiIsemirleri: (item_id|isemri_id)
-          $dagKey = $itemId . '|' . (int)$list->worder_m_id;
-          $existingKey1 = $dagilimIndex[$dagKey] ?? false;
+          $existingKey = array_search($list->item_id, array_column($bulkUpdates, 'item_id'));
+          $existingKey1 = array_search($list->worder_m_id, array_column($hangiIsemirleri, 'stok_id'));
+          // $filteredResults = array_filter($hangiIsemirleri, function ($item) use ($list) {
+          //     return isset($item['isemri_id'], $item['stok_id']) &&
+          //            $item['isemri_id'] == $list->worder_m_id &&
+          //            $item['stok_id'] == $list->item_id;
+          // });
 
-          // Güvenli hesap (0'a bölme yok)
-          $qtyNet = (float)($list->qty_net ?? 0);
-          $miktar = (float)($emir->miktar ?? 0);
-          $kalan  = (float)($emir->kalan ?? 0);
-          $hesapMiktari = $miktar > 0 ? ($qtyNet / $miktar) * $kalan : 0.0;
+          // $existingKey1 = !empty($filteredResults) ? key($filteredResults) : null;
+
+          // $hesapMiktari = ($list->qty_net / $emir->miktar) * $emir->kalan;
+          $hesapMiktari = $list->qty_base_bom * $emir->kalan;
 
           if ($existingKey1 !== false) {
             $hangiIsemirleri[$existingKey1]['isemri_miktari'] += $emir->miktar;
@@ -127,7 +121,6 @@ class IhtiyacController extends Controller
               'stok_kodu' => $emir->stok_kodu,
               'stok_adi' => $emir->stok_adi,
             ];
-            $dagilimIndex[$dagKey] = array_key_last($hangiIsemirleri);
           }
 
           if ($existingKey !== false) {
@@ -142,11 +135,10 @@ class IhtiyacController extends Controller
               'stok_kodu' => $list->stok_kodu,
               'stok_adi' => $list->stok_adi,
               'mrk_adi' => $emir->mrk_adi,
-              'cikis_depo' => $cikisDepo,
               'isemri_miktari' => $emir->miktar,
               'kalan' => $emir->kalan,
               'ihtiyac' => $hesapMiktari,
-              'stok' => (float)($list->qty_prm ?? 0),
+              'stok' => $list->qty_prm,
               'ana_depo' => 0,
               'diger_depo' => 0,
               'satinalma' => 0,
@@ -156,87 +148,61 @@ class IhtiyacController extends Controller
               'dongu' => 1,
               'depo_ihtiyaci' => 0,
             ];
-            $bulkIndex[$itemId] = array_key_last($bulkUpdates);
           }
         }
       }
 
-      // Depo bakiyelerini toplu hesapla
-      $anaDepoIds = $anadepolar->pluck('whouse_id')->toArray();
-      $itemIds = array_values(array_unique(array_map(function ($r) {
-        return (int)$r['item_id'];
-      }, $bulkUpdates)));
+      foreach ($bulkUpdates as &$list) {
+        $anaDepo = DB::connection('pgsql')
+          ->table('uyumsoft.OFTV_DIGER_DEPOLAR')
+          ->where('item_id', $list['item_id'])
+          ->whereIn('whouse_id', $anadepolar->pluck('whouse_id')->toArray())
+          ->sum('qty_prm');
 
-      $anaDepoSums = DB::connection('pgsql')
-        ->table('uyumsoft.OFTV_DIGER_DEPOLAR')
-        ->select('item_id', DB::raw('SUM(qty_prm) as s'))
-        ->whereIn('whouse_id', $anaDepoIds)
-        ->whereIn('item_id', $itemIds)
-        ->groupBy('item_id')
-        ->get()
-        ->keyBy('item_id');
-
-      $nonAnaRows = DB::connection('pgsql')
-        ->table('uyumsoft.OFTV_DIGER_DEPOLAR')
-        ->select('item_id', 'whouse_id', DB::raw('SUM(qty_prm) as s'))
-        ->whereNotIn('whouse_id', $anaDepoIds)
-        ->whereIn('item_id', $itemIds)
-        ->groupBy('item_id', 'whouse_id')
-        ->get();
-
-      $nonAnaTotals = [];
-      $perWhouse = [];
-      foreach ($nonAnaRows as $row) {
-        $iid = (int)$row->item_id;
-        $wid = (int)$row->whouse_id;
-        $sum = (float)$row->s;
-        $nonAnaTotals[$iid] = ($nonAnaTotals[$iid] ?? 0) + $sum;
-        $perWhouse[$iid] = $perWhouse[$iid] ?? [];
-        $perWhouse[$iid][$wid] = $sum;
+        if ($anaDepo > 0) {
+          $list['ana_depo'] = $anaDepo ?? 0;
+        }
       }
 
-      foreach ($bulkUpdates as &$list) {
-        $iid = (int)$list['item_id'];
-        $list['ana_depo'] = isset($anaDepoSums[$iid]) ? (float)$anaDepoSums[$iid]->s : 0.0;
-        $otherTotal = (float)($nonAnaTotals[$iid] ?? 0);
-        $exclude = 0.0;
-        if (!empty($list['cikis_depo'])) {
-          $cd = (int)$list['cikis_depo'];
-          $exclude = (float)($perWhouse[$iid][$cd] ?? 0);
-        }
-        $list['diger_depo'] = max(0.0, $otherTotal - $exclude);
+      unset($list);
 
-        $satinalma = $satinalmasiparisleri->where('STOK_HIZMET_ID', $iid)->sum('KALAN_MIKTAR');
-        $satinalmapersoneli = $satinalmasiparisleri->where('STOK_HIZMET_ID', $iid)->pluck('satici_adi')->first();
+      foreach ($bulkUpdates as &$list) {
+        $digerDepo = DB::connection('pgsql')
+          ->table('uyumsoft.OFTV_DIGER_DEPOLAR')
+          ->where('item_id', $list['item_id'])
+          ->where('whouse_id', '!=', $emir->CIKIS_DEPO)
+          ->whereNotIn('whouse_id', $anadepolar->pluck('whouse_id')->toArray())
+          ->sum('qty_prm');
+
+        if ($digerDepo > 0) {
+          $list['diger_depo'] = $digerDepo ?? 0;
+        }
+
+        $satinalma = $satinalmasiparisleri->where('STOK_HIZMET_ID', $list['item_id'])->sum('KALAN_MIKTAR');
+        $satinalmapersoneli = $satinalmasiparisleri->where('STOK_HIZMET_ID', $list['item_id'])->pluck('satici_adi')->first();
+
         if ($satinalma > 0) {
           $list['satinalma'] = $satinalma ?? 0;
           $list['satinalmapersoneli'] = $satinalmapersoneli ?? '';
         }
 
-        $talep = $talepler->where('item_id', $iid)->sum('miktar');
+        $talep = $talepler->where('item_id', $list['item_id'])->sum('miktar');
         if ($talep > 0) {
           $list['talepler'] = $talep ?? 0;
         }
 
-        $anaDepoVal = (float)($list['ana_depo'] ?? 0);
-        $stokVal = (float)($list['stok'] ?? 0);
-        $ihtiyacVal = (float)($list['ihtiyac'] ?? 0);
-        $list['bakiye'] = ($anaDepoVal + $stokVal) - $ihtiyacVal;
-        $list['depo_ihtiyaci'] = ($ihtiyacVal - $stokVal) > 0 ? ($ihtiyacVal - $stokVal) : 0;
+        $list['bakiye'] = ($list['ana_depo'] + $list['stok']) - $list['ihtiyac'];
+        $list['depo_ihtiyaci'] = ($list['ihtiyac'] - $list['stok']) > 0 ? ($list['ihtiyac'] - $list['stok']) : 0;
       }
       unset($list);
 
       return response()->json([
-        'message' => 'İhtiyaçlar başarıyla hesaplandı',
+        'message' => 'İndirimler başarıyla güncellendi!',
         'emirler' => $bulkUpdates,
         'dagilim' => $hangiIsemirleri,
       ], 200);
     } catch (\Exception $e) {
-      Log::error('IhtiyacHesapla - Hata', [
-        'message' => $e->getMessage(),
-        'line' => $e->getLine(),
-        'file' => $e->getFile(),
-      ]);
+      DB::rollBack();
       return response()->json([
         'error' => 'İşlem sırasında hata oluştu!',
         'details' => $e->getMessage(),
@@ -250,7 +216,7 @@ class IhtiyacController extends Controller
   {
     ini_set('max_execution_time', 1500); // 5 dakika
 
-    Log::info($request->all());
+    // Log::info($request->all());
     try {
       $anadepolar = DB::connection('pgsql')
         ->table('uyumsoft.invd_whouse')
@@ -285,8 +251,8 @@ class IhtiyacController extends Controller
           'siparis_belge_no',
           'cari_ad',
           DB::raw("concat_ws('-', \"IS_MERKEZI_KODU\", \"IS_MERKEZI_ADI\") as mrk_adi"),
-          DB::raw('isemri_miktari AS miktar'),
-          DB::raw('kalan_miktar AS kalan'),
+          DB::raw('SUM(isemri_miktari) AS miktar'),
+          DB::raw('SUM(kalan_miktar) AS kalan'),
           DB::raw('0 AS stok'),
           DB::raw('0 AS ana_depo'),
           DB::raw('0 AS diger_depo')
@@ -298,12 +264,10 @@ class IhtiyacController extends Controller
         // ->where('is_sub_worder', 0)
         ->where('isemri_id', 394462)
         ->where('Rotadaki_Son_Operasyon', 1)
-        // ->groupBy('isemri_id', 'isemri_no', 'stok_id', 'stok_kodu', 'stok_adi', 'CIKIS_DEPO', 'siparis_belge_no', 'cari_ad', 'IS_MERKEZI_KODU', 'IS_MERKEZI_ADI')
-        // ->orderBy('stok', 'asc')
+        ->groupBy('isemri_id', 'isemri_no', 'stok_id', 'stok_kodu', 'stok_adi', 'CIKIS_DEPO', 'siparis_belge_no', 'cari_ad', 'IS_MERKEZI_KODU', 'IS_MERKEZI_ADI')
+        ->orderBy('stok', 'asc')
         ->distinct()
         ->get();
-
-      Log::info($emirler);
 
       $bulkUpdates = [];
       $hangiIsemirleri = [];
@@ -576,4 +540,5 @@ class IhtiyacController extends Controller
       'success' => true,
     ]);
   }
+
 }
