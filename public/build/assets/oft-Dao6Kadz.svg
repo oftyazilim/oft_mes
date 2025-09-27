@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="150" viewBox="0 0 256 150">
+  <!-- Köşeleri yuvarlatılmış dikdörtgen -->
+  <rect x="5" y="5" width="246" height="140" rx="50" ry="50" stroke="#2c3e50" fill="none" stroke-width="10"></rect>
+  
+  <!-- Yazı -->
+  <text x="50%" y="58%" text-anchor="middle" alignment-baseline="middle" font-size="80" font-family="Arial Rounded MT Bold, sans-serif" font-weight="bold" fill="#2c3e50">
+    OFT
+  </text>
+</svg>

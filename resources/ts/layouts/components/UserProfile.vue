@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { purgeAuthCookies } from '@/utils/cookies'
 import axios from 'axios'
 import { PerfectScrollbar } from 'vue3-perfect-scrollbar'
 
@@ -17,11 +18,25 @@ const displayName = computed(() => {
 })
 
 const logout = async () => {
+  // Çakışan path'li eski cookie'leri agresif temizle (Chromium gölgelemesini önle)
+  try { purgeAuthCookies() } catch { }
+
   // Remove "accessToken" from cookie
   useCookie('accessToken').value = null
 
   // Remove "userData" from cookie
   userData.value = null
+  try {
+    const g: any = window as any
+    if (g.__appTitleRef) g.__appTitleRef.value = null
+  } catch { /* ignore */ }
+
+  // Başlığı anında placeholder'a çek (yalnızca theme/layout; sekme başlığı sayfadan)
+  try {
+    const { themeConfig, layoutConfig } = await import('@themeConfig')
+      ; (themeConfig as any).app.title = 'kurum adı'
+      ; (layoutConfig as any).app.title = 'kurum adı'
+  } catch { }
 
   // Redirect to login page
   await router.push('/login')

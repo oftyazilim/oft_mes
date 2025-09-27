@@ -1,6 +1,7 @@
 <!-- ❗Errors in the form are set on line 60 -->
 <script setup lang="ts">
 import { normalizeAbilityRules } from '@/utils/ability-normalizer'
+import { purgeAuthCookies } from '@/utils/cookies'
 import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
 import authV2LoginIllustrationBorderedDark from '@images/pages/auth-v2-login-illustration-bordered-dark.png'
 import authV2LoginIllustrationBorderedLight from '@images/pages/auth-v2-login-illustration-bordered-light.png'
@@ -31,8 +32,20 @@ definePage({
 
 const isPasswordVisible = ref(false)
 
-// Güvenli başlık ve logo (dev'de undefined durumlarını tolere eder)
-const appTitle = computed(() => themeConfig?.app?.title ?? 'oft mes')
+// Başlık: userData cookie'den türet (login/logout anında reaktif güncelleme)
+const userDataCookie = useCookie<any>('userData')
+const appTitle = computed(() => {
+  const v = userDataCookie?.value
+  const coName = v?.co_name
+    ?? v?.firma_adi
+    ?? v?.companyName
+    ?? v?.user?.co_name
+    ?? null
+  const normalized = coName ? String(coName).trim() : ''
+  const title = normalized || 'kurum adı'
+  return title.toLowerCase()
+})
+// Logo yine themeConfig üzerinden
 const appLogo = computed(() => themeConfig?.app?.logo ?? null)
 
 const route = useRoute()
@@ -63,6 +76,9 @@ const login = async () => {
   generalError.value = null
   errors.value = { email: undefined, password: undefined }
   try {
+    // Yeni girişten önce muhtemel eski path'li cookie gölgelerini temizle
+    try { purgeAuthCookies() } catch { }
+
     const res = await $api('/auth/login', {
       method: 'POST',
       body: {
@@ -85,9 +101,15 @@ const login = async () => {
     const normalizedRules = normalizeAbilityRules(userAbilityRules)
 
     // Cookie ömrünü Remember Me'ye göre ayarla
+    const baseOpts = {
+      path: '/',
+      sameSite: 'Lax' as const,
+      // HTTPS ise Secure ekle; HTTP'de tarayıcı yoksayar
+      secure: typeof location !== 'undefined' ? location.protocol === 'https:' : false,
+    }
     const cookieOpts = rememberMe.value
-      ? { maxAge: 60 * 60 * 24 * 30 }
-      : { session: true }
+      ? { ...baseOpts, maxAge: 60 * 60 * 24 * 30 }
+      : { ...baseOpts, session: true }
 
     // Ability ve cookie güncelle
     useCookie('userAbilityRules', cookieOpts as any).value = userAbilityRules
@@ -95,7 +117,21 @@ const login = async () => {
 
     const userDataCookie = useCookie<any>('userData', cookieOpts as any)
     userDataCookie.value = userData
+    // dynamic-app-title pluginindeki aynı ref'i de güncelle (watch tetiklensin)
+    try {
+      const g: any = window as any
+      if (g.__appTitleRef) g.__appTitleRef.value = userData
+    } catch { /* ignore */ }
     useCookie('accessToken', cookieOpts as any).value = accessToken
+
+    // Başlığı anında güncelle (yalnızca theme/layout; sekme başlığı sayfa tarafında)
+    try {
+      const coName = userData?.co_name ?? userData?.firma_adi ?? userData?.companyName ?? userData?.user?.co_name
+      const title = (coName ? String(coName).trim() : 'kurum adı').toLowerCase()
+        ; (themeConfig as any).app.title = title
+      const { layoutConfig } = await import('@themeConfig')
+        ; (layoutConfig as any).app.title = title
+    } catch { }
 
     await nextTick(() => {
       const isDefaultPwd = credentials.value.password === 'pass1234'
@@ -196,7 +232,7 @@ onMounted(() => {
       <VCard flat :max-width="500" class="mt-12 mt-sm-0 pa-4">
         <VCardText>
           <h4 class="text-h4 mb-1">
-            <span class="text-capitalize"> {{ appTitle }}'e hoşgeldiniz' </span>! 👋🏻
+            <span class="text-capitalize"> OFT MES'e hoşgeldiniz' </span>! 👋🏻
           </h4>
           <p class="mb-0">
             Lütfen hesabınıza giriş yapın ve maceraya başlayın...
@@ -450,7 +486,6 @@ onMounted(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   .intro-bg,
   .intro-noise,
   .intro-title-chars .char,

@@ -175,7 +175,7 @@
             <!-- Sağ: Üretim Rakamları -->
             <section class="panel status-panel">
               <VProgressLinear
-                :model-value="((worksInfo?.net_qty + worksInfo?.counter) / worksInfo?.order_qty * 100) ?? 0"
+                :model-value="percentDone"
                 color="warning" height="10" :rounded="true" class="my-4" />
               <VRow>
                 <VCol cols="5">
@@ -216,8 +216,7 @@
                       </VCol>
                       <VCol cols="6">
                         <div class="label">O.A.%</div>
-                        <div class="sayac net digit">{{ worksInfo?.net_qty === 0 || worksInfo?.order_qty === 0 ? 0 :
-                          ((worksInfo?.net_qty + worksInfo?.counter) / worksInfo?.order_qty * 100).toFixed(0) }}</div>
+                        <div class="sayac net digit">{{ percentDoneRounded }}</div>
                       </VCol>
                     </VRow>
 
@@ -449,15 +448,15 @@
 import { usePageTitleStore } from '@/stores/pageTitle';
 import axios from 'axios';
 import DxCircularGauge, {
-  DxExport,
-  DxGeometry,
-  DxLabel,
-  DxMinorTick,
-  DxRange,
-  DxRangeContainer,
-  DxScale,
-  DxTick,
-  DxValueIndicator,
+    DxExport,
+    DxGeometry,
+    DxLabel,
+    DxMinorTick,
+    DxRange,
+    DxRangeContainer,
+    DxScale,
+    DxTick,
+    DxValueIndicator,
 } from 'devextreme-vue/circular-gauge';
 import DxDataGrid, { DxColumn, DxSearchPanel } from 'devextreme-vue/data-grid';
 import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup';
@@ -541,6 +540,16 @@ function toUnitsPerHour(speedMPerMin: number | null | undefined, itemLenMm: numb
 const speedUnitsHour = computed(() => toUnitsPerHour(worksInfo.value?.speed, worksInfo.value?.item_length))
 const speedMaxUnitsHour = computed(() => toUnitsPerHour(worksInfo.value?.speed_max, worksInfo.value?.item_length))
 const speedTargetUnitsHour = computed(() => toUnitsPerHour(worksInfo.value?.speed_target, worksInfo.value?.item_length))
+
+// Tamamlanma yüzdesi (0..100 arası güvenli)
+const percentDone = computed(() => {
+  const order = Number(worksInfo.value?.order_qty ?? 0)
+  if (!Number.isFinite(order) || order <= 0) return 0
+  const produced = Number(worksInfo.value?.net_qty ?? 0) + Number(worksInfo.value?.counter ?? 0)
+  const val = (produced / order) * 100
+  return Number.isFinite(val) ? Math.max(0, Math.min(100, val)) : 0
+})
+const percentDoneRounded = computed(() => Math.round(percentDone.value))
 
 // Gauge görsel ayarları (mevcut tanım yoksa basit defaultlar)
 const gaugeTooltip = { enabled: false } as any

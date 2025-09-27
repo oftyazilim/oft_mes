@@ -38,6 +38,7 @@ class User extends Authenticatable
         'operasyon_id',
         'register_id',
         'co_id',
+        'co_name',
         'created_at',
         'updated_at',
         // eklemek istediğin başka kolonlar varsa buraya ekle
@@ -78,6 +79,7 @@ class User extends Authenticatable
         'operasyon_id',
         'register_id',
         'co_id',
+        'co_name',
     ];
 
     /**

@@ -1,0 +1,13 @@
+<!--?xml version="1.0" encoding="utf-8"?-->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 200 200" role="img" aria-label="OFT logo">
+  <!-- renk buradan değiştirilebilir -->
+  <g fill="none" stroke="#c92a1a" stroke-width="8">
+    <!-- dış çember -->
+    <circle cx="100" cy="100" r="90"></circle>
+  </g>
+
+  <!-- yazı: çemberle aynı renkte -->
+  <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" font-family="Arial Rounded MT Bold, Poppins, Nunito, Segoe UI, sans-serif" font-size="64" font-weight="bold" fill="#c92a1a" letter-spacing="4">
+    OFT
+  </text>
+</svg>

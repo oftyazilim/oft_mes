@@ -1,0 +1,1 @@
+import{aK as u,aL as i,X as f}from"./main-PIO7dkvE.js";const m=(e,t,s,o,r=!1)=>{const a=u(),{global:n}=i();return f(()=>n.name.value==="light"?a.skin==="bordered"&&r?s:e:n.name.value==="dark"?a.skin==="bordered"&&r?o:t:e)};export{m as u};

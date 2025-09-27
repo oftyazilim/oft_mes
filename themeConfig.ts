@@ -1,11 +1,9 @@
+import AppLogo from "@/components/AppLogo.vue";
 import { defineThemeConfig } from "@core";
 import { Skins } from "@core/enums";
 import { breakpointsVuetifyV3 } from "@vueuse/core";
 import { h } from "vue";
 import { VIcon } from "vuetify/components/VIcon";
-
-// ❗ Logo SVG must be imported with ?raw suffix
-import logo from "@images/logo.svg?raw";
 
 import {
   AppContentLayoutNav,
@@ -33,11 +31,11 @@ if (typeof window !== "undefined") {
 
 export const { themeConfig, layoutConfig } = defineThemeConfig({
   app: {
-    title: "oft - canovate",
-    logo: h("div", {
-      innerHTML: logo,
-      style: "line-height:0; color: rgb(var(--v-global-theme-primary))",
-    }),
+    title: "canovate",
+    // Orijinal AppLogo kullanılsın (temanın default hali)
+    logo: h("div", { class: "text-primary", style: "line-height:0" }, [
+      h(AppLogo),
+    ]),
     contentWidth: ContentWidth.Fluid,
     contentLayoutNav: savedLayout || AppContentLayoutNav.Horizontal,
     overlayNavFromBreakpoint: breakpointsVuetifyV3.lg - 1, // 1 for matching with vuetify breakpoint. Docs: https://next.vuetifyjs.com/en/features/display-and-platform/

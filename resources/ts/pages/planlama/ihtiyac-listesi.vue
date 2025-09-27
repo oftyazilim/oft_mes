@@ -403,27 +403,33 @@
     <VRow>
       <VCol>
         <DxDataGrid id="gridEmirler" ref="dataGridRefE" :data-source="filtrelenmisEmirler()" :show-borders="true"
-          :column-auto-width="true" :allow-column-resizing="true" column-resizing-mode="widget"
+          :column-auto-width="false" :allow-column-resizing="true" column-resizing-mode="widget"
           :row-alternation-enabled="true" width="100%">
 
           <DxColumn data-field="siparis_belge_no" caption="SİPARİŞ NO" :width="120" :visible="true" />
           <DxColumn data-field="cari_ad" caption="CARİ ADI" :width="150" :visible="true" />
           <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="100" :visible="false" />
           <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" />
-          <DxColumn data-field="stok_id" caption="STOK ID" :visible="false" />
-          <DxColumn data-field="stok_kodu" caption="STOK KODU" />
-          <DxColumn data-field="stok_adi" caption="STOK ADI" />
-          <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MİKTARI" :width="150" data-type="number" :format="{
+          <DxColumn data-field="stok_id" caption="STOK ID" :visible="false"  :width="50"/>
+          <DxColumn data-field="stok_kodu" caption="STOK KODU"  :width="150"/>
+          <DxColumn data-field="stok_adi" caption="STOK ADI"  :width="auto" />
+          <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MİKTARI" :width="120" data-type="number" :format="{
             type: 'fixedPoint',
             precision: 2,
             thousandsSeparator: ',',
           }" />
-          <DxColumn data-field="kalan" caption="KALAN MİKTAR" :width="150" data-type="number" :format="{
+          <DxColumn data-field="kalan" caption="KALAN MİKTAR" :width="120" data-type="number" :format="{
             type: 'fixedPoint',
             precision: 2,
             thousandsSeparator: ',',
           }" />
 
+            <DxSummary>
+              <DxTotalItem :align-by-column="true" column="isemri_miktari" summary-type="sum" display-format="{0} ad"
+                :alignment="right" />
+              <DxTotalItem :align-by-column="true" column="kalan" summary-type="sum" display-format="{0} ad"
+                :alignment="right" />
+            </DxSummary>
 
           <DxGroupPanel :visible="false" />
           <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
