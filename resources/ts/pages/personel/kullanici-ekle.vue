@@ -11,6 +11,7 @@ interface Emit {
 }
 
 const emit = defineEmits<Emit>()
+const userDataCookie = useCookie<any>('userData')
 
 const roller = ref<{ name: string }[]>([]);
 const isFormValid = ref(false)
@@ -21,8 +22,11 @@ const unvan = ref<any>(null)
 const ismerkezi = ref<any>([]);
 const istasyon = ref<any>([]);
 const proses = ref<any>(null)
+const firma_adi = ref<any>(null)
 const tip = ref<any>(null)
 const selectedRoles = ref<string[]>([]);
+// Firma ID ref'i eklendi
+const firma_id = ref<number>(0);
 // İş Merkezleri tek seçim: scalar değer tut
 const secimMerkezler = ref<number | string | null>(null);
 const secimIstasyonlar = ref<Array<number | string>>([]);
@@ -41,6 +45,8 @@ interface Details {
   unvan: string;
   ismerkezi: string;
   istasyon: string;
+  firma_id: number;
+  firma_adi: string;
 }
 
 interface Props {
@@ -59,6 +65,8 @@ const props = withDefaults(defineProps<Props>(), {
     unvan: '',
     ismerkezi: '',
     istasyon: '',
+    firma_id: 0,
+    firma_adi: '',
   }),
 })
 
@@ -111,7 +119,7 @@ const getIstasyonlar = async () => {
     const rawList = Array.isArray(candidate) ? candidate : []
 
     // Verileri sayıya çevirerek at (eğer ID'ler string ise) ve alanları standardize et
-  istasyonlar.value = rawList.map((item: any) => {
+    istasyonlar.value = rawList.map((item: any) => {
       const idRaw = item?.istasyon_id ?? item?.id ?? item
       const idNum = typeof idRaw === 'number' ? idRaw : Number(idRaw)
       return {
@@ -119,8 +127,8 @@ const getIstasyonlar = async () => {
         ist_adi: item?.ist_adi ?? item?.name ?? String(idRaw ?? ''),
       }
     }).filter((i: any) => i.istasyon_id !== 0 || (typeof i.istasyon_id === 'string' && i.istasyon_id !== ''))
-  // Listenin başına boş seçenek ekle
-  istasyonlar.value.unshift({ istasyon_id: '', ist_adi: 'Seçim yok' })
+    // Listenin başına boş seçenek ekle
+    istasyonlar.value.unshift({ istasyon_id: '', ist_adi: 'Seçim yok' })
 
     // Düzenleme modundaysa, istasyon seçimlerini yükle
     if (props.userData?.id && props.userData.istasyon) {
@@ -143,7 +151,11 @@ const getIstasyonlar = async () => {
 
 const getMerkezler = async () => {
   try {
-    const { data } = await axios.get('/api/merkezal')
+    const { data } = await axios.get('/api/merkezal', {
+      params: {
+        coID: firma_id.value || null,
+      },
+    })
     const root: any = data as any
     const candidate = root?.merkezler ?? root?.data?.merkezler ?? root
     const rawList = Array.isArray(candidate) ? candidate : []
@@ -182,14 +194,14 @@ watch(
   () => props.userData,
   (newData) => {
     if (newData && newData.id > 0) {
-      name.value = newData.name || '';
-      email.value = newData.email || '';
-      selectedRoles.value = newData.roles != '' ? newData.roles.split(',').map(role => role.trim()) : [];
-      proses.value = newData.proses || '';
-      tip.value = newData.tip || '';
-      unvan.value = newData.unvan || '';
-      ismerkezi.value = newData.ismerkezi || '';
-      istasyon.value = newData.istasyon || '';
+      name.value = newData.name || ''
+      email.value = newData.email || ''
+      selectedRoles.value = newData.roles != '' ? newData.roles.split(',').map(role => role.trim()) : []
+      proses.value = newData.proses || ''
+      tip.value = newData.tip || ''
+      unvan.value = newData.unvan || ''
+      firma_id.value = newData.firma_id || 0
+      firma_adi.value = newData.firma_adi || ''
       {
         const first = (newData.ismerkezi || '')
           .split(',')
@@ -197,30 +209,32 @@ watch(
           .filter(Boolean)[0]
         secimMerkezler.value = first ? (isNaN(Number(first)) ? first : Number(first)) : null
       }
-      secimIstasyonlar.value = newData.istasyon != '' ? newData.istasyon.split(',').map(r => Number(r.trim())) : [];
+      secimIstasyonlar.value = newData.istasyon != '' ? newData.istasyon.split(',').map(r => Number(r.trim())) : []
     } else {
-      selectedRoles.value = [];
-      secimMerkezler.value = null;
-      secimIstasyonlar.value = [];
+      selectedRoles.value = []
+      secimMerkezler.value = null
+      secimIstasyonlar.value = []
       Object.assign(userData, {
         id: 0,
         name: '',
         email: '',
-        roles: null,
+        roles: null as any,
         proses: '',
         tip: '',
         unvan: '',
-        ismerkezi: null,
-        istasyon: null,
-      });
+        ismerkezi: null as any,
+        istasyon: null as any,
+        firma_id: 0,
+        firma_adi: '',
+      })
     }
   },
-  { immediate: true } // İlk başta da çalıştır
-);
+  { immediate: true }
+)
 
 onMounted(() => {
   fetchRoles();
-  getMerkezler();
+  // getMerkezler();
 })
 
 watch(secimMerkezler, (yeniDeger) => {
@@ -235,6 +249,28 @@ watch(secimMerkezler, (yeniDeger) => {
     istasyon.value = null
   }
 })
+
+// Firma adı değişince firma_id'yi eşle
+watch(
+  () => userData.firma_adi,
+  (yeniDeger) => {
+    if (yeniDeger !== null && yeniDeger !== '') {
+      const id = yeniDeger === 'Canovate' ? 2715 : yeniDeger === 'Coolaer' ? 2729 : 0
+      userData.firma_id = id
+      firma_id.value = id
+      secimIstasyonlar.value = []
+      istasyon.value = null
+      getMerkezler()
+    } else {
+      userData.firma_id = 0
+      firma_id.value = 0
+      merkezler.value = []
+      secimIstasyonlar.value = []
+      istasyon.value = null
+    }
+  },
+  { immediate: true }
+)
 
 // Çoklu istasyon seçiminde "Seçim yok" (boş) ile diğer değerlerin birlikte seçilmesini engelle
 watch(secimIstasyonlar, (yeni) => {
@@ -305,6 +341,8 @@ const saveUser = async () => {
       unvan: userData.unvan,
       ismerkezi: String(secimMerkezler.value ?? ''),
       istasyon: toCsv(secimIstasyonlar.value),
+      firma_id: userData.firma_id,
+      firma_adi: userData.firma_adi,
     });
     // Kaydetme sonrası kullanıcı güncelleme olayını yayınla
     try {
@@ -334,6 +372,8 @@ const updateUser = async () => {
       unvan: userData.unvan,
       ismerkezi: String(secimMerkezler.value ?? ''),
       istasyon: toCsv(secimIstasyonlar.value),
+      firma_id: userData.firma_id,
+      firma_adi: userData.firma_adi,
     });
     // Güncelleme sonrası kullanıcı güncelleme olayını yayınla
     try {
@@ -400,6 +440,17 @@ const toCsv = (val: any): string => {
           <!-- <VForm ref="refForm" v-model="isFormValid" @submit.prevent="onSubmit"> -->
           <VForm ref="refForm" lazy-validation @submit.prevent="onSubmit">
             <VRow>
+              <!-- 👉 Firma -->
+              <VCol cols="6">
+                <AppSelect v-model="userData.firma_adi" :rules="[requiredValidator]" label="Firma Adı"
+                  :items="['Canovate', 'Coolaer']" item-title="firma" />
+              </VCol>
+
+              <!-- 👉 Firma ID -->
+              <VCol cols="6">
+                <AppTextField v-model="userData.firma_id" label="Firma ID" disabled />
+              </VCol>
+
               <!-- 👉 Full name -->
               <VCol cols="6">
                 <AppTextField v-model="userData.name" :rules="[requiredValidator]" label="Adı Soyadı"
@@ -442,14 +493,14 @@ const toCsv = (val: any): string => {
               <VCol cols="6">
                 <AppSelect v-model="secimMerkezler" :items="merkezler" item-title="mrk_adi"
                   :menu-props="{ maxHeight: '400' }" label="İş Merkezleri" persistent-hint item-value="is_merkezi_id"
-                  placeholder="Rol seçiniz..." @update:model-value="onMerkezChanged" />{{ secimMerkezler }}
+                  placeholder="İş merkezi seçiniz..." @update:model-value="onMerkezChanged" />{{ secimMerkezler }}
               </VCol>
               <!-- @update:modelValue="getIstasyonlar"  -->
               <!-- 👉 İş İstasyonları -->
               <VCol cols="6">
                 <AppSelect v-model="secimIstasyonlar" :items="istasyonlar" item-title="ist_adi"
                   :menu-props="{ maxHeight: '400' }" label="İş İstasyonları" persistent-hint item-value="istasyon_id"
-                  placeholder="Rol seçiniz..." />{{ secimIstasyonlar }}
+                  placeholder="İş istasyonu seçiniz..." />{{ secimIstasyonlar }}
               </VCol>
 
               <!-- 👉 Submit and Cancel -->

@@ -33,6 +33,8 @@
           <span>{{ data.roles }}</span>
         </template> -->
         </DxColumn>
+        <DxColumn data-field="co_id" caption="Firma ID" width="200" />
+        <DxColumn data-field="co_name" caption="Firma Adı" width="200" />
         <DxColumn data-field="proses" caption="PROSES" width="200" />
         <DxColumn data-field="tip" caption="KADEME" :validation-rules="[{ type: 'required' }]" width="150" />
         <!-- <DxLookup :data-source="kademeler" display-expr="tip" value-expr="tip" width="150" /> -->
@@ -162,7 +164,7 @@
       </DxDataGrid>
     </VCard>
   </div>
-  <AddNewUserDrawer v-model:isDrawerOpen="isAddNewUserDrawerVisible" :userData="modalParametre" />
+  <kullaniciEkle v-model:isDrawerOpen="isAddNewUserDrawerVisible" :userData="modalParametre" />
 
   <VOverlay persistent contained :model-value="loading" class="align-center justify-center">
     <VCard class="pa-4 d-flex align-center justify-center">
@@ -205,7 +207,7 @@ import notify from 'devextreme/ui/notify';
 import { Workbook } from "exceljs";
 import { saveAs } from "file-saver-es";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
-import AddNewUserDrawer from './kullanici-ekle.vue';
+import kullaniciEkle from './kullanici-ekle.vue';
 // import { usePageTitleStore } from "@/stores/pageTitle";
 import { DxButton } from "devextreme-vue/button";
 import DxList from 'devextreme-vue/list';
@@ -704,6 +706,8 @@ const modalParametre = computed(() => {
     proses: selected.proses || '',
     tip: selected.tip || '',
     roles: selected.roles || '',
+    firma_id: selected.co_id || '',
+    firma_adi: selected.co_name || '',
   };
 });
 

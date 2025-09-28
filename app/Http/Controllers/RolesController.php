@@ -64,6 +64,7 @@ class RolesController extends Controller
         // Paginate
         $users = $query->paginate($itemsPerPage, ['*'], 'page', $page);
 
+        Log::info('Users:', ['users' => $users]);
         return response()->json([
             'users' => $users->items(),
             'totalUsers' => $users->total(),

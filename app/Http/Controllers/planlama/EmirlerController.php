@@ -27,6 +27,7 @@ class EmirlerController extends Controller
     // Normalize and validate incoming params
     $tabloRaw = strtoupper((string) $request->input('tablo', 'DETAY'));
     $isMerkezi = $request->input('isMerkezi', []);
+    $firma = $request->input('coID', 2715); // Varsayılan firma ID'si 2715
     // İstenilen şekilde zaman aşımı artırımı: PHP yürütme 60 sn
     @set_time_limit(60);
     // Opsiyonel: PostgreSQL statement timeout (ms) — çok uzun sorguları sınırlamak isterseniz açın
@@ -48,7 +49,10 @@ class EmirlerController extends Controller
       ], 400);
     }
 
-    $query = DB::connection('pgsql')->table($tableMap[$tabloRaw]);
+    // Log::info('getData parametreleri', ['tablo' => $tabloRaw, 'isMerkezi' => $isMerkezi], ['firma' => $firma]);
+    $query = DB::connection('pgsql')
+      ->table($tableMap[$tabloRaw])
+      ->where('co_id', $firma);
 
     if ($tabloRaw === 'DETAY') {
       // İsteğe bağlı iş merkezi filtresi
@@ -79,6 +83,7 @@ class EmirlerController extends Controller
 
       $siparisler = DB::connection('pgsql')
         ->table('uyumsoft.OFTV_ISEMIRLERI_MASTER2')
+      ->where('co_id', $request->input('coID', 2715)) // Varsayılan firma ID'si 2715
         ->get();
       // ->map(function ($siparis) {
       //   $siparis->isemri_id = trim((string) $siparis->isemri_id); // Normalize ediyoruz

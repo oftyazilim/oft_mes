@@ -81,7 +81,7 @@ class IhtiyacController extends Controller
         ->distinct()
         ->get();
 
-        // Log::info('Emirler:', ['emirler' => $emirler]);
+      // Log::info('Emirler:', ['emirler' => $emirler]);
       $bulkUpdates = [];
       $bulkIndex = [];
       $hangiIsemirleri = [];
@@ -308,7 +308,7 @@ class IhtiyacController extends Controller
         ->distinct()
         ->get();
 
-        // Log::info('Emirler:', ['emirler' => $emirler]);
+      // Log::info('Emirler:', ['emirler' => $emirler]);
 
       $bulkUpdates = [];
       $bulkIndex = [];
@@ -357,13 +357,13 @@ class IhtiyacController extends Controller
             $bulkUpdates[$existingKey]['kalan'] += $emir->kalan;
             $bulkUpdates[$existingKey]['ihtiyac'] += $hesapMiktari;
             $bulkUpdates[$existingKey]['dongu'] += 1;
-            if ($emir->isemri_id === 400344 && $list->item_id === 165887) {    
+            if ($emir->isemri_id === 400344 && $list->item_id === 165887) {
               Log::info('1Adding new bulk update for item_id: ' . $itemId);
               Log::info('1List details:', ['list' => $list]);
               Log::info('1Emir details:', ['emir' => $emir]);
             }
           } else {
-            if ($emir->isemri_id === 400344 && $list->item_id === 165887) {    
+            if ($emir->isemri_id === 400344 && $list->item_id === 165887) {
               Log::info('2Adding new bulk update for item_id: ' . $itemId);
               Log::info('2List details:', ['list' => $list]);
               Log::info('2Emir details:', ['emir' => $emir]);
@@ -481,8 +481,9 @@ class IhtiyacController extends Controller
     }
   }
 
-  public function getMerkezler()
+  public function getMerkezler(Request $request)
   {
+    // Log::info($request->all());
     $merkezler = DB::connection('pgsql')
       ->table('uyumsoft.zz_bk_OFTV_IS_ISTASYONLARI')
       ->select(
@@ -490,15 +491,21 @@ class IhtiyacController extends Controller
         'ismerkezi_kodu',
         DB::raw("concat_ws('-', ismerkezi_kodu, ismerkezi_adi) as mrk_adi") // 1200 ve istasyon_adi birleştirildi
       )
-      ->where('firma_id', 2715)
+      ->when($request->coID, function ($query, $coID) {
+        return $query->where('firma_id', $coID);
+      })
       ->orderBy('is_merkezi_id')
       ->distinct()
       ->get();
 
+      // Log::info('Merkezler:', ['merkezler' => $merkezler]);
+
     $siparisler = DB::connection('pgsql')
       ->table('uyumsoft.zz_bk_OFTV_ISEMIRLERI_DETAY')
       ->select('siparis_belge_no')
-      ->where('firma_id', 2715)
+      ->when($request->coID, function ($query, $coID) {
+        return $query->where('firma_id', $coID);
+      })
       ->orderBy('siparis_belge_no')
       ->distinct()
       ->get();
@@ -506,7 +513,9 @@ class IhtiyacController extends Controller
     $cariler = DB::connection('pgsql')
       ->table('uyumsoft.zz_bk_OFTV_ISEMIRLERI_DETAY')
       ->select('cari_ad')
-      ->where('firma_id', 2715)
+      ->when($request->coID, function ($query, $coID) {
+        return $query->where('firma_id', $coID);
+      })
       ->orderBy('cari_ad')
       ->distinct()
       ->get();
@@ -536,7 +545,7 @@ class IhtiyacController extends Controller
         DB::raw("concat_ws('-', istasyon_kodu, istasyon_adi) as ist_adi") // 1200 ve istasyon_adi birleştirildi
       )
       ->whereIn('is_merkezi_id', $istasyonArray)
-      ->where('firma_id', 2715)
+      // ->where('firma_id', request()->coID)
       ->orderBy('istasyon_kodu')
       ->distinct()
       ->get();

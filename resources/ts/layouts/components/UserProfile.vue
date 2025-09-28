@@ -34,8 +34,8 @@ const logout = async () => {
   // Başlığı anında placeholder'a çek (yalnızca theme/layout; sekme başlığı sayfadan)
   try {
     const { themeConfig, layoutConfig } = await import('@themeConfig')
-      ; (themeConfig as any).app.title = 'kurum adı'
-      ; (layoutConfig as any).app.title = 'kurum adı'
+      ; (themeConfig as any).app.title = 'firma adı'
+      ; (layoutConfig as any).app.title = 'firma adı'
   } catch { }
 
   // Redirect to login page

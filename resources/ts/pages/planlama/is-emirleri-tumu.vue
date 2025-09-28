@@ -1824,6 +1824,7 @@ const getData = async () => {
       params: {
         tablo: 'DETAY',
         isMerkezi: ['Tümü'],
+        coID: userData.value.co_id,
       },
     })
 
@@ -1853,7 +1854,14 @@ const getData = async () => {
 }
 const fetchMontajVerileri = async () => {
   try {
-    const response = await axios.get('/api/aktifleri-al', { params: { istasyon: userData.value.istasyon_id, planlama: 1, } })
+        
+    const response = await axios.get('/api/aktifleri-al', {
+      params: {
+        coID: userData.value.co_id,
+        istasyon: userData.value.istasyon_id,
+        planlama: 1,
+      },
+    })
     montajVerileri.value = response.data.data.map((veri: any, index: number) => ({
       id: index, // Eğer benzersiz bir ID varsa kullan
       isEmriNo: veri.IS_EMRI_NO,
@@ -1873,6 +1881,7 @@ const getDetay = async () => {
         tablo: 'DETAY',
         depo: selectedRow.value.CIKIS_DEPO || 0,
         isemri_id: selectedRow.value.isemri_id,
+        coID: userData.value.co_id,
       },
     })
 
@@ -1888,7 +1897,11 @@ const getDetay = async () => {
 const getMerkezler = async () => {
   await beginLoading('İş merkezleri yükleniyor...')
   try {
-    const response = await axios.get('/api/merkezal')
+    const response = await axios.get('/api/merkezal', {
+      params: {
+        coID: userData.value.co_id,
+      },
+    })
 
     merkezler.value = response.data.merkezler
   }

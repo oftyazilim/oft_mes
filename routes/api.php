@@ -79,7 +79,8 @@ Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () 
   Route::get('/{id}', [UsersController::class, 'show']);
   Route::get('/{id}/roles', [UsersController::class, 'getUserRoles']);
   Route::get('/{id}/permissions', [UsersController::class, 'getUserPermissions']);
-
+  // Route::get('/company', [UsersController::class, 'getCompany']);
+  
   Route::post('/{id}/permissions/{permissionId}', [UsersController::class, 'assignUserPermission']);
   Route::post('/{id}/roles', [UsersController::class, 'assignRoles']);
   Route::post('/', [UsersController::class, 'store']);
@@ -105,16 +106,14 @@ Route::group(['prefix' => 'permissions', 'middleware' => 'auth:sanctum'], functi
 
 // planlama-montaj
 Route::middleware('auth:sanctum')->group(function () {
-  // Kullanıcı logları
   Route::get('/loglar', [UsersController::class, 'getLoglar']);
-  Route::post('/log-kayit', [UsersController::class, 'LogKayit']);
-
   Route::get('/data', [EmirlerController::class, 'getData']);
   Route::get('/aktifleri-al', [EmirlerController::class, 'AktifleriAl']);
   Route::get('/isEmriDetay', [EmirlerController::class, 'getIsEmriDetay']);
   Route::get('/digerdepobakiyeleri', [EmirlerController::class, 'getDepoBakiyeleri']);
   Route::get('/isEmriKapanmislar', [EmirlerController::class, 'getIsEmriKapanmislar']);
-
+  
+  Route::post('/log-kayit', [UsersController::class, 'LogKayit']);
   Route::post('/istasyonKaydet', [EmirlerController::class, 'istasyonKaydet']);
   Route::post('/aksesuarKaydet', [EmirlerController::class, 'AksesuarKaydet']);
   Route::post('/updatePlanBaslangic', [EmirlerController::class, 'updatePlanlananBaslangic']);

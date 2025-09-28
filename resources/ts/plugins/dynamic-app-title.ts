@@ -1,4 +1,5 @@
-import { layoutConfig, themeConfig } from '@themeConfig'
+import { layoutConfig as themeLayoutConfig, themeConfig } from '@themeConfig'
+import { layoutConfig as layoutsLayoutConfig } from '@layouts'
 import type { App } from 'vue'
 import { watch } from 'vue'
 
@@ -8,7 +9,7 @@ export default function (_app: App) {
     // Global referans: login/logout tarafı bu ref'in değerini doğrudan güncelleyebilsin
     try { (window as any).__appTitleRef = userData } catch { /* ignore */ }
 
-  const PLACEHOLDER = 'kurum adı'
+  const PLACEHOLDER = "kurum adı";
 
     const extractCoName = (val: any): string | null => {
       const coName = val?.co_name
@@ -24,7 +25,9 @@ export default function (_app: App) {
     const setTitle = (title: string) => {
       // Sadece theme/layout başlıklarını güncelle (sekme başlığı sayfa bileşenlerinden yönetiliyor)
       themeConfig.app.title = title as Lowercase<string>
-      layoutConfig.app.title = title as Lowercase<string>
+      themeLayoutConfig.app.title = title as Lowercase<string>
+      // Ayrıca @layouts tarafındaki layoutConfig'i de güncelle (VerticalNav gibi yerler bunu okuyor)
+      try { (layoutsLayoutConfig as any).app.title = title } catch {}
     }
 
     const apply = (val: any) => {

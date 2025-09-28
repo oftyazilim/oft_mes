@@ -8,9 +8,9 @@ import {
 } from "@layouts/enums";
 import type { LayoutConfig } from "@layouts/types";
 import { breakpointsVuetify } from "@vueuse/core";
-import { h } from "vue";
+import { h, reactive } from "vue";
 
-export const layoutConfig: LayoutConfig = {
+export const layoutConfig: LayoutConfig = reactive({
   app: {
     title: "my-layout",
     // Mask tabanlı logo: currentColor ile tema rengine göre boyanır
@@ -49,4 +49,4 @@ export const layoutConfig: LayoutConfig = {
     verticalNavUnPinned: { icon: "tabler-circle" },
     sectionTitlePlaceholder: { icon: "tabler-minus" },
   },
-};
+}) as unknown as LayoutConfig;

@@ -127,10 +127,15 @@ const login = async () => {
     // Başlığı anında güncelle (yalnızca theme/layout; sekme başlığı sayfa tarafında)
     try {
       const coName = userData?.co_name ?? userData?.firma_adi ?? userData?.companyName ?? userData?.user?.co_name
-      const title = (coName ? String(coName).trim() : 'kurum adı').toLowerCase()
+  const title = (coName ? String(coName).trim() : 'kurum adı').toLowerCase()
         ; (themeConfig as any).app.title = title
       const { layoutConfig } = await import('@themeConfig')
         ; (layoutConfig as any).app.title = title
+      // Ayrıca @layouts tarafındaki layoutConfig'i de güncelle (VerticalNav vb.)
+      try {
+        const layouts = await import('@layouts')
+        ; (layouts as any).layoutConfig.app.title = title
+      } catch { /* ignore */ }
     } catch { }
 
     await nextTick(() => {

@@ -490,7 +490,7 @@ const formatDate = (date: any) => {
 
 const pageTitleStore = usePageTitleStore()
 const pageName = 'İhtiyaç Listesi'
-const pageAlias = 'PLN-İHTIYAC'
+const pageAlias = ''
 const popupDepolarGosterVisible = ref(false)
 const popupIsEmirleriGosterVisible = ref(false)
 const popupAcilmisIsEmirleriGosterVisible = ref(false)
