@@ -57,6 +57,87 @@ class PhotoController extends Controller
             'Content-Disposition' => 'inline; filename="'.basename($path).'"'
         ]);
     }
+
+    /**
+     * Tanılama: PHP-FPM kullanıcı bağlamında bir foto dosyasını gerçekten okuyabiliyor muyuz?
+     * Sadece debug modda kullanılabilir.
+     */
+    public function diagPhotoRead(Request $request)
+    {
+        if (!config('app.debug')) {
+            return response()->json(['error' => 'disabled'], 403);
+        }
+
+        $isemri = $request->query('isemri');
+        $name = $request->query('name');
+        if (!$isemri || !$name) {
+            return response()->json(['error' => 'isemri and name required'], 400);
+        }
+
+        $dir = rtrim(config('app.photo_kk_dir', self::BASE_NETWORK_DIR), '\/');
+        $path = $dir . DIRECTORY_SEPARATOR . trim($isemri, '\/') . DIRECTORY_SEPARATOR . basename($name);
+
+        $info = [
+            'path' => $path,
+            'exists' => file_exists($path),
+            'is_file' => is_file($path),
+            'readable' => is_readable($path),
+            'owner' => null,
+            'group' => null,
+            'perms_octal' => null,
+            'php_euid' => getmyuid(),
+            'php_egid' => getmygid(),
+            'php_user' => function_exists('posix_geteuid') ? posix_getpwuid(posix_geteuid())['name'] ?? null : null,
+            'php_group' => function_exists('posix_getegid') ? posix_getgrgid(posix_getegid())['name'] ?? null : null,
+        ];
+
+        if ($info['exists']) {
+            clearstatcache(false, $path);
+            $stat = @stat($path);
+            if ($stat) {
+                $info['perms_octal'] = substr(sprintf('%o', $stat['mode']), -4);
+                if (function_exists('posix_getpwuid')) {
+                    $pw = @posix_getpwuid($stat['uid']);
+                    $info['owner'] = $pw['name'] ?? $stat['uid'];
+                }
+                if (function_exists('posix_getgrgid')) {
+                    $gr = @posix_getgrgid($stat['gid']);
+                    $info['group'] = $gr['name'] ?? $stat['gid'];
+                }
+            }
+
+            // Dosyayı açıp ilk birkaç baytı okumayı deneyelim
+            try {
+                $fh = @fopen($path, 'rb');
+                if ($fh === false) {
+                    $info['open'] = false;
+                    $info['open_error'] = error_get_last()['message'] ?? 'unknown';
+                } else {
+                    $info['open'] = true;
+                    $bytes = @fread($fh, 16);
+                    $info['read_first_bytes_hex'] = bin2hex($bytes ?: '');
+                    @fclose($fh);
+                }
+            } catch (\Throwable $e) {
+                $info['open'] = false;
+                $info['open_exception'] = $e->getMessage();
+            }
+        }
+
+        // namei -l benzeri traverse testi: her klasörde x izni gerekiyor; sadece debug amaçlı ipucu
+        $parts = explode(DIRECTORY_SEPARATOR, rtrim($path, DIRECTORY_SEPARATOR));
+        $walk = [];
+        $cur = DIRECTORY_SEPARATOR;
+        foreach ($parts as $p) {
+            if ($p === '') continue;
+            $cur = rtrim($cur, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $p;
+            $ok = is_dir($cur) ? is_readable($cur) : is_readable($cur);
+            $walk[] = ['path' => $cur, 'exists' => file_exists($cur), 'readable' => $ok, 'is_dir' => is_dir($cur)];
+        }
+        $info['walk'] = $walk;
+
+        return response()->json($info);
+    }
     
     private function buildDir(string $isEmriNo): string
     {

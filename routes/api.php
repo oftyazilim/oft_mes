@@ -233,6 +233,9 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/oft-resimler/{isemri_no}/{filename}', [PhotoController::class, 'serveImage']);
 Route::get('/stok-resimler/{itemCode}/{filename}', [StokPhotoController::class, 'serve']);
 
+// Debug: FPM kullanıcı yetkisi tanılama (APP_DEBUG true iken işe yarar)
+Route::middleware('auth:sanctum')->get('/diag/photo-read', [PhotoController::class, 'diagPhotoRead']);
+
 // depo
 Route::middleware('auth:sanctum')->group(function () {
   Route::post('/find-pdf', [FileSearchController::class, 'findPdf']);
