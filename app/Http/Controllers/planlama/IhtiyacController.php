@@ -92,9 +92,16 @@ class IhtiyacController extends Controller
       foreach ($emirler as $emir) {
         // CIKIS_DEPO olmayabilir; güvenli kullan
         $cikisDepo = isset($emir->CIKIS_DEPO) ? $emir->CIKIS_DEPO : null;
+
+        // select listesi: çıkış deposu varsa qty_prm'yi de dahil et, yoksa ekleme
+        $listeSelect = ['item_id', 'worder_m_id', 'qty', 'qty_net', 'tipi', 'stok_kodu', 'stok_adi'];
+        if (!is_null($cikisDepo)) {
+          $listeSelect[] = 'qty_prm';
+        }
+
         $liste = DB::connection('pgsql')
           ->table('uyumsoft.OFTV_ISEMIRLERI_MALZEMELER')
-          ->select('item_id', 'worder_m_id', 'qty', 'qty_net', 'tipi', 'stok_kodu', 'stok_adi')
+          ->select($listeSelect)
           ->where('worder_m_id', $emir->isemri_id)
           ->when($cikisDepo, function ($q) use ($cikisDepo) {
             return $q->where('whouse_id', $cikisDepo);
