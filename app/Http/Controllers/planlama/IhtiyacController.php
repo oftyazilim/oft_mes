@@ -121,6 +121,7 @@ class IhtiyacController extends Controller
           $qtyNet = (float)($list->qty_net ?? 0);
           $miktar = (float)($emir->miktar ?? 0);
           $kalan  = (float)($emir->kalan ?? 0);
+          
           $hesapMiktari = $miktar > 0 ? ($qtyNet / $miktar) * $kalan : 0.0;
 
           if ($existingKey1 !== false) {

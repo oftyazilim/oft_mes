@@ -424,7 +424,11 @@ function sadeceTamSayi(event: Event) {
 
 onMounted(async () => {
   try {
-    const res = await axios.get('/api/kapasite-merkez-al');
+    const res = await axios.get('/api/kapasite-merkez-al', {
+      params: {
+        coID: userData.value.co_id,
+      },
+    })
     const rawMerkezler = Array.isArray(res.data.merkezler) ? res.data.merkezler : [];
     const normalized = rawMerkezler.map((t: any) => ({
       ismerkezi_kodu: t?.ismerkezi_kodu ?? '',

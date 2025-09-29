@@ -12,21 +12,71 @@ use Carbon\Carbon;
 
 class KapasiteController extends Controller
 {
-  public function getMerkezler()
+  // public function getMerkezler()
+  // {
+  //   $merkezler = DB::connection('pgsql')
+  //     ->table('uyumsoft.zz_bk_OFTV_IS_ISTASYONLARI')
+  //     ->select(
+  //       'ismerkezi_kodu',
+  //       DB::raw("concat_ws('-', ismerkezi_kodu, ismerkezi_adi) as mrk_adi") // 1200 ve istasyon_adi birleştirildi
+  //     )
+  //     ->where('firma_id', 2715)
+  //     ->orderBy('ismerkezi_kodu')
+  //     ->distinct()
+  //     ->get();
+
+  //   return response()->json([
+  //     'merkezler' => $merkezler,
+  //     'message' => 'Veriler başarıyla alındı',
+  //     'success' => true,
+  //   ]);
+  // }
+
+    public function getMerkezler(Request $request)
   {
+    Log::info($request->all());
     $merkezler = DB::connection('pgsql')
       ->table('uyumsoft.zz_bk_OFTV_IS_ISTASYONLARI')
       ->select(
+        'is_merkezi_id',
         'ismerkezi_kodu',
         DB::raw("concat_ws('-', ismerkezi_kodu, ismerkezi_adi) as mrk_adi") // 1200 ve istasyon_adi birleştirildi
       )
-      ->where('firma_id', 2715)
-      ->orderBy('ismerkezi_kodu')
+      ->when($request->coID, function ($query, $coID) {
+        return $query->where('firma_id', $coID);
+      })
+        ->where('firma_id', $request->coID)
+      ->orderBy('is_merkezi_id')
+      ->distinct()
+      ->get();
+
+      // Log::info('Merkezler:', ['merkezler' => $merkezler]);
+
+    $siparisler = DB::connection('pgsql')
+      ->table('uyumsoft.zz_bk_OFTV_ISEMIRLERI_DETAY')
+      ->select('siparis_belge_no')
+      ->when($request->coID, function ($query, $coID) {
+        return $query->where('firma_id', $coID);
+      })
+      ->orderBy('siparis_belge_no')
+        ->where('firma_id', $request->coID)
+      ->distinct()
+      ->get();
+
+    $cariler = DB::connection('pgsql')
+      ->table('uyumsoft.zz_bk_OFTV_ISEMIRLERI_DETAY')
+      ->select('cari_ad')
+      ->when($request->coID, function ($query, $coID) {
+        return $query->where('firma_id', $coID);
+      })
+      ->orderBy('cari_ad')
       ->distinct()
       ->get();
 
     return response()->json([
       'merkezler' => $merkezler,
+      'siparisler' => $siparisler,
+      'cariler' => $cariler,
       'message' => 'Veriler başarıyla alındı',
       'success' => true,
     ]);
