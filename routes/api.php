@@ -136,7 +136,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // ihtiyac-listesi
 Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/istasyon-ihtiyaclar', [IhtiyacController::class, 'IhtiyacHesapla']);
+  Route::get('/istasyon-ihtiyaclar', [IhtiyacController::class, 'IhtiyacHesaplaIstasyon']);
+  Route::get('/toplu-ihtiyaclar', [IhtiyacController::class, 'IhtiyacHesaplaToplu']);
   Route::get('/merkezal', [IhtiyacController::class, 'getMerkezler']);
   Route::get('/istasyonal', [IhtiyacController::class, 'getIstasyon']);
   Route::get('/isEmriAcilmislar', [IhtiyacController::class, 'getAcilmisIsEmirleri']);

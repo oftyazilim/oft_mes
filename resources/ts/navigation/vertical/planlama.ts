@@ -46,12 +46,20 @@ export default [
         target: "_blank",
       },
       {
-        title: "Malzeme İhtiyaç Listesi",
-        to: "planlama-ihtiyac-listesi",
+        title: "Malzeme İhtiyaç (İstasyon)",
+        to: "planlama-ihtiyac-listesi-istasyon",
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama", "montaj"],
-        target: "_blank",
+        target: '_blank',
+      },
+      {
+        title: "Malzeme İhtiyaç (Toplu)",
+        to: "planlama-ihtiyac-listesi-toplu",
+        icon: { icon: "tabler-list" },
+        action: "read",
+        subject: ["planlama", "montaj"],
+        target: '_blank',
       },
       {
         title: "Kapasite Hesapla",
