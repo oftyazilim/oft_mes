@@ -757,6 +757,7 @@ const getData = async () => {
       params: {
         filterValue: filterValue.value,
         filterValue1: filterValue1.value,
+        coID: userData.value.co_id,
       },
     });
     gridData.value = response.data.emirler;

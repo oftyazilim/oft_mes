@@ -33,7 +33,7 @@ class EmirlerController extends Controller
     // Opsiyonel: PostgreSQL statement timeout (ms) — çok uzun sorguları sınırlamak isterseniz açın
     // DB::connection('pgsql')->statement("SET statement_timeout TO 60000");
 
-    // Log::info('getData parametreleri', ['tablo' => $tabloRaw, 'isMerkezi' => $isMerkezi]);
+    Log::info('getData parametreleri', ['tablo' => $tabloRaw, 'isMerkezi' => $isMerkezi, 'FİRMA' => $firma]);
 
     // Map to actual table names to avoid missing-table errors
     $tableMap = [
@@ -57,9 +57,9 @@ class EmirlerController extends Controller
     if ($tabloRaw === 'DETAY') {
       // İsteğe bağlı iş merkezi filtresi
       if ($isMerkezi !== ['Tümü']) {
-        if ($isMerkezi === ['1100', '1200', '1500', '2200', '3200', '4001'])
-          $query->whereNotIn('IS_MERKEZI_KODU', $isMerkezi);
-        else
+        // if ($isMerkezi === ['1100', '1150', '1200', '1500', '110', '200', 'sele'])
+        //   $query->whereNotIn('IS_MERKEZI_KODU', $isMerkezi);
+        // else
           $query->whereIn('IS_MERKEZI_KODU', $isMerkezi);
       }
 
@@ -83,7 +83,7 @@ class EmirlerController extends Controller
 
       $siparisler = DB::connection('pgsql')
         ->table('uyumsoft.OFTV_ISEMIRLERI_MASTER2')
-      ->where('co_id', $request->input('coID', 2715)) // Varsayılan firma ID'si 2715
+      ->where('co_id', $firma) 
         ->get();
       // ->map(function ($siparis) {
       //   $siparis->isemri_id = trim((string) $siparis->isemri_id); // Normalize ediyoruz
@@ -144,6 +144,7 @@ class EmirlerController extends Controller
     $emirler = $query
       ->whereDate('kapanma_tarihi', '>=', $request->filterValue)
       ->whereDate('kapanma_tarihi', '<=', $request->filterValue1)
+      ->where('co_id', $request->input('coID', 2715)) // Varsayılan firma ID'si 2715
       ->orderBy('hafta', 'asc')
       ->orderBy('IS_ISTASYONU_KODU', 'asc')
       ->orderBy('OPERASYON_KODU', 'asc')

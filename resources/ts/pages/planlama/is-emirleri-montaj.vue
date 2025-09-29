@@ -1815,7 +1815,8 @@ const getData = async () => {
     const response = await axios.get('/api/data', {
       params: {
         tablo: 'DETAY',
-        isMerkezi: ['4001'],
+        isMerkezi: ['4001', '800'],
+        coID: userData.value.co_id,
       },
     })
 

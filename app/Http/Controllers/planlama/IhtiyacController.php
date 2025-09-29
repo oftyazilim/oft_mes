@@ -30,12 +30,13 @@ class IhtiyacController extends Controller
         ->select('STOK_HIZMET_ID', 'MIKTAR', 'KALAN_MIKTAR', 'satici_adi')
         ->where('purchase_sales', '1')
         ->where('order_status', '1')
-        ->where('FIRMA', 'CANOVATE')
+        ->where('co_id', $request->coID)
         ->get();
 
       $talepler = DB::connection('pgsql')
         ->table('uyumsoft.zz_bk_tumtalepler')
         ->select('item_id', 'miktar')
+        ->where('co_id', $request->coID)
         ->where('ONAY_DURUMU', 'Onaylandi')
         ->get();
 
@@ -58,6 +59,7 @@ class IhtiyacController extends Controller
           DB::raw('0 AS ana_depo'),
           DB::raw('0 AS diger_depo')
         )
+        ->where('co_id', $request->input('coID'))
         ->whereDate('planlanan_bitis_tarihi', '>=', $request->filterValue)
         ->whereDate('planlanan_bitis_tarihi', '<=', $request->filterValue1)
         ->when($request->merkezID, function ($query, $merkezID) {
@@ -494,6 +496,7 @@ class IhtiyacController extends Controller
       ->when($request->coID, function ($query, $coID) {
         return $query->where('firma_id', $coID);
       })
+        ->where('firma_id', $request->coID)
       ->orderBy('is_merkezi_id')
       ->distinct()
       ->get();
@@ -507,6 +510,7 @@ class IhtiyacController extends Controller
         return $query->where('firma_id', $coID);
       })
       ->orderBy('siparis_belge_no')
+        ->where('co_id', $request->coID)
       ->distinct()
       ->get();
 

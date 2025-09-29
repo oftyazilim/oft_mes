@@ -605,6 +605,7 @@ const getMalzemeler = async () => {
         istasyonID: istasyon.value,
         siparis: siparis.value,
         cari: cari.value,
+        coID: userData.value.co_id,
       },
     })
     gridDataM.value = response.data.emirler

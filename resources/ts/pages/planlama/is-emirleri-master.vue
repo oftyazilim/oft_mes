@@ -1797,6 +1797,7 @@ const getData = async () => {
       params: {
         tablo: 'MASTER',
         isMerkezi: ['4001'],
+        coID: userData.value.co_id,
       },
     })
 
