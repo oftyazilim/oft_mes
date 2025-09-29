@@ -621,7 +621,11 @@ const getMalzemeler = async () => {
 const getMerkezler = async () => {
   loadingVisible.value = true
   try {
-    const response = await axios.get('/api/merkezal')
+    const response = await axios.get('/api/merkezal', {
+      params: {
+        coID: userData.value.co_id,
+      },
+    })
     merkezler.value = response.data.merkezler
     siparisler.value = response.data.siparisler
     cariler.value = response.data.cariler

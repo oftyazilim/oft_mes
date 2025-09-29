@@ -485,7 +485,7 @@ class IhtiyacController extends Controller
 
   public function getMerkezler(Request $request)
   {
-    // Log::info($request->all());
+    Log::info($request->all());
     $merkezler = DB::connection('pgsql')
       ->table('uyumsoft.zz_bk_OFTV_IS_ISTASYONLARI')
       ->select(
@@ -510,7 +510,7 @@ class IhtiyacController extends Controller
         return $query->where('firma_id', $coID);
       })
       ->orderBy('siparis_belge_no')
-        ->where('co_id', $request->coID)
+        ->where('firma_id', $request->coID)
       ->distinct()
       ->get();
 
