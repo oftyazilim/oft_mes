@@ -90,7 +90,7 @@ https://codepen.io/giana/pen/MWxONWm
     </div>
   </VCard>
 
-  <img :src="`/photo/fotolar/kk-fotolari/IEN-25035323/IEN-25035323-00001-01.jpg`" alt="foto" />
+  <!-- <img :src="`/photo/fotolar/kk-fotolari/IEN-25035323/IEN-25035323-00001-01.jpg`" alt="foto" /> -->
 
 </template>
 

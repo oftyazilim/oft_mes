@@ -85,7 +85,8 @@ class StokPhotoController extends Controller
             ->values()
             ->map(fn($f, $idx) => [
                 'name' => $f->getFilename(),
-                'url' => url(self::BASE_PUBLIC_URL . '/' . $clean . '/' . $f->getFilename()),
+            // Relative URL + güvenli encode
+            'url' => self::BASE_PUBLIC_URL . '/' . rawurlencode($clean) . '/' . rawurlencode($f->getFilename()),
                 'size' => $f->getSize(),
                 'index' => $idx,
             ]);
@@ -147,7 +148,8 @@ class StokPhotoController extends Controller
         return response()->json([
             'status' => 'ok',
             'name' => $targetName,
-            'url' => url(self::BASE_PUBLIC_URL . '/' . $this->cleanItemCode($itemCode) . '/' . $targetName),
+            // Relative URL + güvenli encode
+            'url' => self::BASE_PUBLIC_URL . '/' . rawurlencode($this->cleanItemCode($itemCode)) . '/' . rawurlencode($targetName),
         ]);
     }
 

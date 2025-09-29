@@ -243,10 +243,16 @@ class PhotoController extends Controller
         $prefix = Str::substr($serino, 0, 18); // İlk 18 karakter (uygulamadaki mevcut varsayım)
         $fotolar = collect(File::files($klasorYolu))
             ->filter(fn($dosya) => Str::startsWith($dosya->getFilename(), $prefix))
-            ->map(fn($dosya) => [
-                'dosya_adi' => $dosya->getFilename(),
-                'url' => url("/api/oft-resimler/$isemriNo/" . $dosya->getFilename()),
-            ])
+            ->map(function ($dosya) use ($isemriNo) {
+                // APP_URL bağımlılığını kaldır: relative URL dön.
+                // Özel karakter/boşluk içeren dosya adları için güvenli encode uygula
+                $encodedName = rawurlencode($dosya->getFilename());
+                $encodedIsemri = rawurlencode($isemriNo);
+                return [
+                    'dosya_adi' => $dosya->getFilename(),
+                'url' => "/api/oft-resimler/{$encodedIsemri}/{$encodedName}",
+            ];
+        })
             ->values();
 
         return response()->json($fotolar);
