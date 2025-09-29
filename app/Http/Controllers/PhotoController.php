@@ -27,6 +27,37 @@ class PhotoController extends Controller
     //     return rtrim(config('app.photo_base_url', env('PHOTO_BASE_URL', self::DEFAULT_PUBLIC_PHOTO_BASE)), '/') . '/';
     // }
 
+    public function show(Request $request, $name)
+    {
+        // Yetki kontrolü (örnek: auth middleware üstte var)
+        // Ek kontroller gerekiyorsa burada yap:
+        // if (! $request->user()->can('view-photo')) abort(403);
+
+        // Güvenlik: sadece dosya adı al, path traversal önle
+        $safeName = basename($name);
+
+        // Eğer Storage disk tanımlıysa kullan:
+        // $disk = Storage::disk('fotolar');
+        // $path = $disk->path($safeName);
+
+        // Veya sabit mount yolu:
+        $base = '/mnt/fotolar';
+        $path = $base . DIRECTORY_SEPARATOR . $safeName;
+
+        if (! file_exists($path) || ! is_file($path)) {
+            abort(404);
+        }
+
+        // MIME tipini otomatik al
+        $mime = mime_content_type($path) ?: 'application/octet-stream';
+
+        // Inline göster (tarayıcı görüntü için)
+        return response()->file($path, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="'.basename($path).'"'
+        ]);
+    }
+    
     private function buildDir(string $isEmriNo): string
     {
         // Base'i config(app.photo_kk_dir) ile al, ayırıcıları normalize et

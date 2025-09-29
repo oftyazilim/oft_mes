@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Uretim\TechnicalDrawingController;
 use App\Http\Controllers\FeedbackActionController;
+use App\Http\Controllers\PhotoController;
+
+Route::middleware('auth')->get('/photo/{name}', [PhotoController::class, 'show'])->name('photo.show');
 
 // Teknik resim: code query param ile (fallback'tan önce tanımlanmalı)
 Route::get('/teknik-resim', [TechnicalDrawingController::class, 'show'])->name('teknik-resim');
