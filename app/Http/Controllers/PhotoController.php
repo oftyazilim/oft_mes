@@ -352,6 +352,13 @@ class PhotoController extends Controller
         $dosyaYolu = $this->buildFilePath($isemri_no, $filename);
 
         if (!File::exists($dosyaYolu)) {
+            // 404 durumunda resolved path’i loglayalım (izin/yol hatası teşhisi için)
+            Log::warning('oft-resimler 404: file not found', [
+                'resolved_path' => $dosyaYolu,
+                'isemri_no' => $isemri_no,
+                'filename' => $filename,
+                'photo_kk_dir' => config('app.photo_kk_dir')
+            ]);
             return response()->json(['message' => 'Dosya bulunamadı'], 404);
         }
 
