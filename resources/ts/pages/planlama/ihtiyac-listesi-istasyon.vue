@@ -162,7 +162,7 @@
               <DxButton :visible="bothSelected" id="sayim" icon="refresh" styling-mode="text" hint="Yenile" />
             </template>
             <template #menuYenileTemplate>
-              <div style="display: flex; align-items: center; margin-inline-start: 13px;">
+              <div :visible="bothSelected" style="display: flex; align-items: center; margin-inline-start: 13px;">
                 <i class="dx-icon dx-icon-refresh"></i>
                 <span style="margin-inline-start: 8px;">Yenile</span>
               </div>

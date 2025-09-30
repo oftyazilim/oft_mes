@@ -63,7 +63,13 @@ class IhtiyacController extends Controller
         ->whereNot('OPERASYON', 'HAYALET')
         ->whereNot('OPERASYON_KODU', 'M12')
         ->where('Rotadaki_Son_Operasyon', 1)
-        ->groupBy('isemri_id', 'isemri_no', 'stok_id', 'stok_kodu', 'stok_adi', 'siparis_belge_no', 'cari_ad')
+              ->when($request->siparis, function ($query, $siparis) {
+          return $query->where('siparis_belge_no', $siparis);
+        })
+        ->when($request->cari, function ($query, $cari) {
+          return $query->where('cari_ad', $cari);
+        })
+          ->groupBy('isemri_id', 'isemri_no', 'stok_id', 'stok_kodu', 'stok_adi', 'siparis_belge_no', 'cari_ad')
         ->orderBy('stok', 'asc')
         ->distinct()
         ->get();
