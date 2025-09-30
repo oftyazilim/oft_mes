@@ -595,6 +595,7 @@ class UretimMontajController extends Controller
         'worder_m_id',
         'qty_base_bom',
         'qty_net',
+        'kalan',
         DB::raw('0 AS qty_prm'),
         DB::raw('0 AS qty_min_inv'),
         DB::raw('0 AS qty_max_inv'),

@@ -74,6 +74,7 @@
               <DxItem location="before" locate-in-menu="auto" template="filtreIstasyon" />
               <DxItem location="before" locate-in-menu="auto" template="filtreSiparis" />
               <DxItem location="before" locate-in-menu="auto" template="filtreCari" />
+              <DxItem location="before" locate-in-menu="auto" template="filtreisEmriNo" />
               <DxItem location="before" locate-in-menu="auto" template="yenileTemplate"
                 menu-item-template="menuYenileTemplate" @click="YenileMalzemeler" />
               <DxItem location="after" locate-in-menu="auto" template="filtreTemizleTemplate"
@@ -136,6 +137,14 @@
                 <DxSelectBox :data-source="cariler" v-model:value="cari" label="Cari" label-mode="floating"
                   display-expr="cari_ad" value-expr="cari_ad" style="inline-size: 100%;" :show-clear-button="true"
                   search-mode="contains" search-expr="cari_ad" :search-timeout="200" :search-enabled="true" />
+              </div>
+            </template>
+
+            <template #filtreisEmriNo>
+              <div style="inline-size: 200px; margin-block-start: -10px; margin-inline-start: 5px;">
+                <DxSelectBox :data-source="emirnolari" v-model:value="emirNo" label="İş Emri No" label-mode="floating"
+                  display-expr="isemri_no" value-expr="isemri_no" style="inline-size: 100%;" :show-clear-button="true"
+                  search-mode="contains" search-expr="isemri_no" :search-timeout="200" :search-enabled="true" />
               </div>
             </template>
 
@@ -526,7 +535,9 @@ const merkez = ref(0)
 const siparis = ref('')
 const siparisler = ref<any[]>([])
 const cari = ref('')
+const emirNo = ref('')
 const cariler = ref<any[]>([])
+const emirnolari = ref<any[]>([])
 const now = new Date()
 const firstDayOfWeek = new Date(now)
 firstDayOfWeek.setDate(now.getDate() - now.getDay() + 1) // Pazartesi

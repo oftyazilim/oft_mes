@@ -617,7 +617,7 @@
                               :cell-template="tipCellTemplate" />
                             <DxColumn data-field="user_line_no" caption="LINE NO" :width="60" :visible="false" />
                             <DxColumn data-field="item_id" caption="ITEM ID" :width="180" :visible="false" />
-                            <DxColumn data-field="stok_kodu" caption="STOK KODU" :min-width="120" />
+                            <DxColumn data-field="stok_kodu" caption="STOK KODU" :min-width="100" />
                             <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="180" />
                             <DxColumn data-field="worder_m_id" caption="İŞ EMRİ ID" :width="150" :visible="false" />
                             <DxColumn data-field="qty_base_bom" caption="BOM" :width="80" data-type=number :format="{
@@ -625,7 +625,7 @@
                               precision: 2,
                               thousandsSeparator: ',',
                             }" />
-                            <DxColumn data-field="qty_net" caption="İHTİYAÇ" :width="80" data-type="number" :format="{
+                            <DxColumn data-field="kalan" caption="İHTİYAÇ" :width="80" data-type="number" :format="{
                               type: 'fixedPoint',
                               precision: 2,
                               thousandsSeparator: ',',
@@ -1868,7 +1868,7 @@ const getDetay = async () => {
         isemri_id: selectedRow.value.isemri_id,
       },
     })
-
+console.log('Detay response:', response);
     gridDataDetay.value = response.data.data
     numberedSteps.value[1].subtitle = `${response.data.toplamIsEmri} ad / ${response.data.toplamSure} dk`
     gridDataMalzemeler.value = response.data.malzemeler
@@ -1881,7 +1881,11 @@ const getDetay = async () => {
 const getMerkezler = async () => {
   await beginLoading('İş merkezleri yükleniyor...')
   try {
-    const response = await axios.get('/api/merkezal')
+    const response = await axios.get('/api/merkezal', {
+      params: {
+        coID: userData.value.co_id,
+      },
+    })
 
     merkezler.value = response.data.merkezler
   }

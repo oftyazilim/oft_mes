@@ -524,6 +524,7 @@ class IhtiyacController extends Controller
           DB::raw('0 AS ana_depo'),
           DB::raw('0 AS diger_depo')
         )
+        // ->where('isemri_no', 'IEN-25023614')
         ->where('co_id', $request->input('coID'))
         ->whereDate('planlanan_bitis_tarihi', '>=', $request->filterValue)
         ->whereDate('planlanan_bitis_tarihi', '<=', $request->filterValue1)

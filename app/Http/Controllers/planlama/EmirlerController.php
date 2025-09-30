@@ -33,7 +33,7 @@ class EmirlerController extends Controller
     // Opsiyonel: PostgreSQL statement timeout (ms) — çok uzun sorguları sınırlamak isterseniz açın
     // DB::connection('pgsql')->statement("SET statement_timeout TO 60000");
 
-    Log::info('getData parametreleri', ['tablo' => $tabloRaw, 'isMerkezi' => $isMerkezi, 'FİRMA' => $firma]);
+    // Log::info('getData parametreleri', ['tablo' => $tabloRaw, 'isMerkezi' => $isMerkezi, 'FİRMA' => $firma]);
 
     // Map to actual table names to avoid missing-table errors
     $tableMap = [
@@ -60,7 +60,7 @@ class EmirlerController extends Controller
         // if ($isMerkezi === ['1100', '1150', '1200', '1500', '110', '200', 'sele'])
         //   $query->whereNotIn('IS_MERKEZI_KODU', $isMerkezi);
         // else
-          $query->whereIn('IS_MERKEZI_KODU', $isMerkezi);
+        $query->whereIn('IS_MERKEZI_KODU', $isMerkezi);
       }
 
       // Büyük datasetlerde deterministik sıralama + limit
@@ -83,7 +83,7 @@ class EmirlerController extends Controller
 
       $siparisler = DB::connection('pgsql')
         ->table('uyumsoft.OFTV_ISEMIRLERI_MASTER2')
-      ->where('co_id', $firma) 
+        ->where('co_id', $firma)
         ->get();
       // ->map(function ($siparis) {
       //   $siparis->isemri_id = trim((string) $siparis->isemri_id); // Normalize ediyoruz
@@ -666,9 +666,10 @@ class EmirlerController extends Controller
 
   public function getIsEmriDetay(Request $request)
   {
+    // Log::info($request->all());
     $isemri_id = $request->isemri_id;
     $depo = $request->depo;
-
+    // Log::info("İş Emri Detay İsteği: isemri_id=$isemri_id, depo=$depo");
     $query = DB::connection('pgsql')
       ->table('uyumsoft.OFTV_ISEMIRLERI_DETAY')
       ->select(
@@ -713,6 +714,7 @@ class EmirlerController extends Controller
         'worder_m_id',
         'qty_base_bom',
         'qty_net',
+        'kalan',
         DB::raw('0 AS qty_prm'),
         DB::raw('0 AS qty_min_inv'),
         DB::raw('0 AS qty_max_inv'),
@@ -759,6 +761,7 @@ class EmirlerController extends Controller
       }
     }
 
+    // Log::info("Malzemeler: ".json_encode($malzemeler));
     return response()->json([
       'data' => $data,
       'malzemeler' => $malzemeler,
