@@ -24,7 +24,7 @@
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
             <DxColumn data-field="ihtiyac" caption="İHTİYAÇ" data-type="number" :visible="true" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="diger_depo" caption="DİĞER DEPO" data-type="number" :visible="true"
+            <DxColumn data-field="diger_depo" caption="STOK" data-type="number" :visible="true"
               :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
             <DxColumn data-field="bakiye" caption="BAKİYE" data-type="number" :visible="true" :width="100"
@@ -152,7 +152,7 @@
   </VCard>
 
   <DxPopup v-model:visible="popupDepolarGosterVisible" :hide-on-outside-click="true" title='Stok Detayları'
-    :show-close-button="false" :show-title="true" :width="600" :height="500">
+    :show-close-button="false" :show-title="true" :width="600" :height="600">
     <VCol class="text-center">
       <h2>{{ eksikStokKodu }}</h2>
       <h2>{{ eksikStokAdi }}</h2>
@@ -176,6 +176,12 @@
 
           <DxGroupPanel :visible="false" />
           <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
+
+
+            <DxSummary>
+              <DxTotalItem :align-by-column="true" column="qty_prm" summary-type="sum" display-format="{0}"
+                :alignment="right" />
+            </DxSummary>
 
         </DxDataGrid>
       </VCol>

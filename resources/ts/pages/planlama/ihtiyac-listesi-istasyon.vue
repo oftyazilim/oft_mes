@@ -28,17 +28,15 @@
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
             <DxColumn data-field="ana_depo" caption="ANA DEPO" data-type="number" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="depo_ihtiyaci" caption="DEPO İHTİYACI" data-type="number"
-              :width="100" :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="diger_depo" caption="DİĞER DEPO" data-type="number" :visible="true"
-              :width="100" 
+            <DxColumn data-field="depo_ihtiyaci" caption="DEPO İHTİYACI" data-type="number" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="bakiye" caption="BAKİYE" data-type="number" :visible="true" :width="100"
-              :format="{
-                type: 'fixedPoint',
-                precision: 0,
-                thousandsSeparator: ',',
-              }" sort-order="asc" />
+            <DxColumn data-field="diger_depo" caption="DİĞER DEPO" data-type="number" :visible="true" :width="100"
+              :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
+            <DxColumn data-field="bakiye" caption="BAKİYE" data-type="number" :visible="true" :width="100" :format="{
+              type: 'fixedPoint',
+              precision: 0,
+              thousandsSeparator: ',',
+            }" sort-order="asc" />
             <DxColumn data-field="satinalma" caption="SATINALMA" data-type="number" :visible="true" :width="100"
               :format="{
                 type: 'fixedPoint',
@@ -94,14 +92,14 @@
 
             <template #filtreTarih1>
               <div style="margin-block-start: -10px;">
-                <DxDateBox label="Başlangıç Tarihi" width="150" label-mode="floating" v-model:value="filterValue"
+                <DxDateBox label="Başlangıç Tarihi" width="120" label-mode="floating" v-model:value="filterValue"
                   type="date" />
               </div>
             </template>
 
             <template #filtreTarih2>
               <div style="margin-block-start: -10px; margin-inline-start: 5px;">
-                <DxDateBox label="Bitiş Tarihi" width="150" label-mode="floating" v-model:value="filterValue1"
+                <DxDateBox label="Bitiş Tarihi" width="120" label-mode="floating" v-model:value="filterValue1"
                   type="date" />
               </div>
             </template>
@@ -119,12 +117,13 @@
               <div style="inline-size: 200px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="istasyonlar" v-model:value="istasyon" label="İstasyon" label-mode="floating"
                   display-expr="ist_adi" value-expr="istasyon_id" style="inline-size: 100%;" search-mode="contains"
-                  search-expr="ist_adi" :search-timeout="200" :search-enabled="true" />
+                  @value-changed="getIsEmriNolari()" search-expr="ist_adi" :search-timeout="200"
+                  :search-enabled="true" />
               </div>
             </template>
 
             <template #filtreSiparis>
-              <div style="inline-size: 160px; margin-block-start: -10px; margin-inline-start: 5px;">
+              <div style="inline-size: 120px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="siparisler" v-model:value="siparis" label="Sipariş" label-mode="floating"
                   display-expr="siparis_belge_no" value-expr="siparis_belge_no" style="inline-size: 100%;"
                   :show-clear-button="true" search-mode="contains" search-expr="siparis_belge_no" :search-timeout="200"
@@ -133,7 +132,7 @@
             </template>
 
             <template #filtreCari>
-              <div style="inline-size: 200px; margin-block-start: -10px; margin-inline-start: 5px;">
+              <div style="inline-size: 150px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="cariler" v-model:value="cari" label="Cari" label-mode="floating"
                   display-expr="cari_ad" value-expr="cari_ad" style="inline-size: 100%;" :show-clear-button="true"
                   search-mode="contains" search-expr="cari_ad" :search-timeout="200" :search-enabled="true" />
@@ -141,7 +140,7 @@
             </template>
 
             <template #filtreisEmriNo>
-              <div style="inline-size: 200px; margin-block-start: -10px; margin-inline-start: 5px;">
+              <div style="inline-size: 180px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="emirnolari" v-model:value="emirNo" label="İş Emri No" label-mode="floating"
                   display-expr="isemri_no" value-expr="isemri_no" style="inline-size: 100%;" :show-clear-button="true"
                   search-mode="contains" search-expr="isemri_no" :search-timeout="200" :search-enabled="true" />
@@ -419,9 +418,9 @@
           <DxColumn data-field="cari_ad" caption="CARİ ADI" :width="150" :visible="true" />
           <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="100" :visible="false" />
           <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" />
-          <DxColumn data-field="stok_id" caption="STOK ID" :visible="false"  :width="50"/>
-          <DxColumn data-field="stok_kodu" caption="STOK KODU"  :width="150"/>
-          <DxColumn data-field="stok_adi" caption="STOK ADI"  :width="auto" />
+          <DxColumn data-field="stok_id" caption="STOK ID" :visible="false" :width="50" />
+          <DxColumn data-field="stok_kodu" caption="STOK KODU" :width="150" />
+          <DxColumn data-field="stok_adi" caption="STOK ADI" :width="auto" />
           <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MİKTARI" :width="120" data-type="number" :format="{
             type: 'fixedPoint',
             precision: 2,
@@ -433,12 +432,12 @@
             thousandsSeparator: ',',
           }" />
 
-            <DxSummary>
-              <DxTotalItem :align-by-column="true" column="isemri_miktari" summary-type="sum" display-format="{0} ad"
-                :alignment="right" />
-              <DxTotalItem :align-by-column="true" column="kalan" summary-type="sum" display-format="{0} ad"
-                :alignment="right" />
-            </DxSummary>
+          <DxSummary>
+            <DxTotalItem :align-by-column="true" column="isemri_miktari" summary-type="sum" display-format="{0} ad"
+              :alignment="right" />
+            <DxTotalItem :align-by-column="true" column="kalan" summary-type="sum" display-format="{0} ad"
+              :alignment="right" />
+          </DxSummary>
 
           <DxGroupPanel :visible="false" />
           <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
@@ -593,6 +592,7 @@ const getMalzemeler = async () => {
         siparis: siparis.value,
         cari: cari.value,
         coID: userData.value.co_id,
+        isemriNo: emirNo.value,
       },
     })
     gridDataM.value = response.data.emirler
@@ -624,6 +624,11 @@ const getMerkezler = async () => {
 }
 
 const getIstasyonlar = async () => {
+  if (!merkez.value) {
+    istasyonlar.value = [];
+    istasyon.value = 0;
+    return;
+  }
   istasyon.value = 0;
   gridDataM.value = [];
   loadingVisible.value = true
@@ -634,6 +639,28 @@ const getIstasyonlar = async () => {
       },
     })
     istasyonlar.value = response.data.istasyonlar
+  } catch (error) {
+    console.error('Veri çekilirken hata oluştu: ', error)
+  } finally {
+    loadingVisible.value = false
+  }
+}
+
+const getIsEmriNolari = async () => {
+  emirNo.value = '';
+  emirnolari.value = [];
+  loadingVisible.value = true
+  try {
+    const response = await axios.get('/api/isemri-nolari', {
+      params: {
+        filterValue: filterValue.value,
+        filterValue1: filterValue1.value,
+        ismerkezi: merkez.value,
+        istasyon: istasyon.value,
+      },
+    })
+    emirnolari.value = response.data.emirnolari
+    // console.log(emirnolari.value);
   } catch (error) {
     console.error('Veri çekilirken hata oluştu: ', error)
   } finally {

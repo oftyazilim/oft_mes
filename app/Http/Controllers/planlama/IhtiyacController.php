@@ -17,13 +17,13 @@ class IhtiyacController extends Controller
   {
     ini_set('max_execution_time', 1500); // 5 dakika
 
-    Log::info($request->all());
+    // Log::info($request->all());
     try {
-      $anadepolar = DB::connection('pgsql')
-        ->table('uyumsoft.invd_whouse')
-        ->select('whouse_id')
-        ->where('whouse_width', '1')
-        ->get();
+      // $anadepolar = DB::connection('pgsql')
+      //   ->table('uyumsoft.invd_whouse')
+      //   ->select('whouse_id')
+      //   ->where('whouse_width', '1')
+      //   ->get();
 
       $satinalmasiparisleri = DB::connection('pgsql')
         ->table('uyumsoft.zz_bk_tumsiparisler')
@@ -142,24 +142,24 @@ class IhtiyacController extends Controller
       }
 
       // Depo bakiyelerini toplu hesapla
-      $anaDepoIds = $anadepolar->pluck('whouse_id')->toArray();
+      // $anaDepoIds = $anadepolar->pluck('whouse_id')->toArray();
       $itemIds = array_values(array_unique(array_map(function ($r) {
         return (int)$r['item_id'];
       }, $bulkUpdates)));
 
-      $anaDepoSums = DB::connection('pgsql')
-        ->table('uyumsoft.OFTV_DIGER_DEPOLAR')
-        ->select('item_id', DB::raw('SUM(qty_prm) as s'))
-        ->whereIn('whouse_id', $anaDepoIds)
-        ->whereIn('item_id', $itemIds)
-        ->groupBy('item_id')
-        ->get()
-        ->keyBy('item_id');
+      // $anaDepoSums = DB::connection('pgsql')
+      //   ->table('uyumsoft.OFTV_DIGER_DEPOLAR')
+      //   ->select('item_id', DB::raw('SUM(qty_prm) as s'))
+      //   ->whereIn('whouse_id', $anaDepoIds)
+      //   ->whereIn('item_id', $itemIds)
+      //   ->groupBy('item_id')
+      //   ->get()
+      //   ->keyBy('item_id');
 
       $nonAnaRows = DB::connection('pgsql')
         ->table('uyumsoft.OFTV_DIGER_DEPOLAR')
         ->select('item_id', 'whouse_id', DB::raw('SUM(qty_prm) as s'))
-        ->whereNotIn('whouse_id', $anaDepoIds)
+        // ->whereNotIn('whouse_id', $anaDepoIds)
         ->whereIn('item_id', $itemIds)
         ->groupBy('item_id', 'whouse_id')
         ->get();
@@ -175,10 +175,10 @@ class IhtiyacController extends Controller
         $perWhouse[$iid][$wid] = $sum;
       }
 
-      Log::info('AnaDepoSums:', ['sums' => $anaDepoSums]);
-      Log::info('NonAnaTotals:', ['totals' => $nonAnaTotals]);
-      Log::info('PerWhouse:', ['perWhouse' => $perWhouse]);
-      Log::info('PerxxxWhouse:', ['perWhouse' => $bulkUpdates]);
+      // Log::info('AnaDepoSums:', ['sums' => $anaDepoSums]);
+      // Log::info('NonAnaTotals:', ['totals' => $nonAnaTotals]);
+      // Log::info('PerWhouse:', ['perWhouse' => $perWhouse]);
+      // Log::info('PerxxxWhouse:', ['perWhouse' => $bulkUpdates]);
 
       foreach ($bulkUpdates as &$list) {
         $iid = (int)$list['item_id'];
@@ -536,6 +536,9 @@ class IhtiyacController extends Controller
         ->when($request->cari, function ($query, $cari) {
           return $query->where('cari_ad', $cari);
         })
+        ->when($request->isemriNo, function ($query, $isemriNo) {
+          return $query->where('isemri_no', $isemriNo);
+        })
         ->whereNot('OPERASYON', 'HAYALET')
         ->whereNot('OPERASYON_KODU', 'M12')
         ->where('Rotadaki_Son_Operasyon', 1)
@@ -661,10 +664,10 @@ class IhtiyacController extends Controller
         $perWhouse[$iid][$wid] = $sum;
       }
 
-      Log::info('AnaDepoSums:', ['sums' => $anaDepoSums]);
-      Log::info('NonAnaTotals:', ['totals' => $nonAnaTotals]);
-      Log::info('PerWhouse:', ['perWhouse' => $perWhouse]);
-      Log::info('PerxxxWhouse:', ['perWhouse' => $bulkUpdates]);
+      // Log::info('AnaDepoSums:', ['sums' => $anaDepoSums]);
+      // Log::info('NonAnaTotals:', ['totals' => $nonAnaTotals]);
+      // Log::info('PerWhouse:', ['perWhouse' => $perWhouse]);
+      // Log::info('PerxxxWhouse:', ['perWhouse' => $bulkUpdates]);
 
       foreach ($bulkUpdates as &$list) {
         $iid = (int)$list['item_id'];
@@ -719,7 +722,7 @@ class IhtiyacController extends Controller
 
   public function getMerkezler(Request $request)
   {
-    Log::info($request->all());
+    // Log::info($request->all());
     $merkezler = DB::connection('pgsql')
       ->table('uyumsoft.zz_bk_OFTV_IS_ISTASYONLARI')
       ->select(
@@ -771,9 +774,17 @@ class IhtiyacController extends Controller
   {
 
     // Log::info($request->all());
-    $istasyonArray = explode(',', $request->ismerkezi);
+    // $istasyonArray = explode(',', $request->ismerkezi);
 
     // Log::info($istasyonArray);
+
+    if (empty($request->ismerkezi)) {
+      return response()->json([
+        'istasyonlar' => [],
+        'message' => 'İstasyonlar için geçerli bir iş merkezi ID sağlanmadı',
+        'success' => false,
+      ], 400);
+    }
 
     $istasyonlar = DB::connection('pgsql')
       ->table('uyumsoft.zz_bk_OFTV_IS_ISTASYONLARI')
@@ -782,14 +793,36 @@ class IhtiyacController extends Controller
         'istasyon_kodu',
         DB::raw("concat_ws('-', istasyon_kodu, istasyon_adi) as ist_adi") // 1200 ve istasyon_adi birleştirildi
       )
-      ->whereIn('is_merkezi_id', $istasyonArray)
-      // ->where('firma_id', request()->coID)
+      ->where('is_merkezi_id', $request->ismerkezi)
       ->orderBy('istasyon_kodu')
       ->distinct()
       ->get();
 
     return response()->json([
       'istasyonlar' => $istasyonlar,
+      'message' => 'Veriler başarıyla alındı',
+      'success' => true,
+    ]);
+  }
+
+  public function getIsEmriNoAl(Request $request)
+  {
+
+    Log::info($request->all());
+
+    $emirnolari = DB::connection('pgsql')
+      ->table('uyumsoft.OFTV_ISEMIRLERI_DETAY')
+      ->select('isemri_no')
+      ->whereDate('planlanan_bitis_tarihi', '>=', $request->filterValue)
+      ->whereDate('planlanan_bitis_tarihi', '<=', $request->filterValue1)
+      ->where('IS_MERKEZI_ID', $request->ismerkezi)
+      ->where('IS_ISTASYONU_ID', $request->istasyon)
+      ->orderBy('isemri_no')
+      ->distinct()
+      ->get();
+
+    return response()->json([
+      'emirnolari' => $emirnolari,
       'message' => 'Veriler başarıyla alındı',
       'success' => true,
     ]);
