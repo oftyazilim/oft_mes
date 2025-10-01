@@ -343,7 +343,7 @@ class UretimRollFormController extends Controller
         'oid.isemri_no',
         'oid.stok_kodu',
         'oid.stok_adi',
-        'oid.siparis_miktari',
+        'oid.isemri_miktari',
         'oid.kalan_miktar',
         'oid.uretilen_net_miktar',
         'oid.toplam_hurda_miktari',

@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { VCard } from 'vuetify/components'
+
+import { computed, onMounted, ref } from 'vue'
+import { VCard, VBtn, VTextField } from 'vuetify/components'
+// Yerel JSON: ağaç verisi
+// tsconfig resolveJsonModule aktif; doğrudan import edebiliriz
+// Yol: aynı klasörde agac.json
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 
 // Dinamik kelimeler (göz alıcı ama sakin döngü)
 const words = ['Verimlilik', 'İzlenebilirlik', 'Şeffaflık', 'Hız', 'Kalite']
 const activeIndex = ref(0)
 const prefersReducedMotion = ref(false)
 let rotateTimer: number | null = null
+
 
 onMounted(() => {
   try { prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)')?.matches } catch (_) { }
@@ -24,50 +31,7 @@ onMounted(() => {
   <VCard class="welcome-page">
 
 
-<!--
-This demo was very old and overly complex
-I have updated it with a cleaner, more modern technique
-It still uses mix-blend-modes, so the basic idea hasn't changed
 
-Original:
-https://codepen.io/giana/pen/MWxONWm
--->
-<!-- <div class="text-effect-wrapper">
-  <h1 class="text" contenteditable>oft mes</h1>
-</div>
-
-<label for="option-toggle">
-  <input type="checkbox" id="option-toggle"> Version toggle
-</label> -->
-
-
-
-
-<!-- <div class="stage">
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-  <div class="layer"></div>
-</div> -->
-
-
- 
     <div class="welcome-card">
       <h1 class="welcome-title gradient-cycle">
         <span class="title-text">OFT MES'e Hoşgeldiniz!</span>
@@ -90,7 +54,6 @@ https://codepen.io/giana/pen/MWxONWm
     </div>
   </VCard>
 
-  <!-- <img :src="`/photo/fotolar/kk-fotolari/IEN-25035323/IEN-25035323-00001-01.jpg`" alt="foto" /> -->
 
 </template>
 
@@ -135,7 +98,7 @@ https://codepen.io/giana/pen/MWxONWm
 }
 
 .gradient-cycle {
-  animation: titleGradient 14s linear infinite;
+  animation: title-gradient 14s linear infinite;
   background: linear-gradient(90deg, #1e293b, #334155, #2563eb, #1e293b);
   background-clip: text;
   background-size: 280% 100%;
@@ -144,11 +107,30 @@ https://codepen.io/giana/pen/MWxONWm
 
 .welcome-title .shine {
   position: absolute;
-  animation: shineMove 6.5s ease-in-out infinite;
+  animation: shine-move 6.5s ease-in-out infinite;
   background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 15%) 45%, rgba(255, 255, 255, 60%) 50%, rgba(255, 255, 255, 15%) 55%, transparent 100%);
   inset: 0;
   mix-blend-mode: overlay;
   pointer-events: none;
+}
+
+.home-tree {
+  margin-block-start: 24px;
+}
+
+.tree-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-block-end: 8px;
+}
+
+.tree-toolbar .root-field {
+  max-inline-size: 280px;
+}
+
+.tree-toolbar .toolbar-actions {
+  margin-inline-start: auto;
 }
 
 .welcome-desc {
@@ -214,7 +196,7 @@ https://codepen.io/giana/pen/MWxONWm
   transform: translateY(-18px) scale(0.94);
 }
 
-@keyframes titleGradient {
+@keyframes title-gradient {
   0% {
     background-position: 0% 50%;
   }
@@ -224,7 +206,7 @@ https://codepen.io/giana/pen/MWxONWm
   }
 }
 
-@keyframes shineMove {
+@keyframes shine-move {
 
   0%,
   45% {
@@ -252,5 +234,4 @@ https://codepen.io/giana/pen/MWxONWm
     inline-size: 80px;
   }
 }
-
 </style>

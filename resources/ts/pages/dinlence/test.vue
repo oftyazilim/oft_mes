@@ -1,11 +1,31 @@
 <template>
-  <DxGantt
-    ref="ganttRef"
-    :task-list-width="500"
-    :height="700"
-    scale-type="weeks"
-    :root-value="-1"
-  >
+  <!-- Ağaç Görünümü (DevExtreme TreeList) -->
+  <div class="home-tree">
+    <div class="tree-toolbar">
+      <div class="toolbar-actions">
+        <VBtn size="small" color="secondary" variant="tonal" class="ml-1" @click="collapseAll">Collapse all</VBtn>
+      </div>
+    </div>
+
+    <DxTreeList id="employees" :data-source="treeData" ref="treeList" :allow-column-reordering="true"
+      :allow-column-resizing="true" :show-borders="true"  key-expr="sub_worder_id"
+      parent-id-expr="sub_worder_parent_id" :column-auto-width="true" height="420">
+      <DxSelection :recursive="true" mode="single" />
+      <DxFilterRow :visible="true" />
+      <DxStateStoring :enabled="true" type="localStorage" storage-key="treeListStorage" />
+      <DxColumn data-field="sub_worder_id" caption="Alt Emir ID" :width="120" />
+      <DxColumn data-field="sub_worder_parent_id" caption="Üst ID" :width="100" />
+      <DxColumn data-field="item_id" caption="Stok ID" :width="120" />
+      <DxColumn data-field="bom_m_id" caption="BOM ID" :width="120" />
+      <DxColumn data-field="qty" caption="Adet" data-type="number" :width="90" />
+      <DxColumn data-field="unit_id" caption="Birim" :width="90" />
+      <DxColumn data-field="product_route_m_id" caption="Rota" :width="110" />
+      <DxColumn data-field="create_date" caption="Oluşturma" data-type="date" :width="170" />
+    </DxTreeList>
+  </div>
+  
+    <br>
+  <DxGantt ref="ganttRef" :task-list-width="500" :height="700" scale-type="weeks" :root-value="-1">
     <DxTasks :data-source="tasks" />
     <DxDependencies :data-source="dependencies" />
     <DxResources :data-source="resources" />
@@ -29,9 +49,9 @@
     <DxEditing :enabled="true" />
     <DxValidation :auto-update-parent-tasks="true" />
 
-    <DxColumn :width="300" data-field="title" caption="Subject" />
-    <DxColumn data-field="start" caption="Start Date" />
-    <DxColumn data-field="end" caption="End Date" />
+    <DxGanttColumn :width="300" data-field="title" caption="Subject" />
+    <DxGanttColumn data-field="start" caption="Start Date" />
+    <DxGanttColumn data-field="end" caption="End Date" />
   </DxGantt>
 
   <div class="options">
@@ -40,11 +60,7 @@
       <div class="option">
         <div class="label">Document format:</div>
         <div class="value">
-          <DxSelectBox
-            :items="formats"
-            :input-attr="{ 'aria-label': 'Format' }"
-            v-model:value="formatBoxValue"
-          />
+          <DxSelectBox :items="formats" :input-attr="{ 'aria-label': 'Format' }" v-model:value="formatBoxValue" />
         </div>
       </div>
       <div class="option">
@@ -56,22 +72,15 @@
       <div class="option">
         <div class="label">Export mode:</div>
         <div class="value">
-          <DxSelectBox
-            :items="exportModes"
-            :input-attr="{ 'aria-label': 'Export Mode' }"
-            v-model:value="exportModeBoxValue"
-          />
+          <DxSelectBox :items="exportModes" :input-attr="{ 'aria-label': 'Export Mode' }"
+            v-model:value="exportModeBoxValue" />
         </div>
       </div>
       <div class="option">
         <div class="label">Date range:</div>
         <div class="value">
-          <DxSelectBox
-            :items="dateRanges"
-            v-model:value="dateRangeBoxValue"
-            :input-attr="{ 'aria-label': 'Date Range' }"
-            @value-changed="dateRangeBoxSelectionChanged($event)"
-          />
+          <DxSelectBox :items="dateRanges" v-model:value="dateRangeBoxValue"
+            :input-attr="{ 'aria-label': 'Date Range' }" @value-changed="dateRangeBoxSelectionChanged($event)" />
         </div>
       </div>
     </div>
@@ -80,84 +89,76 @@
       <div class="option">
         <div class="label">Start task (index):</div>
         <div class="value">
-          <DxNumberBox
-            :disabled="customRangeDisabled"
-            :value="startTaskIndex"
-            :min="0"
-            :max="endTaskIndex"
-            :show-spin-buttons="true"
-            :input-attr="{ 'aria-label': 'Start Task Index' }"
-            @value-changed="startTaskIndexChanged"
-          />
+          <DxNumberBox :disabled="customRangeDisabled" :value="startTaskIndex" :min="0" :max="endTaskIndex"
+            :show-spin-buttons="true" :input-attr="{ 'aria-label': 'Start Task Index' }"
+            @value-changed="startTaskIndexChanged" />
         </div>
       </div>
       <div class="option">
         <div class="label">End task (index):</div>
         <div class="value">
-          <DxNumberBox
-            :disabled="customRangeDisabled"
-            :value="endTaskIndex"
-            :min="startTaskIndex"
-            :max="tasks.length - 1"
-            :show-spin-buttons="true"
-            :input-attr="{ 'aria-label': 'End Task Index' }"
-            @value-changed="endTaskIndexChanged"
-          />
+          <DxNumberBox :disabled="customRangeDisabled" :value="endTaskIndex" :min="startTaskIndex"
+            :max="tasks.length - 1" :show-spin-buttons="true" :input-attr="{ 'aria-label': 'End Task Index' }"
+            @value-changed="endTaskIndexChanged" />
         </div>
       </div>
       <div class="option">
         <div class="label">Start date:</div>
         <div class="value">
-          <DxDateBox
-            :disabled="customRangeDisabled"
-            :input-attr="{ 'aria-label': 'Start Date' }"
-            v-model:value="startDate"
-            :max="endDate"
-            type="date"
-            apply-value-mode="useButtons"
-          />
+          <DxDateBox :disabled="customRangeDisabled" :input-attr="{ 'aria-label': 'Start Date' }"
+            v-model:value="startDate" :max="endDate" type="date" apply-value-mode="useButtons" />
         </div>
       </div>
       <div class="option">
         <div class="label">End date:</div>
         <div class="value">
-          <DxDateBox
-            :disabled="customRangeDisabled"
-            :input-attr="{ 'aria-label': 'End Date' }"
-            v-model:value="endDate"
-            :min="startDate"
-            type="date"
-            apply-value-mode="useButtons"
-          />
+          <DxDateBox :disabled="customRangeDisabled" :input-attr="{ 'aria-label': 'End Date' }" v-model:value="endDate"
+            :min="startDate" type="date" apply-value-mode="useButtons" />
         </div>
       </div>
     </div>
   </div>
+
+
+
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import {
-  DxGantt,
-  DxTasks,
-  DxDependencies,
-  DxResources,
-  DxResourceAssignments,
-  DxColumn,
-  DxEditing,
-  DxToolbar,
-  DxItem,
-} from "devextreme-vue/gantt";
+import "devexpress-gantt/dist/dx-gantt.min.css";
 import DxCheckBox from "devextreme-vue/check-box";
-import DxNumberBox from "devextreme-vue/number-box";
+import { exportGantt as exportGanttToPdf } from "devextreme-vue/common/export/pdf";
 import DxDateBox from "devextreme-vue/date-box";
+import {
+  DxDependencies,
+  DxEditing,
+  DxGantt,
+  DxColumn as DxGanttColumn,
+  DxItem,
+  DxResourceAssignments,
+  DxResources,
+  DxTasks,
+  DxToolbar,
+} from "devextreme-vue/gantt";
+import DxNumberBox from "devextreme-vue/number-box";
 import DxSelectBox from "devextreme-vue/select-box";
+import {
+  DxColumn,
+  DxFilterRow,
+  DxSelection,
+  DxStateStoring,
+  DxTreeList,
+} from 'devextreme-vue/tree-list';
+// import type { GanttPdfExportDateRange, GanttPdfExportMode } from 'devextreme/ui/gantt';
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
-import { exportGantt as exportGanttToPdf } from "devextreme-vue/common/export/pdf";
-// import { type GanttPdfExportMode } from 'devextreme/ui/gantt';
-import { tasks, dependencies, resources, resourceAssignments } from "./data.ts";
-import "devexpress-gantt/dist/dx-gantt.min.css";
+import { ref } from 'vue';
+import agac from './agac.json';
+import {
+  dateRanges,
+  exportModes,
+  formats,
+  tasks
+} from './data';
 
 const ganttRef = ref();
 
@@ -166,7 +167,7 @@ const exportButtonOptions = {
   icon: "exportpdf",
   stylingMode: "text",
   onClick: () => {
-    exportGantt();
+    // exportGantt();
   },
 };
 const formatBoxValue = ref(formats[0]);
@@ -179,70 +180,101 @@ const startDate = ref(tasks[0].start);
 const endDate = ref(tasks[0].end);
 const customRangeDisabled = ref(true);
 
-async function exportGantt() {
-  const format = formatBoxValue.value.toLowerCase();
-  const isLandscape = landscapeCheckBoxValue.value;
-  const exportMode: GanttPdfExportMode =
-    exportModeBoxValue.value === "Tree List"
-      ? "treeList"
-      : (exportModeBoxValue.value.toLowerCase() as GanttPdfExportMode);
-  const dataRangeMode = dateRangeBoxValue.value.toLowerCase();
-  let dataRange;
-  if (dataRangeMode === "custom") {
-    dataRange = {
-      startIndex: startTaskIndex.value,
-      endIndex: endTaskIndex.value,
-      startDate: startDate.value,
-      endDate: endDate.value,
-    };
-  } else {
-    dataRange = dataRangeMode;
-  }
-  const doc = await exportGanttToPdf({
-    component: ganttRef.value.instance,
-    createDocumentMethod: (args) => new jsPDF(args),
-    format,
-    landscape: isLandscape,
-    exportMode,
-    dateRange: dataRange,
-  });
+const treeList = ref<any>(null);
+// TreeList tam veri kaynağı (yerel JSON)
+const treeData = ref<any[]>(Array.isArray(agac?.prdt_worder_sub) ? agac.prdt_worder_sub : [])
 
-  doc.save("gantt.pdf");
+function collapseAll() {
+  // const inst = treeList.value?.instance
+  // if (inst?.collapseAll) {
+  //   inst.collapseAll()
+  //   return
+  // }
+  // // Fallback: tüm ebeveyn düğümlerde collapseRow uygula
+  // const nodes = treeData.value || []
+  // if (inst && nodes.length) {
+  //   const parentSet = new Set<string>()
+  //   for (const n of nodes) {
+  //     const pid = String(n?.sub_worder_parent_id ?? '')
+  //     const id = String(n?.sub_worder_id ?? '')
+  //     if (pid && id) parentSet.add(pid)
+  //   }
+  //   parentSet.forEach(k => inst.collapseRow?.(k))
+  // }
 }
-function dateRangeBoxSelectionChanged(e) {
+
+// async function exportGantt() {
+//   const format = formatBoxValue.value.toLowerCase();
+//   const isLandscape = landscapeCheckBoxValue.value;
+//   const exportMode: GanttPdfExportMode =
+//     exportModeBoxValue.value === "Tree List"
+//       ? "treeList"
+//       : (exportModeBoxValue.value.toLowerCase() as GanttPdfExportMode);
+//   const dataRangeMode = (dateRangeBoxValue.value.toLowerCase() as 'all' | 'visible' | 'custom');
+//   let dateRangeOpt: GanttPdfExportDateRange | {
+//     startIndex: number;
+//     endIndex: number;
+//     startDate: Date;
+//     endDate: Date;
+//   } | undefined;
+//   if (dataRangeMode === 'custom') {
+//     dateRangeOpt = {
+//       startIndex: startTaskIndex.value,
+//       endIndex: endTaskIndex.value,
+//       startDate: startDate.value,
+//       endDate: endDate.value,
+//     };
+//   } else {
+//     dateRangeOpt = dataRangeMode;
+//   }
+//   const doc = await exportGanttToPdf({
+//     component: ganttRef.value.instance,
+//     createDocumentMethod: (args) => new jsPDF(args),
+//     format,
+//     landscape: isLandscape,
+//     exportMode,
+//     // Tip uyuşmazlığını aşmak için dateRange'i uygun tipe cast ediyoruz
+//     dateRange: dateRangeOpt,
+//   });
+
+//   doc.save("gantt.pdf");
+// }
+function dateRangeBoxSelectionChanged(e: any) {
   customRangeDisabled.value = e.value !== "Custom";
 }
-function startTaskIndexChanged(e) {
+function startTaskIndexChanged(e: any) {
   startTaskIndex.value = e.value;
 }
-function endTaskIndexChanged(e) {
+function endTaskIndexChanged(e: any) {
   endTaskIndex.value = e.value;
 }
 </script>
 
-<style>
+<style scoped>
 #gantt {
-  height: 700px;
+  block-size: 700px;
 }
 
 .options {
-  background-color: rgba(191, 191, 191, 0.15);
-  margin-top: 20px;
   display: flex;
+  background-color: rgb(191 191 191 / 15%);
+  margin-block-start: 20px;
 }
 
 .column {
-  width: 40%;
   display: flex;
   flex-direction: column;
-  margin: 15px 3%;
-  text-align: left;
+  inline-size: 40%;
+  margin-block: 15px;
+  margin-inline: 3%;
+  text-align: start;
 }
 
 .option {
-  padding: 5px 0;
   display: flex;
   align-items: center;
+  padding-block: 5px;
+  padding-inline: 0;
 }
 
 .label,
@@ -252,15 +284,20 @@ function endTaskIndexChanged(e) {
 }
 
 .label {
-  width: 180px;
+  inline-size: 180px;
 }
 
 .value {
-  width: 30%;
+  inline-size: 30%;
 }
 
 .caption {
   font-size: 18px;
   font-weight: 500;
+}
+
+#employees {
+  block-size: 440px;
+  margin-block-start: 30px;
 }
 </style>

@@ -1132,7 +1132,7 @@ async function fetchIsEmirleri() {
       isEmriNo: r.isemri_no,
       stokKodu: r.stok_kodu,
       stokAdi: r.stok_adi,
-      plnAd: Number(r.siparis_miktari ?? 0),
+      plnAd: Number(r.isemri_miktari ?? 0),
       ilvAd: 0,
       klnAd: Number(r.kalan_miktar ?? 0),
       urtAd: Number(r.uretilen_net_miktar ?? 0),
