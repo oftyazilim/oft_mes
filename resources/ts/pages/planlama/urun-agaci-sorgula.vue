@@ -96,10 +96,30 @@ async function loadData() {
       noResultMessage.value = 'Kayıt bulunamadı.'
       noResultType.value = 'warning'
     }
-  } catch (e) {
+  } catch (e: any) {
+    // Sunucu hatasını detaylı incelemek için console'a yaz
+    // Not: Üretimde Sentry benzeri bir araca da gönderilebilir.
+    // eslint-disable-next-line no-console
+    console.error('urun-agaci-sorgula çağrısı hata verdi:', e)
+
     rows.value = []
-    noResultMessage.value = 'Sorgu sırasında bir hata oluştu.'
-    noResultType.value = 'error'
+    const status = e?.response?.status as number | undefined
+    if (status === 401 || status === 419) {
+      noResultMessage.value = 'Oturum doğrulaması gerekli. Lütfen giriş yapın ve tekrar deneyin.'
+      noResultType.value = 'warning'
+    } else if (status === 403) {
+      noResultMessage.value = 'Bu işlem için yetkiniz yok.'
+      noResultType.value = 'warning'
+    } else if (status === 404) {
+      noResultMessage.value = 'Servis bulunamadı (404).'
+      noResultType.value = 'error'
+    } else if (typeof status === 'number' && status >= 500) {
+      noResultMessage.value = 'Sunucu tarafında bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
+      noResultType.value = 'error'
+    } else {
+      noResultMessage.value = 'Sorgu sırasında bir hata oluştu.'
+      noResultType.value = 'error'
+    }
   } finally {
     loading.value = false
   }
