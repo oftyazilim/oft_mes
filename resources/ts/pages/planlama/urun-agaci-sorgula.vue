@@ -14,6 +14,7 @@
       <VTextField v-model="miktar" label="Miktar" density="comfortable" hide-details="auto" class="miktar-input"
         placeholder="1" type="number" min="0" step="any" />
       <VBtn color="secondary" variant="outlined" @click="hesapla">Hesapla</VBtn>
+      <VBtn color="success" variant="outlined" @click="exportExcel">Excel'e Aktar</VBtn>
     </div>
 
     <VAlert v-if="!loading && noResultMessage" :type="noResultType || 'info'" variant="tonal" density="comfortable"
@@ -30,10 +31,10 @@
       <DxFilterRow :visible="true" />
       <DxStateStoring :enabled="true" type="localStorage" storage-key="treeListStorage" />
 
-      <DxColumn data-field="exploded_id" caption="Exploded ID" :width="170" :visible="false" />
-      <DxColumn data-field="parent_exploded_id" caption="Parent ID" :width="120" :visible="false" />
+      <DxColumn data-field="exploded_id" caption="Exploded ID" :width="170" :visible="true" />
+      <DxColumn data-field="parent_exploded_id" caption="Parent ID" :width="120" :visible="true" />
       <DxColumn data-field="tipi" caption="Tipi" :width="250" />
-      <DxColumn data-field="exploded_level" caption="Seviye" :width="90" :visible="false" />
+      <DxColumn data-field="exploded_level" caption="Seviye" :width="90" :visible="true" />
       <DxColumn data-field="line_no" caption="Satır No" :width="90" />
       <DxColumn data-field="bom_line_type" caption="Tip" :width="80" :visible="false" />
       <DxColumn data-field="item_code" caption="Stok Kodu" :width="140" />
@@ -41,25 +42,25 @@
       <DxColumn data-field="operation_no" caption="Operasyon No" :width="110" />
       <DxColumn data-field="operation_name" caption="Operasyon Adı" :width="180" />
       <DxColumn data-field="qty_prm_exploded" caption="Miktar" data-type="number" :width="110" :format="{
-                type: 'fixedPoint',
-                precision: 1,
-                thousandsSeparator: ',',
-              }"/>
+        type: 'fixedPoint',
+        precision: 1,
+        thousandsSeparator: ',',
+      }" />
       <DxColumn data-field="ihtiyac" caption="İhtiyaç" data-type="number" :width="110" :format="{
-                type: 'fixedPoint',
-                precision: 1,
-                thousandsSeparator: ',',
-              }"/>
+        type: 'fixedPoint',
+        precision: 1,
+        thousandsSeparator: ',',
+      }" />
       <DxColumn data-field="stok" caption="Stok" data-type="number" :width="110" :format="{
-                type: 'fixedPoint',
-                precision: 1,
-                thousandsSeparator: ',',
-              }"/>
+        type: 'fixedPoint',
+        precision: 1,
+        thousandsSeparator: ',',
+      }" />
       <DxColumn data-field="bakiye" caption="Bakiye" data-type="number" :width="110" :format="{
-                type: 'fixedPoint',
-                precision: 1,
-                thousandsSeparator: ',',
-              }"/>
+        type: 'fixedPoint',
+        precision: 1,
+        thousandsSeparator: ',',
+      }" />
     </DxTreeList>
   </div>
 
@@ -74,6 +75,8 @@ import {
   DxStateStoring,
   DxTreeList,
 } from 'devextreme-vue/tree-list';
+import { Workbook } from 'exceljs';
+import { saveAs } from 'file-saver';
 import "jspdf-autotable";
 import { computed, nextTick, ref } from 'vue';
 
@@ -261,6 +264,99 @@ function onCellPrepared(e: any) {
   }
   if (e.column.dataField === 'bakiye' && e.cellElement && Number(e.value) < 0) {
     (e.cellElement as HTMLElement).style.backgroundColor = 'red'
+  }
+}
+
+async function exportExcel() {
+  try {
+    const wb = new Workbook()
+    const ws = wb.addWorksheet('UrunAgaci')
+
+    // Sütun tanımları
+    ws.columns = [
+      { header: 'ID', key: 'exploded_id', width: 10 },
+      { header: 'Parent ID', key: 'parent_exploded_id', width: 10 },
+      { header: 'Tipi', key: 'tipi', width: 25 },
+      { header: 'Stok Kodu', key: 'item_code', width: 18 },
+      { header: 'Stok Adı', key: 'item_name', width: 36 },
+      { header: 'Operasyon No', key: 'operation_no', width: 16 },
+      { header: 'Operasyon Adı', key: 'operation_name', width: 24 },
+      { header: 'Miktar', key: 'qty_prm_exploded', width: 14 },
+      { header: 'İhtiyaç', key: 'ihtiyac', width: 14 },
+      { header: 'Stok', key: 'stok', width: 14 },
+      { header: 'Bakiye', key: 'bakiye', width: 14 },
+    ] as any
+
+    // Başlıkları kalın yap
+    ws.getRow(1).font = { bold: true }
+
+    // Verileri yaz
+    const data = treeData.value || []
+    for (const r of data) {
+      const level: number = Number(r?.exploded_level ?? 0)
+      const row = ws.addRow({
+        exploded_id: r?.exploded_id ?? '',
+        parent_exploded_id: r?.parent_exploded_id ?? '',
+        tipi: r?.tipi ?? '',
+        item_code: r?.item_code ?? '',
+        // Stok adını görsel girintiyle yaz (• ve boşluklarla)
+        item_name: `${' '.repeat(level * 2)}${level > 0 ? '• ' : ''}${r?.item_name ?? ''}`,
+        operation_no: r?.operation_no ?? '',
+        operation_name: r?.operation_name ?? '',
+        qty_prm_exploded: Number(r?.qty_prm_exploded ?? 0),
+        ihtiyac: Number(r?.ihtiyac ?? 0),
+        stok: Number(r?.stok ?? 0),
+        bakiye: Number(r?.bakiye ?? 0),
+      })
+      // Outline seviyesi ile hiyerarşi vurgusu
+      // @ts-ignore exceljs typings allow outlineLevel on row
+      row.outlineLevel = Math.max(0, level)
+    }
+
+    // Sayı formatları ve kolon bazında vurgular
+    // Yerel sayı formatı (tr-TR benzeri): binlik ayırıcı nokta, ondalık virgül
+    // Excel numFmt: . binlik, , ondalık. TR görünümü için hücre stili bölgeye bağlıdır; burada 2 ondalık sağlanır
+    const numFmt = '#,##0.00;[Red]-#,##0.00'
+    const boldCols = ['ihtiyac', 'stok', 'bakiye']
+    for (const c of ['qty_prm_exploded', 'ihtiyac', 'stok', 'bakiye']) {
+      const col = ws.getColumn(c)
+      // @ts-ignore exceljs typings
+      col.numFmt = numFmt
+      if (boldCols.includes(c)) {
+        // Tüm kolonu kalın yap (başlık zaten bold)
+        // @ts-ignore exceljs typings
+        col.eachCell({ includeEmpty: true }, (cell: any, rowNumber: number) => {
+          if (rowNumber > 1) cell.font = { ...(cell.font || {}), bold: true }
+        })
+      }
+    }
+
+    // Negatif bakiye hücrelerini kırmızı dolgu ile işaretle
+    const bakiyeIndex = ws.getColumn('bakiye').number
+    ws.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return
+      const cell = row.getCell(bakiyeIndex)
+      const val = Number(cell.value ?? 0)
+      if (Number.isFinite(val) && val < 0) {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFB3B3' } }
+      }
+    })
+
+    // Otomatik filtre
+    ws.autoFilter = 'A1:K1'
+
+    // Dinamik dosya adı: UrunAgaci_YYYYMMDD.xlsx
+    const now = new Date()
+    const yyyy = String(now.getFullYear())
+    const mm = String(now.getMonth() + 1).padStart(2, '0')
+    const dd = String(now.getDate()).padStart(2, '0')
+    const filename = `UrunAgaci_${yyyy}${mm}${dd}.xlsx`
+
+    const buffer = await wb.xlsx.writeBuffer()
+    saveAs(new Blob([buffer], { type: 'application/octet-stream' }), filename)
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Excel aktarımı başarısız:', err)
   }
 }
 </script>
