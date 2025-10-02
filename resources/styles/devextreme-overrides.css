@@ -1,12 +1,14 @@
-.dx-widget,
+/* .dx-widget,
 .dx-datagrid,
-.dx-datagrid *:not(.dx-icon):not(.dx-icon:before) {
+.dx-datagrid *:not(.dx-icon) {
   font-family: var(--v-font-family, "Inter", sans-serif) !important;
 }
 
 .dx-icon,
-.dx-icon:before {
-  font-family: DXIcons !important;
+.dx-icon::before {
+  font-family: DXIcons, sans-serif !important;
   font-style: normal;
   font-weight: normal;
 }
+
+*/

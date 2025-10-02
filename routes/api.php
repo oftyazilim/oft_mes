@@ -26,6 +26,7 @@ use App\Services\FileSearchController;
 use App\Services\FileServeController;
 use App\Http\Controllers\diger\DigerController;
 use App\Http\Controllers\NotificationSettingsController;
+use App\Http\Controllers\Planlama\UrunAgaciController;
 
 Route::group(['prefix' => 'auth'], function () {
   Route::post('login', [AuthController::class, 'login']);
@@ -193,6 +194,8 @@ Route::middleware('auth:sanctum')->group(function () {
 // planlama - BOM exploded ağacı
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/bom-exploded', [BomController::class, 'exploded']);
+  // Ürün Ağacı Sorgu
+  Route::get('/urun-agaci-sorgula', [UrunAgaciController::class, 'index']);
 });
 
 // satis

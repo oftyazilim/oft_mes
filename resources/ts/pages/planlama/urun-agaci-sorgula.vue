@@ -1,9 +1,13 @@
 <template>
   <!-- Ağaç Görünümü (DevExtreme TreeList) -->
-  <div class="pa-2">
+  <div>
     <div class="tree-toolbar">
-      <VTextField v-model="bomInput" label="BOM ID" density="comfortable" hide-details="auto" class="bom-input"
-        placeholder="ör: 120452" type="number" @keyup.enter="loadData" />
+      <VTextField v-model="stokKodu" label="Stok Kodu" density="comfortable" hide-details="auto" class="query-input"
+        placeholder="örn: ABC-123" type="text" @input="onStokKoduInput" @keyup.enter="loadData" />
+      <VTextField v-model="stokAdi" label="Stok Adı" density="comfortable" hide-details="auto" class="query-input"
+        placeholder="örn: Vida" type="text" @input="onStokAdiInput" @keyup.enter="loadData" />
+      <VTextField v-model="isEmriNo" label="İş Emri No" density="comfortable" hide-details="auto" class="query-input"
+        placeholder="örn: IEN-25000000" type="text" @input="onIsEmriNoInput" @keyup.enter="loadData" />
       <VBtn color="primary" variant="outlined" @click="loadData" :loading="loading">Göster</VBtn>
       <VBtn color="secondary" variant="outlined" @click="expandAll">Düğümleri Aç</VBtn>
       <VBtn color="secondary" variant="outlined" @click="collapseAll">Düğümleri Kapat</VBtn>
@@ -11,6 +15,11 @@
         placeholder="ör: 2" type="number" min="1" />
       <VBtn color="secondary" variant="outlined" @click="expandToLevel">Seviyeye kadar aç</VBtn>
     </div>
+
+    <VAlert v-if="!loading && noResultMessage" :type="noResultType || 'info'" variant="tonal" density="comfortable"
+      class="mt-2">
+      {{ noResultMessage }}
+    </VAlert>
 
     <DxTreeList id="agac" :data-source="treeData" ref="treeList" :allow-column-reordering="true"
       :allow-column-resizing="true" :show-borders="true" key-expr="exploded_id" parent-id-expr="parent_exploded_id"
@@ -34,6 +43,7 @@
 </template>
 
 <script setup lang="ts">
+import axios from 'axios';
 import {
   DxColumn,
   DxFilterRow,
@@ -41,16 +51,20 @@ import {
   DxStateStoring,
   DxTreeList,
 } from 'devextreme-vue/tree-list';
-// import type { GanttPdfExportDateRange, GanttPdfExportMode } from 'devextreme/ui/gantt';
-import axios from 'axios';
 import "jspdf-autotable";
 import { computed, nextTick, ref } from 'vue';
 
 const treeList = ref<any>(null);
 const loading = ref(false)
-const bomInput = ref<string>('')
 const rows = ref<any[]>([])
 const expandLevel = ref<string>('2')
+const noResultMessage = ref<string>('')
+const noResultType = ref<'warning' | 'error' | 'info' | undefined>(undefined)
+
+// Sorgu inputları
+const stokKodu = ref<string>('')
+const stokAdi = ref<string>('')
+const isEmriNo = ref<string>('')
 
 // TreeList veri kaynağı: kökleri gösterebilmek için parent_exploded_id = 0 -> null
 const treeData = computed<any[]>(() => {
@@ -61,14 +75,55 @@ const treeData = computed<any[]>(() => {
 })
 
 async function loadData() {
-  const id = (bomInput.value || '').trim()
-  if (!id || !/^\d+$/.test(id)) return
+  const code = (stokKodu.value || '').trim()
+  const name = (stokAdi.value || '').trim()
+  const wo = (isEmriNo.value || '').trim()
+
+  // Hangi input dolu ise ona göre parametre oluştur
+  let params: Record<string, any> | null = null
+  if (wo) params = { work_order_no: wo }
+  else if (code) params = { stock_code: code }
+  else if (name) params = { stock_name: name }
+  else return // hiçbiri dolu değilse çık
+
   loading.value = true
+  noResultMessage.value = ''
+  noResultType.value = undefined
   try {
-    const { data } = await axios.get('/api/bom-exploded', { params: { bom_m_id: Number(id) } })
+    const { data } = await axios.get('/api/urun-agaci-sorgula', { params })
     rows.value = Array.isArray(data) ? data : []
+    if (rows.value.length === 0) {
+      noResultMessage.value = 'Kayıt bulunamadı.'
+      noResultType.value = 'warning'
+    }
+  } catch (e) {
+    rows.value = []
+    noResultMessage.value = 'Sorgu sırasında bir hata oluştu.'
+    noResultType.value = 'error'
   } finally {
     loading.value = false
+  }
+}
+
+// Input temizleme mantığı
+function onStokKoduInput() {
+  if ((stokKodu.value || '').length > 0) {
+    stokAdi.value = ''
+    isEmriNo.value = ''
+  }
+}
+
+function onStokAdiInput() {
+  if ((stokAdi.value || '').length > 0) {
+    stokKodu.value = ''
+    isEmriNo.value = ''
+  }
+}
+
+function onIsEmriNoInput() {
+  if ((isEmriNo.value || '').length > 0) {
+    stokKodu.value = ''
+    stokAdi.value = ''
   }
 }
 
@@ -176,11 +231,11 @@ function onRowPrepared(e: any) {
   display: flex;
   align-items: center;
   gap: 12px;
-  
-    /* butonlar arasında hafif aralık */
+
+  /* butonlar arasında hafif aralık */
 }
 
-.bom-input {
+.query-input {
   inline-size: 200px;
 }
 </style>

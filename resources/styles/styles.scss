@@ -67,6 +67,36 @@
   padding-block: 6px !important; /* varsayılan ~14px yerine */
 }
 
+/* TreeList Filtre Satırı: editörleri sıkılaştır */
+.dx-treelist-rowsview .dx-row .dx-editor-cell {
+  padding-block: 2px !important;
+}
+
+.dx-treelist-rowsview .dx-row .dx-editor-cell .dx-texteditor {
+  min-block-size: 28px !important;
+}
+
+.dx-treelist-rowsview .dx-row .dx-editor-cell .dx-texteditor-input {
+  line-height: 24px !important;
+  padding-block: 2px !important;
+}
+
+/* TreeList Header (Filter Row dahil) editör boyutlarını düşür */
+.dx-treelist-headers .dx-row:not(.dx-header-row) td {
+  padding-block: 1px !important;
+}
+
+.dx-treelist-headers .dx-row:not(.dx-header-row) .dx-texteditor {
+  min-block-size: 26px !important;
+}
+
+.dx-treelist-headers .dx-row:not(.dx-header-row) .dx-texteditor-input {
+  line-height: 22px !important;
+  padding-block: 1px !important;
+}
+
+/* (İhtiyaç olursa rowsview içindeki editörler için de benzer ayarlar eklenebilir) */
+
 // .dx-datagrid-rowsview .dx-row > td {
 //   font-size: var(--dx-datagrid-font-size) !important;
 //   padding-block: 0 !important;
