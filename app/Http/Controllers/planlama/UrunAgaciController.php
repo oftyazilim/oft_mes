@@ -48,8 +48,8 @@ class UrunAgaciController extends Controller
                     ->leftJoin('uyumsoft.prdt_bom_exploded as pbe', 'pbe.exploded_bom_m_id', '=', 'pbm.bom_m_id')
                     ->where('ii.ispassive', 0)
                     ->where('pbm.is_default', 1)
-                    ->where('ii.item_name', '=', $stockName );
-                    // ->where('ii.item_name', 'like', '%' . $stockName . '%');
+                    ->where('ii.item_name', '=', $stockName);
+                // ->where('ii.item_name', 'like', '%' . $stockName . '%');
 
                 $bomId = $query->value('pbm.bom_m_id');
             }
@@ -62,7 +62,18 @@ class UrunAgaciController extends Controller
             $rows = DB::connection('pgsql')
                 ->table('uyumsoft.prdt_bom_exploded as pom')
                 ->leftJoin('uyumsoft.invd_item as ii', 'ii.item_id', '=', 'pom.item_id')
-                ->select([
+                ->leftJoin('uyumsoft.prdd_operation as po', 'po.operation_id', '=', 'pom.operation_id')
+                ->selectRaw("
+                    CASE ii.categories1_id
+                        WHEN 2626 THEN 'Hammadde'::text
+                        WHEN 2631 THEN 'YarıMamul'::text
+                        WHEN 2627 THEN 'Mamul'::text
+                        WHEN 2628 THEN 'Ticari'::text
+                        WHEN 2634 THEN 'Sarf'::text
+                        ELSE NULL::text
+                    END AS tipi
+                ")
+                ->addSelect([
                     'pom.exploded_level',
                     'pom.parent_exploded_id',
                     'pom.exploded_id',
@@ -74,12 +85,18 @@ class UrunAgaciController extends Controller
                     'pom.qty_prm_exploded',
                     'pom.operation_id',
                     'pom.operation_no',
+                    'po.description as operation_name',
+                    DB::raw('(select sum(ibi.qty_prm) from uyumsoft.invd_bwh_item ibi 
+                            left join uyumsoft.invd_whouse iw on iw.whouse_id = ibi.whouse_id	
+                            where ibi.item_id = ii.item_id and iw.whouse_width in (1,2,3,4)) as stok')
                 ])
                 ->where('pom.main_bom_m_id', $bomId)
                 ->orderBy('pom.exploded_level')
                 ->orderBy('pom.exploded_id')
                 ->orderBy('pom.line_no')
                 ->get();
+
+            Log::info($rows);
 
             return response()->json($rows);
         } catch (\Throwable $th) {

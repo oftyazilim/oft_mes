@@ -11,9 +11,9 @@
       <VBtn color="primary" variant="outlined" @click="loadData" :loading="loading">Göster</VBtn>
       <VBtn color="secondary" variant="outlined" @click="expandAll">Düğümleri Aç</VBtn>
       <VBtn color="secondary" variant="outlined" @click="collapseAll">Düğümleri Kapat</VBtn>
-      <VTextField v-model="expandLevel" label="Seviye" density="comfortable" hide-details="auto" class="level-input"
-        placeholder="ör: 2" type="number" min="1" />
-      <VBtn color="secondary" variant="outlined" @click="expandToLevel">Seviyeye kadar aç</VBtn>
+      <VTextField v-model="miktar" label="Miktar" density="comfortable" hide-details="auto" class="miktar-input"
+        placeholder="1" type="number" min="0" step="any" />
+      <VBtn color="secondary" variant="outlined" @click="hesapla">Hesapla</VBtn>
     </div>
 
     <VAlert v-if="!loading && noResultMessage" :type="noResultType || 'info'" variant="tonal" density="comfortable"
@@ -24,19 +24,42 @@
     <DxTreeList id="agac" :data-source="treeData" ref="treeList" :allow-column-reordering="true"
       :allow-column-resizing="true" :show-borders="true" key-expr="exploded_id" parent-id-expr="parent_exploded_id"
       :column-auto-width="true" :width="'100%'" class="mt-2" :onRowPrepared="onRowPrepared"
-      :focused-row-enabled="false">
+      :onCellPrepared="onCellPrepared" :focused-row-enabled="false">
+
       <DxSelection :recursive="true" mode="single" />
       <DxFilterRow :visible="true" />
       <DxStateStoring :enabled="true" type="localStorage" storage-key="treeListStorage" />
-      <DxColumn data-field="exploded_id" caption="Exploded ID" :width="170" />
-      <DxColumn data-field="parent_exploded_id" caption="Parent ID" :width="120" />
-      <DxColumn data-field="exploded_level" caption="Seviye" :width="90" />
+
+      <DxColumn data-field="exploded_id" caption="Exploded ID" :width="170" :visible="false" />
+      <DxColumn data-field="parent_exploded_id" caption="Parent ID" :width="120" :visible="false" />
+      <DxColumn data-field="tipi" caption="Tipi" :width="250" />
+      <DxColumn data-field="exploded_level" caption="Seviye" :width="90" :visible="false" />
       <DxColumn data-field="line_no" caption="Satır No" :width="90" />
-      <DxColumn data-field="bom_line_type" caption="Tip" :width="80" />
+      <DxColumn data-field="bom_line_type" caption="Tip" :width="80" :visible="false" />
       <DxColumn data-field="item_code" caption="Stok Kodu" :width="140" />
       <DxColumn data-field="item_name" caption="Stok Adı" :min-width="220" />
-      <DxColumn data-field="qty_prm_exploded" caption="Miktar" data-type="number" :width="110" />
-      <DxColumn data-field="operation_no" caption="Operasyon" :width="110" />
+      <DxColumn data-field="operation_no" caption="Operasyon No" :width="110" />
+      <DxColumn data-field="operation_name" caption="Operasyon Adı" :width="180" />
+      <DxColumn data-field="qty_prm_exploded" caption="Miktar" data-type="number" :width="110" :format="{
+                type: 'fixedPoint',
+                precision: 1,
+                thousandsSeparator: ',',
+              }"/>
+      <DxColumn data-field="ihtiyac" caption="İhtiyaç" data-type="number" :width="110" :format="{
+                type: 'fixedPoint',
+                precision: 1,
+                thousandsSeparator: ',',
+              }"/>
+      <DxColumn data-field="stok" caption="Stok" data-type="number" :width="110" :format="{
+                type: 'fixedPoint',
+                precision: 1,
+                thousandsSeparator: ',',
+              }"/>
+      <DxColumn data-field="bakiye" caption="Bakiye" data-type="number" :width="110" :format="{
+                type: 'fixedPoint',
+                precision: 1,
+                thousandsSeparator: ',',
+              }"/>
     </DxTreeList>
   </div>
 
@@ -57,7 +80,9 @@ import { computed, nextTick, ref } from 'vue';
 const treeList = ref<any>(null);
 const loading = ref(false)
 const rows = ref<any[]>([])
-const expandLevel = ref<string>('2')
+const miktar = ref<string>('1')
+const appliedMiktar = ref<number>(1)
+const bakiyeMiktar = ref<number>(1)
 const noResultMessage = ref<string>('')
 const noResultType = ref<'warning' | 'error' | 'info' | undefined>(undefined)
 
@@ -68,11 +93,23 @@ const isEmriNo = ref<string>('')
 
 // TreeList veri kaynağı: kökleri gösterebilmek için parent_exploded_id = 0 -> null
 const treeData = computed<any[]>(() => {
-  return (rows.value || []).map(r => ({
-    ...r,
-    parent_exploded_id: r?.parent_exploded_id === 0 ? null : r?.parent_exploded_id,
-  }))
+  const m = Number(appliedMiktar.value || 1)
+  return (rows.value || []).map(r => {
+    const qty = Number(r?.qty_prm_exploded ?? 0)
+    const stok = Number(r?.stok ?? 0)
+    return {
+      ...r,
+      parent_exploded_id: r?.parent_exploded_id === 0 ? null : r?.parent_exploded_id,
+      ihtiyac: Number.isFinite(qty * m) ? qty * m : 0,
+      bakiye: Number.isFinite(stok - qty * m) ? stok - qty * m : 0,
+    }
+  })
 })
+
+function hesapla() {
+  const n = Number((miktar.value || '').toString().trim())
+  appliedMiktar.value = Number.isFinite(n) ? n : 1
+}
 
 async function loadData() {
   const code = (stokKodu.value || '').trim()
@@ -183,29 +220,7 @@ function collapseAll() {
   })
 }
 
-// Belirli seviyeye kadar genişlet (root seviye 0 kabul)
-function expandToLevel() {
-  const inst = treeList.value?.instance
-  if (!inst) return
-
-  const n = Number.parseInt((expandLevel.value || '').trim(), 10)
-  if (!Number.isFinite(n) || n <= 0) return
-
-  // Önce tamamını kapat
-  collapseAll()
-
-  // Ardından seviyeleri sırayla genişlet (0..n-1)
-  nextTick(() => {
-    for (let level = 0; level < n; level++) {
-      for (const r of rows.value) {
-        if (Number(r?.exploded_level ?? -1) === level) {
-          const key = r?.exploded_id
-          if (key !== null && key !== undefined) inst.expandRow(key)
-        }
-      }
-    }
-  })
-}
+// Seviye bazlı açma kaldırıldı
 
 
 function onRowPrepared(e: any) {
@@ -238,6 +253,16 @@ function onRowPrepared(e: any) {
     el.style.color = ''
   }
 }
+
+function onCellPrepared(e: any) {
+  if (!e || e.rowType !== 'data' || !e.column) return
+  if ((e.column.dataField === 'ihtiyac' || e.column.dataField === 'stok' || e.column.dataField === 'bakiye') && e.cellElement) {
+    (e.cellElement as HTMLElement).style.fontWeight = '700'
+  }
+  if (e.column.dataField === 'bakiye' && e.cellElement && Number(e.value) < 0) {
+    (e.cellElement as HTMLElement).style.backgroundColor = 'red'
+  }
+}
 </script>
 
 <style scoped>
@@ -257,5 +282,14 @@ function onRowPrepared(e: any) {
 
 .query-input {
   inline-size: 200px;
+}
+
+.miktar-input {
+  inline-size: 140px;
+}
+
+/* İhtiyaç kolonu değerlerini kalın göster */
+.ihtiyac-bold {
+  font-weight: 700;
 }
 </style>
