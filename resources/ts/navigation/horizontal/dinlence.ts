@@ -14,14 +14,6 @@ export default [
         target: "_blank",
       },
       {
-        title: "Ağaç Test",
-        to: "dinlence-agac-test",
-        icon: { icon: "tabler-list-tree" },
-        action: "manage",
-        subject: "all",
-        target: "_blank",
-      },
-      {
         title: "Adam Asmaca",
         to: "dinlence-adam-asmaca",
         icon: { icon: "tabler-device-gamepad-2" },

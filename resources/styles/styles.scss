@@ -54,6 +54,19 @@
   min-block-size: 32px !important;
 }
 
+/* TreeList: DataGrid ile aynı satır yüksekliği */
+.dx-treelist-rowsview .dx-row {
+  block-size: 32px !important;
+  line-height: 30px !important;
+  min-block-size: 32px !important;
+}
+
+/* TreeList hücre paddinglerini küçült (yüksekliği belirleyen asıl kural) */
+.dx-treelist-rowsview .dx-row > td,
+.dx-treelist .dx-row > td {
+  padding-block: 6px !important; /* varsayılan ~14px yerine */
+}
+
 // .dx-datagrid-rowsview .dx-row > td {
 //   font-size: var(--dx-datagrid-font-size) !important;
 //   padding-block: 0 !important;

@@ -1,3 +1,5 @@
+import satis from "./satis";
+
 export default [
   {
     title: "Planlama",
@@ -11,7 +13,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama"],
-        target: '_blank',
+        target: "_blank",
       },
       {
         title: "İş Emirleri - Master",
@@ -19,7 +21,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama"],
-        target: '_blank',
+        target: "_blank",
       },
       {
         title: "İş Emirleri - Kapanmışlar",
@@ -27,7 +29,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama"],
-        target: '_blank',
+        target: "_blank",
       },
       {
         title: "İş Emirleri - Montaj",
@@ -35,7 +37,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama", "montaj"],
-        target: '_blank',
+        target: "_blank",
       },
       {
         title: "İş Emirleri - Mekanik",
@@ -43,7 +45,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama", "mekanik"],
-        target: '_blank',
+        target: "_blank",
       },
       {
         title: "Malzeme İhtiyaç (İstasyon)",
@@ -51,7 +53,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama", "montaj"],
-        target: '_blank',
+        target: "_blank",
       },
       {
         title: "Malzeme İhtiyaç (Toplu)",
@@ -59,7 +61,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "read",
         subject: ["planlama", "montaj"],
-        target: '_blank',
+        target: "_blank",
       },
       {
         title: "Malzeme İhtiyaç (Test)",
@@ -67,7 +69,7 @@ export default [
         icon: { icon: "tabler-list" },
         action: "manage",
         subject: ["all"],
-        target: '_blank',
+        target: "_blank",
       },
       {
         title: "Kapasite Hesapla",
@@ -75,9 +77,23 @@ export default [
         icon: { icon: "tabler-list" },
         action: "create",
         subject: ["planlama"],
-        target: '_blank',
+        target: "_blank",
+      },
+      {
+        title: "Ürün Ağacı Sorgula",
+        to: "planlama-urun-agaci-sorgula",
+        icon: { icon: "tabler-list-tree" },
+        action: "read",
+        subject: [
+          "planlama",
+          "montaj",
+          "mekanik",
+          "satinalma",
+          "depo",
+          "satis",
+        ],
+        target: "_blank",
       },
     ],
   },
 ];
-  
