@@ -20,6 +20,7 @@ use App\Http\Controllers\satinalma\SatinalmaController;
 use App\Http\Controllers\depo\DepoMamulController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\depo\StokPhotoController;
+use App\Http\Controllers\planlama\BomController;
 use Illuminate\Support\Facades\DB;
 use App\Services\FileSearchController;
 use App\Services\FileServeController;
@@ -138,6 +139,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/istasyon-ihtiyaclar', [IhtiyacController::class, 'IhtiyacHesaplaIstasyon']);
   Route::get('/toplu-ihtiyaclar', [IhtiyacController::class, 'IhtiyacHesaplaToplu']);
+  Route::get('/test-ihtiyaclar', [IhtiyacController::class, 'IhtiyacHesaplaTest']);
   Route::get('/merkezal', [IhtiyacController::class, 'getMerkezler']);
   Route::get('/istasyonal', [IhtiyacController::class, 'getIstasyon']);
   Route::get('/isemri-nolari', [IhtiyacController::class, 'getIsEmriNoAl']);
@@ -186,6 +188,11 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/uretim-rollform/close-and-open-down', [UretimRollFormController::class, 'closeAndOpenDown']);
   Route::post('/uretim-rollform/set-operator', [UretimRollFormController::class, 'setOperator']);
   Route::post('/uretim-rollform/adjust-counter', [UretimRollFormController::class, 'adjustCounter']);
+});
+
+// planlama - BOM exploded ağacı
+Route::middleware('auth:sanctum')->group(function () {
+  Route::get('/bom-exploded', [BomController::class, 'exploded']);
 });
 
 // satis

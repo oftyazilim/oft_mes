@@ -114,5 +114,6 @@
         "borderStyle": "solid"
       }
     ]
-  }
+  },
+  "chat.agent.enabled": true
 }

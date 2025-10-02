@@ -1,30 +1,5 @@
 <template>
-  <!-- Ağaç Görünümü (DevExtreme TreeList) -->
-  <div class="home-tree">
-    <div class="tree-toolbar">
-      <div class="toolbar-actions">
-        <VBtn size="small" color="secondary" variant="tonal" class="ml-1" @click="collapseAll">Collapse all</VBtn>
-      </div>
-    </div>
-
-    <DxTreeList id="employees" :data-source="treeData" ref="treeList" :allow-column-reordering="true"
-      :allow-column-resizing="true" :show-borders="true"  key-expr="sub_worder_id"
-      parent-id-expr="sub_worder_parent_id" :column-auto-width="true" height="420">
-      <DxSelection :recursive="true" mode="single" />
-      <DxFilterRow :visible="true" />
-      <DxStateStoring :enabled="true" type="localStorage" storage-key="treeListStorage" />
-      <DxColumn data-field="sub_worder_id" caption="Alt Emir ID" :width="120" />
-      <DxColumn data-field="sub_worder_parent_id" caption="Üst ID" :width="100" />
-      <DxColumn data-field="item_id" caption="Stok ID" :width="120" />
-      <DxColumn data-field="bom_m_id" caption="BOM ID" :width="120" />
-      <DxColumn data-field="qty" caption="Adet" data-type="number" :width="90" />
-      <DxColumn data-field="unit_id" caption="Birim" :width="90" />
-      <DxColumn data-field="product_route_m_id" caption="Rota" :width="110" />
-      <DxColumn data-field="create_date" caption="Oluşturma" data-type="date" :width="170" />
-    </DxTreeList>
-  </div>
-  
-    <br>
+  <!-- Gantt bileşeni -->
   <DxGantt ref="ganttRef" :task-list-width="500" :height="700" scale-type="weeks" :root-value="-1">
     <DxTasks :data-source="tasks" />
     <DxDependencies :data-source="dependencies" />
@@ -126,7 +101,6 @@
 <script setup lang="ts">
 import "devexpress-gantt/dist/dx-gantt.min.css";
 import DxCheckBox from "devextreme-vue/check-box";
-import { exportGantt as exportGanttToPdf } from "devextreme-vue/common/export/pdf";
 import DxDateBox from "devextreme-vue/date-box";
 import {
   DxDependencies,
@@ -141,18 +115,10 @@ import {
 } from "devextreme-vue/gantt";
 import DxNumberBox from "devextreme-vue/number-box";
 import DxSelectBox from "devextreme-vue/select-box";
-import {
-  DxColumn,
-  DxFilterRow,
-  DxSelection,
-  DxStateStoring,
-  DxTreeList,
-} from 'devextreme-vue/tree-list';
+
 // import type { GanttPdfExportDateRange, GanttPdfExportMode } from 'devextreme/ui/gantt';
-import { jsPDF } from "jspdf";
 import "jspdf-autotable";
-import { ref } from 'vue';
-import agac from './agac.json';
+import { computed, ref } from 'vue';
 import {
   dateRanges,
   exportModes,
@@ -179,29 +145,6 @@ const endTaskIndex = ref(3);
 const startDate = ref(tasks[0].start);
 const endDate = ref(tasks[0].end);
 const customRangeDisabled = ref(true);
-
-const treeList = ref<any>(null);
-// TreeList tam veri kaynağı (yerel JSON)
-const treeData = ref<any[]>(Array.isArray(agac?.prdt_worder_sub) ? agac.prdt_worder_sub : [])
-
-function collapseAll() {
-  // const inst = treeList.value?.instance
-  // if (inst?.collapseAll) {
-  //   inst.collapseAll()
-  //   return
-  // }
-  // // Fallback: tüm ebeveyn düğümlerde collapseRow uygula
-  // const nodes = treeData.value || []
-  // if (inst && nodes.length) {
-  //   const parentSet = new Set<string>()
-  //   for (const n of nodes) {
-  //     const pid = String(n?.sub_worder_parent_id ?? '')
-  //     const id = String(n?.sub_worder_id ?? '')
-  //     if (pid && id) parentSet.add(pid)
-  //   }
-  //   parentSet.forEach(k => inst.collapseRow?.(k))
-  // }
-}
 
 // async function exportGantt() {
 //   const format = formatBoxValue.value.toLowerCase();
