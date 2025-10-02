@@ -26,7 +26,7 @@ use App\Services\FileSearchController;
 use App\Services\FileServeController;
 use App\Http\Controllers\diger\DigerController;
 use App\Http\Controllers\NotificationSettingsController;
-use App\Http\Controllers\Planlama\UrunAgaciController;
+use App\Http\Controllers\planlama\UrunAgaciController;
 
 Route::group(['prefix' => 'auth'], function () {
   Route::post('login', [AuthController::class, 'login']);

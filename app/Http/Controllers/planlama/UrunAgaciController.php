@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Planlama;
+namespace App\Http\Controllers\planlama;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
