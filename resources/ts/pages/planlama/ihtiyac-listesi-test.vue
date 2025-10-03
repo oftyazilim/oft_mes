@@ -13,11 +13,11 @@
             @cell-click="onCellClick">
             <DxColumn data-field="tipi" caption="TİPİ" data-type="string" :visible="true" :width="65"
               :cell-template="tipCellTemplate" />
-            <DxColumn data-field="is_merkezi" caption="İŞ MERKEZİ" :visible="true" :width="150" />
-            <DxColumn data-field="item_id" caption="STOK ID" data-type="number" :visible="true" :width="80" />
+            <DxColumn data-field="mrk_adi" caption="İŞ MERKEZİ" :visible="true" :width="150" />
+            <DxColumn data-field="item_id" caption="STOK ID" data-type="number" :visible="true" :width="100" />
             <DxColumn data-field="stok_kodu" caption="STOK KODU" data-type="string" :visible="true" :width="130" />
             <DxColumn data-field="stok_adi" caption="STOK ADI" data-type="string" :visible="true" :width="400" />
-            <DxColumn data-field="qty" caption="İŞ EMRİ MİKTARI" data-type="number" :visible="true"
+            <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MİKTARI" data-type="number" :visible="true"
               :width="100" :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
             <DxColumn data-field="kalan" caption="KALAN" data-type="number" :visible="true" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
@@ -69,9 +69,9 @@
               <DxItem location="before" locate-in-menu="auto" template="filtreTarih2" />
               <DxItem location="before" locate-in-menu="auto" template="filtreMerkez" />
               <DxItem location="before" locate-in-menu="auto" template="filtreIstasyon" />
+              <DxItem location="before" locate-in-menu="auto" template="filtreisEmriNo" />
               <DxItem location="before" locate-in-menu="auto" template="filtreSiparis" />
               <DxItem location="before" locate-in-menu="auto" template="filtreCari" />
-              <DxItem location="before" locate-in-menu="auto" template="filtreisEmriNo" />
               <DxItem location="before" locate-in-menu="auto" template="yenileTemplate"
                 menu-item-template="menuYenileTemplate" @click="YenileMalzemeler" />
               <DxItem location="after" locate-in-menu="auto" template="filtreTemizleTemplate"
@@ -141,8 +141,8 @@
             <template #filtreisEmriNo>
               <div style="inline-size: 180px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="emirnolari" v-model:value="emirNo" label="İş Emri No" label-mode="floating"
-                  display-expr="isemri_id" value-expr="isemri_id" style="inline-size: 100%;" :show-clear-button="true"
-                  search-mode="contains" search-expr="isemri_id" :search-timeout="200" :search-enabled="true" />
+                  display-expr="isemri_no" value-expr="isemri_id" style="inline-size: 100%;" :show-clear-button="true"
+                  search-mode="contains" search-expr="isemri_no" :search-timeout="200" :search-enabled="true" />
               </div>
             </template>
 
@@ -591,7 +591,7 @@ const getMalzemeler = async () => {
         siparis: siparis.value,
         cari: cari.value,
         coID: userData.value.co_id,
-        isemriNo: emirNo.value,
+        isemriID: emirNo.value,
       },
     })
     gridDataM.value = response.data.emirler

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import navItems from '@/navigation/vertical'
+import { usePageTitleStore } from '@/stores/pageTitle'
 import { themeConfig } from '@themeConfig'
 
 // Components
@@ -16,6 +17,9 @@ import { VerticalNavLayout } from '@layouts'
 // Organize Imports'ın template kullanımını görmeyip importları silmesini önlemek için dummy referans
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const __keepTemplateRefs = { navItems, themeConfig }
+
+// Store: current page title/alias
+const pageTitleStore = usePageTitleStore()
 </script>
 
 <template>
@@ -35,6 +39,11 @@ const __keepTemplateRefs = { navItems, themeConfig }
           v-if="themeConfig.app.i18n.enable && themeConfig.app.i18n.langConfig?.length"
           :languages="themeConfig.app.i18n.langConfig"
         /> -->
+
+        <!-- Sayfa başlığı rozeti (horizontal layout ile tutarlı) -->
+        <div v-if="pageTitleStore.title" class="page-title-badge me-3 d-flex">
+          <span class="badge-text">{{ pageTitleStore.title }}</span>
+        </div>
         <NavbarThemeSwitcher />
         <FeedbackWidget :icon-mode="true" />
         <NavbarShortcuts />
@@ -57,3 +66,20 @@ const __keepTemplateRefs = { navItems, themeConfig }
     <TheCustomizer />
   </VerticalNavLayout>
 </template>
+
+<style scoped>
+.page-title-badge {
+  align-items: center;
+}
+
+.badge-text {
+  border-radius: 9999px;
+  background-color: rgba(var(--v-theme-primary), 0.12);
+  color: rgb(var(--v-theme-primary));
+  font-size: 0.8rem;
+  line-height: 1;
+  padding-block: 6px;
+  padding-inline: 10px;
+  white-space: nowrap;
+}
+</style>

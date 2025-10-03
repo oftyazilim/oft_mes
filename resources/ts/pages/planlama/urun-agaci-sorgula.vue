@@ -78,7 +78,19 @@ import {
 import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver';
 import "jspdf-autotable";
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, onMounted } from 'vue';
+import { usePageTitleStore } from '@/stores/pageTitle'
+
+
+definePage({
+  meta: { action: ['read'], subject: ['planlama', 'montaj', 'satinalma', 'satis'] }
+})
+
+const pageTitleStore = usePageTitleStore()
+const pageName = 'Ürün Ağacı Sorgula'
+const pageAlias = ''
+pageTitleStore.setTitle(`${pageName} (${pageAlias})`)
+document.title = `OFT - ${pageName} | ${pageAlias}`
 
 const treeList = ref<any>(null);
 const loading = ref(false)
