@@ -65,8 +65,8 @@ export default [
         title: "Malzeme İhtiyaç (Test)",
         to: "planlama-ihtiyac-listesi-test",
         icon: { icon: "tabler-list" },
-        action: "manage",
-        subject: ["all"],
+        action: "read",
+        subject: ["planlama", "montaj"],
         target: "_blank",
       },
       {
