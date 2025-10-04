@@ -796,7 +796,7 @@ const EmirSec = async () => {
     });
     return
   }
-  loadingVisible.value = true;
+  // loadingVisible.value = true;
 
   gridDataKontroller.value = []
   gridSurec.value = []
@@ -917,7 +917,7 @@ watch([isEmriNo, isEmriMiktari], ([yeniIsemri, yeniMiktar]) => {
 
 const EmirleriAl = async () => {
   try {
-    loadingVisible.value = true;
+    // loadingVisible.value = true;
     const response = await axios.get("/api/kontrolListesiAl", {
       params: {
         istasyon: 0,
@@ -937,7 +937,7 @@ const KontrolleriAl = async () => {
     return
   }
 
-  loadingVisible.value = true;
+  // loadingVisible.value = true;
 
   try {
     const response = await axios.get('/api/kontrolleri-al', {

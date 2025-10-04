@@ -3,34 +3,32 @@
     <VCardText class="mt-0 pa-2">
       <VCol cols="12" class="mt-2 pa-1 pe-2">
         <div id="liste" style="margin-block-end: -10px;">
-          <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick"/>
+          <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" />
 
           <DxDataGrid id="grid" ref="dataGridRef" :key="gridKey" :data-source="gridData" key-expr="satir_id"
-                      :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true" :min-width="200"
-                      @exporting="onExporting" :allow-column-reordering="true" :column-auto-width="false"
-                      @focused-row-changed="onFocusedRowChanged" :allow-column-resizing="true"
-                      column-resizing-mode="widget"
-                      @cell-prepared="onCellPrepared" :auto-navigate-to-focused-row="true"
-                      :on-option-changed="handleOptionChanged" @contextMenuPreparing="onContextMenuPreparing"
-                      v-model:focused-row-key="focusedRowKey">
+            :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true" :min-width="200"
+            @exporting="onExporting" :allow-column-reordering="true" :column-auto-width="false"
+            @focused-row-changed="onFocusedRowChanged" :allow-column-resizing="true" column-resizing-mode="widget"
+            @cell-prepared="onCellPrepared" :auto-navigate-to-focused-row="true"
+            :on-option-changed="handleOptionChanged" @contextMenuPreparing="onContextMenuPreparing"
+            v-model:focused-row-key="focusedRowKey">
 
             <!-- <DxColumn type="selection" :fixed="true" fixedPosition="left" /> -->
-            <DxColumn data-field="id" caption="ID" :visible="false" :min-width="90"/>
+            <DxColumn data-field="id" caption="ID" :visible="false" :min-width="90" />
             <DxColumn data-field="hafta" caption="HAFTA" :fixed="true" :width="120" :visible="true" alignment="left"
-                      :cell-template="weekCellTemplate"/>
-            <DxColumn data-field="IS_ISTASYONU" caption="İST. ADI" :visible="true" :width="130"
-            />
-            <DxColumn data-field="IS_ISTASYONU_KODU" caption="İSTASYON KODU" :visible="false" :width="150"/>
-            <DxColumn data-field="IS_ISTASYONU_ADI" caption="İSTASYON ADIx" :visible="false" :width="150"/>
-            <DxColumn data-field="OPERASYON" caption="OPRSYN" :visible="true" :width="120"/>
-            <DxColumn data-field="siparis_belge_no" caption="SİPARİŞ NO" :width="90" :visible="true"/>
-            <DxColumn data-field="cari_ad" caption="MÜŞTERİ" :visible="true" :min-width="140"/>
-            <DxColumn data-field="stok_kodu" caption="STOK KODU" :visible="true" :width="120"/>
-            <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="200"/>
-            <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="150" :visible="false"/>
-            <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120"/>
+              :cell-template="weekCellTemplate" />
+            <DxColumn data-field="IS_ISTASYONU" caption="İST. ADI" :visible="true" :width="130" />
+            <DxColumn data-field="IS_ISTASYONU_KODU" caption="İSTASYON KODU" :visible="false" :width="150" />
+            <DxColumn data-field="IS_ISTASYONU_ADI" caption="İSTASYON ADIx" :visible="false" :width="150" />
+            <DxColumn data-field="OPERASYON" caption="OPRSYN" :visible="true" :width="120" />
+            <DxColumn data-field="siparis_belge_no" caption="SİPARİŞ NO" :width="90" :visible="true" />
+            <DxColumn data-field="cari_ad" caption="MÜŞTERİ" :visible="true" :min-width="140" />
+            <DxColumn data-field="stok_kodu" caption="STOK KODU" :visible="true" :width="120" />
+            <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="200" />
+            <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="150" :visible="false" />
+            <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" />
             <DxColumn data-field="teslim_tarihi" caption="TESLİM TARİHİ" data-type="date" :width="140" :visible="true"
-                      :format="{
+              :format="{
                 formatter: (date: any) => {
                   const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
@@ -39,9 +37,9 @@
                   }).format(new Date(date));
                   return formattedDate.replace(/\//g, '.');
                 },
-              }" :cell-template="getIconType1"/>
+              }" :cell-template="getIconType1" />
             <DxColumn data-field="planlanan_baslangic" caption="PLN BŞL" data-type="date" :width="130" :visible="false"
-                      :format="{
+              :format="{
                 formatter: (date: any) => {
                   const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
@@ -53,9 +51,9 @@
 
                   return formattedDate.replace(/\//g, '.');
                 },
-              }"/>
+              }" />
             <DxColumn data-field="planlanan_bitis_tarihi" caption="PLN BTŞ" data-type="date" :width="110"
-                      :visible="true" :format="{
+              :visible="true" :format="{
                 formatter: (date) => {
                   const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
@@ -65,9 +63,9 @@
 
                   return formattedDate.replace(/\//g, '.');
                 },
-              }" alignment="left"/>
+              }" alignment="left" />
             <DxColumn data-field="kapanma_tarihi" caption="KAPANMA TARİHİ" data-type="date" :width="140" :visible="true"
-                      :format="{
+              :format="{
                 formatter: (date) => {
                   const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
@@ -77,94 +75,94 @@
 
                   return formattedDate.replace(/\//g, '.');
                 },
-              }" alignment="left" :cell-template="getIconType"/>
-            <DxColumn data-field="kalan_miktar" caption="KALAN MİKTAR" data-type="number" :width="90" :visible="true"/>
+              }" alignment="left" :cell-template="getIconType" />
+            <DxColumn data-field="kalan_miktar" caption="KALAN MİKTAR" data-type="number" :width="90" :visible="true" />
 
             <DxColumn data-field="surec" caption="SÜREÇ" data-type="number" :width="150" :visible="true"
-                      cell-template="surecCellTemplate" alignment="center"/>
+              cell-template="surecCellTemplate" alignment="center" />
             <DxColumn data-field="siparis_miktari" caption="SİPARİŞ MİKTARI" data-type="number" :width="60"
-                      :visible="true"/>
+              :visible="true" />
             <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MİKTARI" data-type="number" :width="60"
-                      :visible="true"/>
+              :visible="true" />
             <DxColumn data-field="uretilen_toplam_miktar" caption="TOPLAM URETİLEN" data-type="number" :width="60"
-                      :visible="false"/>
+              :visible="false" />
             <DxColumn data-field="uretilen_net_miktar" caption="NET URETILEN" data-type="number" :width="60"
-                      :visible="true"/>
+              :visible="true" />
             <DxColumn data-field="toplam_hurda_miktari" caption="HURDA MİKTARI" data-type="number" :width="60"
-                      :visible="true"/>
+              :visible="true" />
             <DxColumn data-field="operasyon_hazirlik_suresi" caption="HAZIRLIK SÜRESİ" data-type="number" :width="60"
-                      :visible="true" :format="{
+              :visible="true" :format="{
                 type: 'fixedPoint',
                 precision: 1,
                 thousandsSeparator: ',',
-              }"/>
+              }" />
             <DxColumn data-field="operasyon_suresi" caption="OPERASYON SÜRESİ" data-type="number" :width="60"
-                      :visible="true" :format="{
+              :visible="true" :format="{
                 type: 'fixedPoint',
                 precision: 1,
                 thousandsSeparator: ',',
-              }"/>
+              }" />
             <DxColumn data-field="aksesuar" caption="AKSESUAR" :width="60" cell-template="aksesuarTemplate"
-                      alignment="center"/>
+              alignment="center" />
 
-            <DxColumn data-field="isemri_tipi" caption="İŞ EMRİ TİPİ" :min-width="120" :width="140"/>
+            <DxColumn data-field="isemri_tipi" caption="İŞ EMRİ TİPİ" :min-width="120" :width="140" />
 
-            <DxColumn data-field="teknik_not1" caption="PLN NOTU" :width="60"/>
-            <DxColumn data-field="teknik_not2" caption="OPR NOTU" :width="90" alignment="center"/>
-            <DxColumn data-field="kaydi_giren_kullanici" caption="KAYIT YAPAN" :min-width="120" :width="140"/>
-            <DxColumn data-field="item_id" caption="ITEM ID" :visible="false" :min-width="90"/>
-            <DxColumn data-field="satir_id" caption="SATIR ID" :visible="false" :min-width="90"/>
+            <DxColumn data-field="teknik_not1" caption="PLN NOTU" :width="60" />
+            <DxColumn data-field="teknik_not2" caption="OPR NOTU" :width="90" alignment="center" />
+            <DxColumn data-field="kaydi_giren_kullanici" caption="KAYIT YAPAN" :min-width="120" :width="140" />
+            <DxColumn data-field="item_id" caption="ITEM ID" :visible="false" :min-width="90" />
+            <DxColumn data-field="satir_id" caption="SATIR ID" :visible="false" :min-width="90" />
 
 
-            <DxColumn data-field="sip_not1" caption="SİP NOT 1" :min-width="120"/>
-            <DxColumn data-field="sip_not2" caption="SİP NOT 2" :min-width="120"/>
-            <DxColumn data-field="sip_not3" caption="SİP NOT 3" :min-width="120"/>
-            <DxColumn data-field="sip_not4" caption="SİP NOT 4" :min-width="120"/>
-            <DxColumn data-field="CIKIS_DEPO" caption="ÇIKIŞ DEPO" :min-width="80"/>
+            <DxColumn data-field="sip_not1" caption="SİP NOT 1" :min-width="120" />
+            <DxColumn data-field="sip_not2" caption="SİP NOT 2" :min-width="120" />
+            <DxColumn data-field="sip_not3" caption="SİP NOT 3" :min-width="120" />
+            <DxColumn data-field="sip_not4" caption="SİP NOT 4" :min-width="120" />
+            <DxColumn data-field="CIKIS_DEPO" caption="ÇIKIŞ DEPO" :min-width="80" />
 
             <DxLoadPanel :key="loadingVisible" v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true"
-                         :shading="true"/>
-            <DxSelection mode="multiple" select-all-mode="page" show-check-boxes-mode="onClick"/>
-            <DxGrouping :auto-expand-all="expandAll"/>
-            <DxGroupPanel :visible="true"/>
-            <DxHeaderFilter :visible="true"/>
-            <DxFilterPanel :visible="true"/>
-            <DxFilterRow :visible="goster"/>
-            <DxSearchPanel :visible="true" :width="240"/>
-            <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always"/>
-            <DxSorting mode="multiple"/>
-            <DxRowDragging :allow-reordering="true" :on-reorder="onReorder" :show-drag-icons="false"/>
-            <DxExport :enabled="true" :allow-export-selected-data="false"/>
+              :shading="true" />
+            <DxSelection mode="multiple" select-all-mode="page" show-check-boxes-mode="onClick" />
+            <DxGrouping :auto-expand-all="expandAll" />
+            <DxGroupPanel :visible="true" />
+            <DxHeaderFilter :visible="true" />
+            <DxFilterPanel :visible="true" />
+            <DxFilterRow :visible="goster" />
+            <DxSearchPanel :visible="true" :width="240" />
+            <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
+            <DxSorting mode="multiple" />
+            <DxRowDragging :allow-reordering="true" :on-reorder="onReorder" :show-drag-icons="false" />
+            <DxExport :enabled="true" :allow-export-selected-data="false" />
 
             <DxColumnChooser height="540px" :enabled="true" mode="select" :position="position">
-              <DxColumnChooserSearch :enabled="true"/>
-              <DxColumnChooserSelection :allow-select-all="true" :select-by-click="true" :recursive="true"/>
+              <DxColumnChooserSearch :enabled="true" />
+              <DxColumnChooserSelection :allow-select-all="true" :select-by-click="true" :recursive="true" />
             </DxColumnChooser>
             <hr>
             <br>
             <DxToolbar>
-              <DxItem location="before" name="groupPanel"/>
-              <DxItem location="before" locate-in-menu="auto" template="collapseTemplate"/>
-              <DxItem location="before" locate-in-menu="auto" template="filtreTarih"/>
+              <DxItem location="before" name="groupPanel" />
+              <DxItem location="before" locate-in-menu="auto" template="collapseTemplate" />
+              <DxItem location="before" locate-in-menu="auto" template="filtreTarih" />
 
               <DxItem location="before" locate-in-menu="auto" template="filtreGun" menu-item-template="menufiltreGun"
-                      @click="Filtrele('g')"/>
+                @click="Filtrele('g')" />
 
               <DxItem location="before" locate-in-menu="auto" template="filtreAy" menu-item-template="menufiltreAy"
-                      @click="Filtrele('a')"/>
+                @click="Filtrele('a')" />
 
               <DxItem location="before" locate-in-menu="auto" template="filtreYil" menu-item-template="menufiltreYil"
-                      @click="Filtrele('y')"/>
+                @click="Filtrele('y')" />
 
               <DxItem location="after" locate-in-menu="auto" template="yenileTemplate"
-                      menu-item-template="menuYenileTemplate" @click="Yenile"/>
+                menu-item-template="menuYenileTemplate" @click="Yenile" />
               <DxItem location="after" locate-in-menu="auto" template="filtreTemizleTemplate"
-                      menu-item-template="menuFiltreTemizleTemplate" @click="FiltreTemizle"/>
+                menu-item-template="menuFiltreTemizleTemplate" @click="FiltreTemizle" />
               <DxItem location="after" locate-in-menu="auto" template="filtreGosterTemplate"
-                      menu-item-template="menuFiltreGosterTemplate" @click="toggleGoster"/>
-              <DxItem name="exportButton"/>
-              <DxItem name="columnChooserButton"/>
-              <DxItem name="searchPanel"/>
+                menu-item-template="menuFiltreGosterTemplate" @click="toggleGoster" />
+              <DxItem name="exportButton" />
+              <DxItem name="columnChooserButton" />
+              <DxItem name="searchPanel" />
             </DxToolbar>
 
             <DxSummary>
@@ -179,32 +177,32 @@
             </DxSummary>
 
             <template #filtreGun>
-              <DxButton icon="filter" styling-mode="text" text="Gün" hint="Günlük" id="gun"/>
+              <DxButton icon="filter" styling-mode="text" text="Gün" hint="Günlük" id="gun" />
             </template>
             <template #menufiltreGun>
-              <div style="display: flex; align-items: center">
+              <div style="display: flex; align-items: center;">
                 <i class="dx-icon dx-icon-filter"></i>
-                <span style="margin-inline-start: 8px">Günlük</span>
+                <span style="margin-inline-start: 8px;">Günlük</span>
               </div>
             </template>
 
             <template #filtreAy>
-              <DxButton icon="filter" styling-mode="text" text="Ay" hint="Aylık" id="ay"/>
+              <DxButton icon="filter" styling-mode="text" text="Ay" hint="Aylık" id="ay" />
             </template>
             <template #menufiltreAy>
-              <div style="display: flex; align-items: center">
+              <div style="display: flex; align-items: center;">
                 <i class="dx-icon dx-icon-filter"></i>
-                <span style="margin-inline-start: 8px">Aylık</span>
+                <span style="margin-inline-start: 8px;">Aylık</span>
               </div>
             </template>
 
             <template #filtreYil>
-              <DxButton icon="filter" styling-mode="text" text="Yıl" hint="Yıllık" id="yil"/>
+              <DxButton icon="filter" styling-mode="text" text="Yıl" hint="Yıllık" id="yil" />
             </template>
             <template #menufiltreYil>
-              <div style="display: flex; align-items: center">
+              <div style="display: flex; align-items: center;">
                 <i class="dx-icon dx-icon-filter"></i>
-                <span style="margin-inline-start: 8px">Yıllık</span>
+                <span style="margin-inline-start: 8px;">Yıllık</span>
               </div>
             </template>
 
@@ -213,15 +211,15 @@
               inline-size: 280px;
               margin-block: -10px;
               margin-block-end: 20px;
-            ">
+">
                 <DxDateRangeBox :value="selectedDateRange" :min="min" :max="max" @value-changed="onDateRangeChanged"
-                                style="inline-size: 100%"/>
+                  style="inline-size: 100%;" />
               </div>
             </template>
 
 
             <template #filtreTemizleTemplate>
-              <DxButton icon="notequal" styling-mode="text" hint="Filtre Temizle" id="filtretemizle"/>
+              <DxButton icon="notequal" styling-mode="text" hint="Filtre Temizle" id="filtretemizle" />
               <!-- <VIcon size="24" icon="tabler-x" /> -->
             </template>
             <template #menuFiltreTemizleTemplate>
@@ -232,7 +230,7 @@
             </template>
 
             <template #yenileTemplate>
-              <DxButton icon="refresh" styling-mode="text" hint="Yenile" id="sayim"/>
+              <DxButton icon="refresh" styling-mode="text" hint="Yenile" id="sayim" />
             </template>
             <template #menuYenileTemplate>
               <div style="display: flex; align-items: center;">
@@ -242,7 +240,7 @@
             </template>
 
             <template #filtreGosterTemplate>
-              <DxButton icon="filter" styling-mode="text" hint="Filtre Goster"/>
+              <DxButton icon="filter" styling-mode="text" hint="Filtre Goster" />
             </template>
             <template #menuFiltreGosterTemplate>
               <div style="display: flex; align-items: center;">
@@ -253,11 +251,11 @@
 
             <template #collapseTemplate>
               <DxButton :icon="expandAll ? 'collapse' : 'expand'" hint="expandAll ? 'Daralt' : 'Genişlet'" width="40"
-                        height="40" styling-mode="text" @click="toggleExpandAll"/>
+                height="40" styling-mode="text" @click="toggleExpandAll" />
             </template>
 
             <template #surecCellTemplate="{ data: cellData }">
-              <SurecCell :cell-data="cellData" :max-deger="100"/>
+              <SurecCell :cell-data="cellData" :max-deger="100" />
             </template>
 
             <template #notlarPTemplate="{ data }">
@@ -268,7 +266,7 @@
             <template #notlarOTemplate="{ data }">
               <template v-if="data.value === '1' || data.value === 1">
                 <i :class="['dx-icon', 'dx-icon-belloutline']"
-                   :style="{ fontSize: '20px', color: staticPrimaryColor }"></i>
+                  :style="{ fontSize: '20px', color: staticPrimaryColor }"></i>
               </template>
             </template>
             <template #aksesuarTemplate="{ data }">
@@ -284,7 +282,7 @@
   </VCard>
 
   <DxPopup v-model:visible="popupMesajGosterVisible" :width="400" :height="220" :hide-on-outside-click="true"
-           :show-close-button="true" :title=notBaslik>
+    :show-close-button="true" :title=notBaslik>
     <template #content>
       <DxScrollView width="100%" height="100%">
         <div class="caption">{{ selectedRow.isemri_no }}</div>
@@ -298,14 +296,12 @@
 <script setup lang="ts">
 
 
-import {onMounted, ref} from "vue";
-import {usePageTitleStore} from "@/stores/pageTitle";
+import { usePageTitleStore } from "@/stores/pageTitle";
+import { onMounted, ref } from "vue";
 // import { DxTooltip } from 'devextreme-vue/tooltip';
-import {staticPrimaryColor} from "@/plugins/vuetify/theme";
 import axios from "axios";
-import {DxButton} from "devextreme-vue/button";
-import DxSelectBox from "devextreme-vue/cjs/select-box";
-import DxContextMenu, {DxContextMenuTypes} from 'devextreme-vue/context-menu';
+import { DxButton } from "devextreme-vue/button";
+import DxContextMenu, { DxContextMenuTypes } from 'devextreme-vue/context-menu';
 import {
   DxColumn,
   DxColumnChooser,
@@ -318,35 +314,25 @@ import {
   DxFilterRow,
   DxGrouping,
   DxGroupItem,
-  DxTotalItem,
   DxGroupPanel,
   DxHeaderFilter,
   DxItem,
+  DxRowDragging,
   DxScrolling,
   DxSearchPanel,
   DxSelection,
+  DxSorting,
   DxSummary,
   DxToolbar,
-  DxSorting,
-  DxRowDragging,
-  DxStateStoring,
+  DxTotalItem
 } from "devextreme-vue/data-grid";
-import DxDateBox from 'devextreme-vue/date-box';
-import {DxLoadPanel} from 'devextreme-vue/load-panel';
-import {DxPopup, DxToolbarItem} from 'devextreme-vue/popup';
-import {DxSwitch} from 'devextreme-vue/switch';
-import DxTextArea from 'devextreme-vue/text-area';
-import DxTextBox from 'devextreme-vue/text-box';
-import query from 'devextreme/data/query';
-import {exportDataGrid} from "devextreme/excel_exporter";
-import notify from "devextreme/ui/notify";
-import {Workbook} from "exceljs";
-import {saveAs} from "file-saver-es";
-import SurecCell from "./SurecCell.vue";
-import DxCalendar from 'devextreme-vue/calendar';
-import {DxPopover} from 'devextreme-vue/popover';
-import {DxTooltip} from 'devextreme-vue/tooltip';
 import DxDateRangeBox from "devextreme-vue/date-range-box";
+import { DxLoadPanel } from 'devextreme-vue/load-panel';
+import { DxPopup } from 'devextreme-vue/popup';
+import { exportDataGrid } from "devextreme/excel_exporter";
+import { Workbook } from "exceljs";
+import { saveAs } from "file-saver-es";
+import SurecCell from "./SurecCell.vue";
 
 // Tarihi yyyy-MM-dd formatına dönüştüren fonksiyon
 const formatDate = (date) => {
@@ -752,7 +738,7 @@ const toggleGoster = () => {
 };
 const getData = async () => {
   try {
-    loadingVisible.value = true;
+    // loadingVisible.value = true;
     const response = await axios.get("/api/isEmriKapanmislar", {
       params: {
         filterValue: filterValue.value,

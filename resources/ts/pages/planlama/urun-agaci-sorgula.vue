@@ -67,6 +67,7 @@
 </template>
 
 <script setup lang="ts">
+import { usePageTitleStore } from '@/stores/pageTitle';
 import axios from 'axios';
 import {
   DxColumn,
@@ -78,8 +79,7 @@ import {
 import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver';
 import "jspdf-autotable";
-import { computed, nextTick, ref, onMounted } from 'vue';
-import { usePageTitleStore } from '@/stores/pageTitle'
+import { computed, nextTick, onMounted, ref } from 'vue';
 
 
 definePage({
@@ -91,6 +91,9 @@ const pageName = 'Ürün Ağacı Sorgula'
 const pageAlias = ''
 pageTitleStore.setTitle(`${pageName} (${pageAlias})`)
 document.title = `OFT - ${pageName} | ${pageAlias}`
+
+// Kullanıcı bilgisi (cookie)
+const userData = useCookie<any>('userData')
 
 const treeList = ref<any>(null);
 const loading = ref(false)
@@ -125,6 +128,23 @@ function hesapla() {
   const n = Number((miktar.value || '').toString().trim())
   appliedMiktar.value = Number.isFinite(n) ? n : 1
 }
+
+// Sayfa açılışında kullanıcı log’u yaz
+onMounted(() => {
+  try {
+    const uid = userData?.value?.id
+    if (uid) {
+      axios.post('/api/log-kayit', {
+        userId: uid,
+        sayfa: 'Ürün Ağacı Sorgula',
+        eylem: 'Yükleme',
+      })
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.debug('Log kaydı atılamadı:', err)
+  }
+})
 
 async function loadData() {
   const code = (stokKodu.value || '').trim()

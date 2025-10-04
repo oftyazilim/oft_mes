@@ -910,7 +910,7 @@ setTimeout(() => {
 // Yükleme panelini anında göstermek için yardımcılar
 async function beginLoading(message: string) {
   loadingMessage.value = message
-  loadingVisible.value = true
+  // loadingVisible.value = true
   await nextTick()
   await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
 }
@@ -2070,7 +2070,7 @@ function groupByWeek(): void {
 }
 
 const RalKodlariGuncelle = async () => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
   const userID = userData.value.id
   try {
     const response = await axios.post('/api/ralguncelle', { userID })
@@ -2181,7 +2181,6 @@ const RalKodlariGuncelle = async () => {
 }
 
 @keyframes montaj-pulse {
-
   0%,
   100% {
     box-shadow: 0 0 0 0 rgba(59 130 246 / 35%);
@@ -2213,6 +2212,7 @@ const RalKodlariGuncelle = async () => {
     opacity: 1;
   }
 }
+
 #grid {
   display: flex;
   flex-direction: column;

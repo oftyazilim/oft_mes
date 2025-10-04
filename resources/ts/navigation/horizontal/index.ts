@@ -7,7 +7,7 @@ import sistem from "./sistem";
 import uretim from "./uretim";
 import kalite from "./kalite";
 import depo from "./depo";
-import dinlence from "./dinlence";
+import istasyonlar from "./istasyonlar";
 // import yardim from "./yardim";
 
 export default [
@@ -16,9 +16,10 @@ export default [
   ...satis,
   ...satinalma,
   ...uretim,
+  ...istasyonlar,
   ...kalite,
   ...depo,
-  ...dinlence,
+  //...dinlence,
   ...sistem,
   // ...yardim,
 ] as HorizontalNavItems;

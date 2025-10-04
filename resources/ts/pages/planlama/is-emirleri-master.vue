@@ -736,7 +736,6 @@ import { DxButton } from 'devextreme-vue/button';
 import DxCalendar from 'devextreme-vue/calendar';
 import DxSelectBox from 'devextreme-vue/cjs/select-box';
 import type { DxContextMenuTypes } from 'devextreme-vue/context-menu';
-import DxContextMenu from 'devextreme-vue/context-menu';
 import type { DxDataGridTypes } from 'devextreme-vue/data-grid';
 import {
   DxColumn,
@@ -886,7 +885,7 @@ setTimeout(() => {
 // Yükleme panelini anında göstermek için yardımcılar
 async function beginLoading(message: string) {
   loadingMessage.value = message
-  loadingVisible.value = true
+  // loadingVisible.value = true
   await nextTick()
   await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
 }
@@ -2047,7 +2046,7 @@ function groupByWeek(): void {
 }
 
 const RalKodlariGuncelle = async () => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
   const userID = userData.value.id
   try {
     const response = await axios.post('/api/ralguncelle', { userID })

@@ -2,7 +2,7 @@
   <VCard class="mt-0 pa-0">
     <VCardText class="mt-0 pa-2 ">
       <VCol cols="12" class="mt-2 pa-1 pe-2 pt-0">
-        <div id="liste" style="margin-block-end: 10px; margin-top: -10px">
+        <div id="liste" style="margin-block: -10px 10px;">
           <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" />
 
           <DxDataGrid id="grid" ref="dataGridRef" :key="gridKey" class="grid" :data-source="gridData"
@@ -22,7 +22,7 @@
 
                   return formattedDate.replace(/\//g, '.');
                 },
-              }"  alignment="center"/>
+              }" alignment="center" />
             <DxColumn data-field="onay_tarihi" caption="ONAY TARİHİ" data-type="date" :width="150" :visible="true"
               :format="{
                 formatter: (date) => {
@@ -34,7 +34,7 @@
 
                   return formattedDate.replace(/\//g, '.');
                 },
-              }"  alignment="center"/>
+              }" alignment="center" />
             <DxColumn data-field="talep_no" caption="TALEP NO" :visible="true" :width="120" />
             <DxColumn data-field="durumu" caption="DURUMU" :visible="true" :width="100" />
             <DxColumn data-field="ONAY_DURUMU" caption="ONAY DURUMU" :visible="true" :width="120" />
@@ -44,35 +44,35 @@
             <DxColumn data-field="item_code" caption="STOK KODU" :visible="true" :width="130" />
             <DxColumn data-field="item_name" caption="STOK ADI" :visible="true" :width="280" />
             <DxColumn data-field="miktar" caption="MİKTAR" data-type="number" :visible="true" :width="100" :format="{
-                type: 'fixedPoint',
-                precision: 1,
-                thousandsSeparator: ',',
-              }"/>
-            <DxColumn data-field="qty_ordered"  data-type="number" :visible="true" :width="100" :format="{
-                type: 'fixedPoint',
-                precision: 1,
-                thousandsSeparator: ',',
-              }"/>
+              type: 'fixedPoint',
+              precision: 1,
+              thousandsSeparator: ',',
+            }" />
+            <DxColumn data-field="qty_ordered" data-type="number" :visible="true" :width="100" :format="{
+              type: 'fixedPoint',
+              precision: 1,
+              thousandsSeparator: ',',
+            }" />
             <DxColumn data-field="qty_free_prm" data-type="number" :visible="true" :width="100" :format="{
-                type: 'fixedPoint',
-                precision: 1,
-                thousandsSeparator: ',',
-              }"/>
+              type: 'fixedPoint',
+              precision: 1,
+              thousandsSeparator: ',',
+            }" />
             <DxColumn data-field="qty_free_sec" data-type="number" :visible="true" :width="100" :format="{
-                type: 'fixedPoint',
-                precision: 1,
-                thousandsSeparator: ',',
-              }"/>
+              type: 'fixedPoint',
+              precision: 1,
+              thousandsSeparator: ',',
+            }" />
             <DxColumn data-field="co_id" data-type="number" :visible="true" :width="100" :format="{
-                type: 'fixedPoint',
-                precision: 1,
-                thousandsSeparator: ',',
-              }"/>
+              type: 'fixedPoint',
+              precision: 1,
+              thousandsSeparator: ',',
+            }" />
             <DxColumn data-field="branch_id" data-type="number" :visible="true" :width="100" :format="{
-                type: 'fixedPoint',
-                precision: 1,
-                thousandsSeparator: ',',
-              }"/>
+              type: 'fixedPoint',
+              precision: 1,
+              thousandsSeparator: ',',
+            }" />
             <DxColumn data-field="note_1" :visible="true" :width="150" />
             <DxColumn data-field="note_2" :visible="true" :width="150" />
             <DxColumn data-field="item_line_type" data-type="number" :visible="true" :width="150" />
@@ -103,9 +103,9 @@
               <DxItem location="before" locate-in-menu="auto" template="filtreTarih1" />
               <DxItem location="before" locate-in-menu="auto" template="filtreTarih2" />
               <DxItem location="before" locate-in-menu="auto" template="tarih"
-              menu-item-template="menuYenileTarihTemplate" @click="YenileTarih" />
+                menu-item-template="menuYenileTarihTemplate" @click="YenileTarih" />
               <DxItem location="before" locate-in-menu="auto" template="tumu"
-              menu-item-template="menuYenileTumuTemplate" @click="YenileTumu" />
+                menu-item-template="menuYenileTumuTemplate" @click="YenileTumu" />
               <DxItem location="after" locate-in-menu="auto" template="filtreTemizleTemplate"
                 menu-item-template="menuFiltreTemizleTemplate" @click="FiltreTemizle" />
 
@@ -122,14 +122,14 @@
             </DxSummary>
 
             <template #filtreTarih1>
-              <div style="margin-top: -10px;">
+              <div style="margin-block-start: -10px;">
                 <DxDateBox label="Başlangıç Tarihi" width="150" label-mode="floating" v-model:value="filterValue"
                   type="date" />
               </div>
             </template>
 
             <template #filtreTarih2>
-              <div style="margin-top: -10px; margin-left: 5px;">
+              <div style="margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxDateBox label="Bitiş Tarihi" width="150" label-mode="floating" v-model:value="filterValue1"
                   type="date" />
               </div>
@@ -176,14 +176,21 @@
 
 
 <script setup lang="ts">
+import { usePageTitleStore } from '@/stores/pageTitle'
 import axios from 'axios'
+import { DxButton } from 'devextreme-vue/button'
+import DxContextMenu, { DxContextMenuTypes } from 'devextreme-vue/context-menu'
 import type { DxDataGridTypes } from 'devextreme-vue/data-grid'
 import {
   DxColumn,
+  DxColumnChooser,
+  DxColumnChooserSearch,
+  DxColumnChooserSelection,
   DxDataGrid,
   DxExport,
   DxFilterPanel,
   DxFilterRow,
+  DxGrouping,
   DxGroupItem,
   DxGroupPanel,
   DxHeaderFilter,
@@ -192,25 +199,15 @@ import {
   DxSorting,
   DxSummary,
   DxToolbar,
-  DxTotalItem,
-  DxGrouping,
-  DxColumnChooser,
-  DxColumnChooserSearch,
-  DxColumnChooserSelection
+  DxTotalItem
 } from 'devextreme-vue/data-grid'
-import { DxButton } from 'devextreme-vue/button'
-import DxSelectBox from 'devextreme-vue/select-box'
+import DxDateBox from "devextreme-vue/date-box"
 import { DxLoadPanel } from 'devextreme-vue/load-panel'
-import { exportDataGrid } from 'devextreme/excel_exporter'
 import { DxItem } from 'devextreme-vue/tabs'
-import { ref } from 'vue'
+import { exportDataGrid } from 'devextreme/excel_exporter'
 import { Workbook } from 'exceljs'
 import { saveAs } from 'file-saver-es'
-import DxContextMenu, { DxContextMenuTypes } from 'devextreme-vue/context-menu'
-import { usePageTitleStore } from '@/stores/pageTitle'
-import notify from "devextreme/ui/notify";
-import DxDateBox from "devextreme-vue/date-box";
-import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup'
+import { ref } from 'vue'
 
 const formatDate = date => {
   if (!date)
@@ -268,7 +265,7 @@ const getTalepler = async () => {
   if (selectedDateRange.value[0]) filterValue.value = new Date(selectedDateRange.value[0])
   if (selectedDateRange.value[1]) filterValue1.value = new Date(selectedDateRange.value[1])
 
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/satinalma-talepleri', {
       params: {

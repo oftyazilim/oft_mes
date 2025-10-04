@@ -24,6 +24,7 @@ import { licenseKey } from "./devextreme-license";
 
 // // Global override (scoped değil!)
 // import '../styles/devextreme-overrides.css'
+import { useLoadingStore } from "@/stores/loading";
 import "@styles/styles.scss";
 
 
@@ -68,6 +69,7 @@ app.mount("#app");
 
 // Axios: attach Authorization header from cookie for all requests
 axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
+
 axios.interceptors.request.use((config) => {
   try {
     const token = useCookie<string | null>("accessToken").value;
@@ -76,6 +78,10 @@ axios.interceptors.request.use((config) => {
       (config.headers as any)["Authorization"] = `Bearer ${token}`;
       (config.headers as any)["Accept"] = "application/json";
     }
+    // Global loading start (yalnızca tarayıcı tarafında)
+    try {
+      useLoadingStore().start();
+    } catch (_) {}
   } catch (e) {
     // ignore
   }
@@ -160,12 +166,22 @@ function showSessionExpiredOverlay(fromIdle = false) {
 }
 
 axios.interceptors.response.use(
-  r => r,
-  error => {
+  (r) => {
+    // Global loading stop
+    try {
+      useLoadingStore().stop();
+    } catch (_) {}
+    return r;
+  },
+  (error) => {
     const status = error?.response?.status;
     if (status === 401 || status === 419) {
       showSessionExpiredOverlay();
     }
+    // Global loading stop (hata durumunda)
+    try {
+      useLoadingStore().stop();
+    } catch (_) {}
     return Promise.reject(error);
   }
 );

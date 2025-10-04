@@ -2,6 +2,8 @@
 import navItems from '@/navigation/horizontal'
 import { usePageTitleStore } from '@/stores/pageTitle'
 import { themeConfig } from '@themeConfig'
+import axios from 'axios'
+import { onMounted, watch } from 'vue'
 // import { onMounted, watch } from 'vue'
 // import { useRoute } from 'vue-router'
 
@@ -12,11 +14,45 @@ import NavBarNotifications from '@/layouts/components/NavBarNotifications.vue'
 import NavbarShortcuts from '@/layouts/components/NavbarShortcuts.vue'
 import NavbarThemeSwitcher from '@/layouts/components/NavbarThemeSwitcher.vue'
 import UserProfile from '@/layouts/components/UserProfile.vue'
+import { useLoadingStore } from '@/stores/loading'
 import { HorizontalNavLayout } from '@layouts'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 
 // Store: current page title/alias
 const pageTitleStore = usePageTitleStore()
+const loadingStore = useLoadingStore()
+let __pageLogSentForThisNavCycle = false
+
+function sendPageLoadLog(title: string) {
+  try {
+    // userData cookie mevcutsa al
+    const userData: any = useCookie('userData')
+    const uid = userData?.value?.id
+    if (!uid || !title) return
+    // Aynı navigasyon döngüsünde bir kez gönder
+    if (__pageLogSentForThisNavCycle) return
+    __pageLogSentForThisNavCycle = true
+    axios.post('/api/log-kayit', {
+      userId: uid,
+      sayfa: title,
+      eylem: 'Yükleme',
+    }).finally(() => {
+      // 1 sn sonra tekrar gönderilebilir olsun (ör. dinamik başlık değişimleri)
+      setTimeout(() => { __pageLogSentForThisNavCycle = false }, 1000)
+    })
+  } catch (e) {
+    // sessiz geç
+    // console.debug(e)
+  }
+}
+
+onMounted(() => {
+  if (pageTitleStore.title) sendPageLoadLog(pageTitleStore.title)
+})
+
+watch(() => pageTitleStore.title, (val) => {
+  if (val) sendPageLoadLog(val)
+})
 // Başlık artık route değişiminde sıfırlanmıyor; her sayfa kendi başlığını ayarlasın
 
 // Not: Bu değişkenler yalnızca template içinde kullanıldığı için
@@ -28,6 +64,9 @@ const __keepTemplateRefs = { navItems, themeConfig }
 
 <template>
   <HorizontalNavLayout :nav-items="navItems">
+    <!-- Global loading bar (fixed, no layout shift) -->
+    <VProgressLinear v-show="loadingStore.isLoading" color="primary" height="3" indeterminate
+      class="global-loading-bar" />
     <!-- 👉 navbar -->
     <template #navbar>
       <RouterLink to="/" class="app-logo d-flex align-center gap-x-3">
@@ -89,5 +128,12 @@ const __keepTemplateRefs = { navItems, themeConfig }
   padding-block: 6px;
   padding-inline: 10px;
   white-space: nowrap;
+}
+
+.global-loading-bar {
+  position: fixed;
+  z-index: 2000;
+  inset-block-start: 0;
+  inset-inline: 0;
 }
 </style>

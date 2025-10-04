@@ -2,7 +2,7 @@
   <VCard class="mt-0 pa-0">
     <VCardText class="mt-0 pa-2 ">
       <VCol cols="12" class="mt-2 pa-1 pe-2 pt-0">
-        <div id="liste" style="margin-block-end: 10px; margin-block-start: -10px;">
+        <div id="liste" style="margin-block: -10px 10px;">
           <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" />
 
           <DxDataGrid id="grid" ref="dataGridRef" :key="gridKey" class="grid" :data-source="gridData"
@@ -280,23 +280,23 @@
             </DxSummary>
 
             <template #filtreTarih1>
-              <div style="margin-top: -10px;">
+              <div style="margin-block-start: -10px;">
                 <DxDateBox label="Başlangıç Tarihi" width="150" label-mode="floating" v-model:value="filterValue"
                   type="date" />
               </div>
             </template>
 
             <template #filtreTarih2>
-              <div style="margin-top: -10px; margin-left: 5px;">
+              <div style="margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxDateBox label="Bitiş Tarihi" width="150" label-mode="floating" v-model:value="filterValue1"
                   type="date" />
               </div>
             </template>
 
             <template #filtreFirma>
-              <div style="inline-size: 160px; margin-top: -10px; margin-left: 5px;">
+              <div style="inline-size: 160px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="firmalar" v-model:value="firma" :show-clear-button="true" label="Firma"
-                  label-mode="floating" display-expr="FIRMA" value-expr="FIRMA" style="inline-size: 100%"
+                  label-mode="floating" display-expr="FIRMA" value-expr="FIRMA" style="inline-size: 100%;"
                   search-mode="contains" search-expr="FIRMA" :search-timeout="200" :search-enabled="true" />
               </div>
             </template>
@@ -396,45 +396,45 @@
 
 
 <script setup lang="ts">
-import axios from 'axios'
-import type { DxDataGridTypes } from 'devextreme-vue/data-grid'
+import { usePageTitleStore } from '@/stores/pageTitle';
+import axios from 'axios';
+import { DxButton } from 'devextreme-vue/button';
 import DxCalendar from 'devextreme-vue/calendar';
+import DxContextMenu, { DxContextMenuTypes } from 'devextreme-vue/context-menu';
+import type { DxDataGridTypes } from 'devextreme-vue/data-grid';
 import {
   DxColumn,
+  DxColumnChooser,
+  DxColumnChooserSearch,
+  DxColumnChooserSelection,
   DxDataGrid,
   DxExport,
   DxFilterPanel,
   DxFilterRow,
+  DxGrouping,
   DxGroupItem,
   DxGroupPanel,
   DxHeaderFilter,
   DxScrolling,
   DxSearchPanel,
-  DxSorting,
   DxSelection,
+  DxSorting,
   DxSummary,
   DxToolbar,
-  DxTotalItem,
-  DxGrouping,
-  DxColumnChooser,
-  DxColumnChooserSearch,
-  DxColumnChooserSelection
-} from 'devextreme-vue/data-grid'
-import { DxButton } from 'devextreme-vue/button'
-import DxSelectBox from 'devextreme-vue/select-box'
-import { DxLoadPanel } from 'devextreme-vue/load-panel'
-import { exportDataGrid } from 'devextreme/excel_exporter'
-import { DxItem } from 'devextreme-vue/tabs'
-import { ref } from 'vue'
-import { Workbook } from 'exceljs'
-import { saveAs } from 'file-saver-es'
-import DxContextMenu, { DxContextMenuTypes } from 'devextreme-vue/context-menu'
-import { usePageTitleStore } from '@/stores/pageTitle'
-import notify from "devextreme/ui/notify";
+  DxTotalItem
+} from 'devextreme-vue/data-grid';
 import DxDateBox from "devextreme-vue/date-box";
-import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup'
-import DxTextArea from 'devextreme-vue/text-area';
+import { DxLoadPanel } from 'devextreme-vue/load-panel';
+import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup';
+import DxSelectBox from 'devextreme-vue/select-box';
 import { DxSwitch } from 'devextreme-vue/switch';
+import { DxItem } from 'devextreme-vue/tabs';
+import DxTextArea from 'devextreme-vue/text-area';
+import { exportDataGrid } from 'devextreme/excel_exporter';
+import notify from "devextreme/ui/notify";
+import { Workbook } from 'exceljs';
+import { saveAs } from 'file-saver-es';
+import { ref } from 'vue';
 
 definePage({
   meta: { action: ['read'], subject: ['planlama', 'satinalma'] }
@@ -502,7 +502,7 @@ const getSatinalmalar = async (kapsam: string) => {
   filterValue.value = formatDate(selectedDateRange.value[0])
   filterValue1.value = formatDate(selectedDateRange.value[1])
 
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/satinalma-siparisleri', {
       params: {
@@ -669,7 +669,7 @@ const NotGir = () => {
 }
 
 const NotKaydet = async () => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
 
   const updateData = selectedRows.value.map((row: any) => {
     return {
@@ -772,8 +772,8 @@ const baseMenuItems = [
   { text: 'Açıklar' },
   { text: 'Kapalılar' },
   { text: 'Tümünü Yenile' },
-  { text: 'Teslim Tarihi Değiştir', requiresManage: true  },
-  { text: 'Not Gir', requiresManage: true  },
+  { text: 'Teslim Tarihi Değiştir', requiresManage: true },
+  { text: 'Not Gir', requiresManage: true },
   { text: 'Düzen Yükle' },
   { text: 'Düzen Kaydet' },
   { text: 'Düzen Sıfırla' },
@@ -901,15 +901,16 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
 }
 
 .full-width-content {
-  width: 100%;
-  margin-top: 10px;
+  inline-size: 100%;
+  margin-block-start: 10px;
 }
 
 .full-width-content .textarea-wrapper>.dx-widget {
-  margin-bottom: 20px;
+  margin-block-end: 20px;
 }
 
 .textarea-wrapper {
-  padding: 0 20px;
+  padding-block: 0;
+  padding-inline: 20px;
 }
 </style>

@@ -455,6 +455,7 @@ import {
 } from 'devextreme-vue/data-grid';
 import DxDateBox from "devextreme-vue/date-box";
 import { DxLoadPanel } from 'devextreme-vue/load-panel';
+import { DxNumberBox } from 'devextreme-vue/number-box';
 import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup';
 import DxSelectBox from 'devextreme-vue/select-box';
 import { DxSwitch } from 'devextreme-vue/switch';
@@ -465,7 +466,6 @@ import notify from "devextreme/ui/notify";
 import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver-es';
 import { ref } from 'vue';
-import { DxNumberBox } from 'devextreme-vue/number-box';
 
 definePage({
   meta: { action: ['read'], subject: ['planlama', 'satis'] }
@@ -535,7 +535,7 @@ const getSiparisler = async (kapsam: string) => {
   filterValue.value = formatDate(selectedDateRange.value[0])
   filterValue1.value = formatDate(selectedDateRange.value[1])
 
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/musteri-siparisleri', {
       params: {
@@ -697,7 +697,7 @@ const NotGir = () => {
 
 
 const NotKaydet = async () => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
 
   const updateData = selectedRows.value.map((row: any) => {
     return {
@@ -815,8 +815,8 @@ const baseMenuItems = [
   { text: 'Açıklar' },
   { text: 'Kapalılar' },
   { text: 'Tümünü Yenile' },
-  { text: 'Teslim Tarihi Değiştir', requiresManage: true  },
-  { text: 'Not Gir', requiresManage: true  },
+  { text: 'Teslim Tarihi Değiştir', requiresManage: true },
+  { text: 'Not Gir', requiresManage: true },
   { text: 'Düzen Yükle' },
   { text: 'Düzen Kaydet' },
   { text: 'Düzen Sıfırla' },

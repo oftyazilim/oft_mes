@@ -580,7 +580,7 @@ const getMalzemeler = async () => {
 
   filterValue.value = formatDate(selectedDateRange.value[0])
   filterValue1.value = formatDate(selectedDateRange.value[1])
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/test-ihtiyaclar', {
       params: {
@@ -605,7 +605,7 @@ const getMalzemeler = async () => {
 }
 
 const getMerkezler = async () => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/merkezal', {
       params: {
@@ -630,7 +630,7 @@ const getIstasyonlar = async () => {
   }
   istasyon.value = 0;
   gridDataM.value = [];
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/istasyonal', {
       params: {
@@ -648,7 +648,7 @@ const getIstasyonlar = async () => {
 const getIsEmriNolari = async () => {
   emirNo.value = 0;
   emirnolari.value = [];
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/isemri-nolari', {
       params: {
@@ -668,7 +668,7 @@ const getIsEmriNolari = async () => {
 }
 
 const getAcilmisEmirler = async (itemID: number) => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/isEmriAcilmislar', {
       params: {

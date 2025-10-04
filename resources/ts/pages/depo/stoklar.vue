@@ -684,12 +684,24 @@
 import { usePageTitleStore } from "@/stores/pageTitle";
 import axios from "axios";
 import { DxButton } from "devextreme-vue/button";
+import DxChart, {
+  DxArgumentAxis,
+  DxCommonSeriesSettings,
+  DxLabel,
+  DxLegend,
+  DxSeries,
+  DxTooltip,
+  DxValueAxis
+} from 'devextreme-vue/chart';
+import type { DxContextMenuTypes } from 'devextreme-vue/context-menu';
+import DxContextMenu from 'devextreme-vue/context-menu';
 import {
   DxColumn,
   DxColumnChooser,
   DxColumnChooserSearch,
   DxColumnChooserSelection,
   DxDataGrid,
+  DxDataGridTypes,
   DxExport,
   DxFilterPanel,
   DxFilterRow,
@@ -701,33 +713,20 @@ import {
   DxItem,
   DxScrolling,
   DxSearchPanel,
+  DxSelection,
   DxSorting,
   DxSummary,
   DxToolbar,
-  DxSelection,
-  DxTotalItem,
-  DxDataGridTypes
+  DxTotalItem
 } from 'devextreme-vue/data-grid';
 import { DxLoadPanel } from 'devextreme-vue/load-panel';
-import DxSelectBox from 'devextreme-vue/select-box';
-import {exportDataGrid} from "devextreme/excel_exporter";
-import { computed, onMounted, ref, watch } from 'vue';
-import type { DxContextMenuTypes } from 'devextreme-vue/context-menu';
-import DxContextMenu from 'devextreme-vue/context-menu';
 import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup';
+import DxSelectBox from 'devextreme-vue/select-box';
+import { exportDataGrid } from "devextreme/excel_exporter";
 import notify from 'devextreme/ui/notify';
-import DxChart, {
-  DxArgumentAxis,
-  DxCommonSeriesSettings,
-  DxLabel,
-  DxLegend,
-  DxSeries,
-  DxTooltip,
-  DxValueAxis,
-  DxConstantLine,
-} from 'devextreme-vue/chart';
-import {Workbook} from "exceljs";
-import {saveAs} from "file-saver-es";
+import { Workbook } from "exceljs";
+import { saveAs } from "file-saver-es";
+import { computed, onMounted, ref, watch } from 'vue';
 
 // const pageSizes: (number | PagerPageSize)[] = [5, 10, 15, 'all'];
 document.title = 'OFT - Stok Listesi';
@@ -861,7 +860,7 @@ const formatNumber = (numara: number, digit: number) => {
 }
 
 const getData = async () => {
-  loadingVisible.value = true;
+  // loadingVisible.value = true;
   try {
     const response = await axios.get('/api/stok-listele', {
       params: {
@@ -876,7 +875,7 @@ const getData = async () => {
 }
 
 const getVeriler = async () => {
-  loadingVisible.value = true;
+  // loadingVisible.value = true;
   try {
     const response = await axios.get('/api/stok-param-al')
 
@@ -888,7 +887,7 @@ const getVeriler = async () => {
 }
 
 const getKategoriler = async () => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/kategorial', {
       params: {
@@ -907,7 +906,7 @@ const getKategoriler = async () => {
 }
 
 const OluStok = async (deger: string) => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
   if (!selectedRows.value) {
     console.warn('Seçili satır yok!')
     return
@@ -945,7 +944,7 @@ const KategoriKaydet = async () => {
     notify('Seçili kategori yok!', 'success', 2000)
     return
   }
-  loadingVisible.value = true
+  // loadingVisible.value = true
 
   const updateData = selectedRows.value.map((row: any) => {
     return {
@@ -1047,7 +1046,7 @@ const UrunSorgula = async () => {
     console.warn('Seçili satır yok!')
     return
   }
-  loadingVisible.value = true;
+  // loadingVisible.value = true;
   Sifirla()
   pageTitleStore.setToplam(' -> ' + selectedRow.value.item_code + ' -> ' + selectedRow.value.item_name + '')
   try {
@@ -1267,68 +1266,69 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
 }
 
 .toplam {
-  background-color: rgb(255, 249, 216);
-  padding: 0 5px 0 5px;
-  color: black;
-  font-weight: bold;
-  border-color: rgb(250, 174, 119);
-  border-style: solid;
   border-width: 1px;
-  border-radius: 5px;
-}
-
-.caption {
-  font-size: 18px;
-  font-weight: 500;
-}
-
-.option-container {
-  display: flex;
-  justify-content: space-between;
-  margin-block: 0;
-  margin-inline: auto;
-}
-
-.option {
-  display: flex;
-  align-items: center;
-  margin-block-start: 10px;
-}
-
-.option-caption {
-  margin-block: 0;
-  margin-inline: 8px;
-  white-space: nowrap;
-}
-
-#chart {
-  height: 440px;
-}
-
-.tooltip-header {
-  margin-bottom: 5px;
-  font-size: 16px;
-  font-weight: 500;
-  padding-bottom: 5px;
-  border-bottom: 1px solid #c5c5c5;
-}
-
-.tooltip-body {
-  width: 170px;
-}
-
-.tooltip-body .series-name {
-  font-weight: normal;
-  opacity: 0.6;
-  display: inline-block;
-  line-height: 1.5;
-  padding-right: 10px;
-  width: 126px;
+    border-style: solid;
+    border-color: rgb(250, 174, 119);
+    border-radius: 5px;
+    background-color: rgb(255, 249, 216);
+    color: black;
+    font-weight: bold;
+    padding-block: 0;
+    padding-inline: 5px;
+  }
+  
+  .caption {
+    font-size: 18px;
+    font-weight: 500;
+  }
+  
+  .option-container {
+    display: flex;
+    justify-content: space-between;
+    margin-block: 0;
+    margin-inline: auto;
+  }
+  
+  .option {
+    display: flex;
+    align-items: center;
+    margin-block-start: 10px;
+  }
+  
+  .option-caption {
+    margin-block: 0;
+    margin-inline: 8px;
+    white-space: nowrap;
+  }
+  
+  #chart {
+    block-size: 440px;
+  }
+  
+  .tooltip-header {
+    border-block-end: 1px solid #c5c5c5;
+    font-size: 16px;
+    font-weight: 500;
+    margin-block-end: 5px;
+    padding-block-end: 5px;
+  }
+  
+  .tooltip-body {
+    inline-size: 170px;
+  }
+  
+  .tooltip-body .series-name {
+    display: inline-block;
+    font-weight: normal;
+    inline-size: 126px;
+    line-height: 1.5;
+    opacity: 0.6;
+    padding-inline-end: 10px;
 }
 
 .tooltip-body .value-text {
   display: inline-block;
+  inline-size: 30px;
   line-height: 1.5;
-  width: 30px;
 }
 </style>

@@ -913,7 +913,7 @@ setTimeout(() => {
 // Yükleme panelini anında göstermek için yardımcılar
 async function beginLoading(message: string) {
   loadingMessage.value = message
-  loadingVisible.value = true
+  // loadingVisible.value = true
   await nextTick()
   await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
 }
@@ -2086,7 +2086,7 @@ function groupByWeek(): void {
 }
 
 const RalKodlariGuncelle = async () => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
   const userID = userData.value.id
   try {
     const response = await axios.post('/api/ralguncelle', { userID })

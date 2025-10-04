@@ -166,7 +166,7 @@ class UsersController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        Log::info($data);
+        Log::info('Kullanıcı logları: '. json_encode($data));
 
         return response()->json([
             'data' => $data,

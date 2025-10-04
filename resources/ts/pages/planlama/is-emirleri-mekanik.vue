@@ -862,7 +862,7 @@ const loadingMessage = ref<string>("")
 
 async function beginLoading(message: string = "Veriler yükleniyor…") {
   loadingMessage.value = message
-  loadingVisible.value = true
+  // loadingVisible.value = true
   await nextTick()
   await new Promise(requestAnimationFrame)
 }

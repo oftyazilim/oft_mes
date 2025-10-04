@@ -452,7 +452,7 @@ import { DxItem } from 'devextreme-vue/tabs'
 import { exportDataGrid } from 'devextreme/excel_exporter'
 import { Workbook } from 'exceljs'
 import { saveAs } from 'file-saver-es'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 definePage({
   meta: { action: ['read'], subject: ['planlama', 'montaj', 'satinalma', 'satis'] }
@@ -549,7 +549,7 @@ const getMalzemeler = async () => {
 
   filterValue.value = formatDate(selectedDateRange.value[0])
   filterValue1.value = formatDate(selectedDateRange.value[1])
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/test-ihtiyaclar', {
       params: {
@@ -573,7 +573,7 @@ const getMalzemeler = async () => {
 }
 
 const getMerkezler = async () => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/merkezal', {
       params: {
@@ -593,7 +593,7 @@ const getMerkezler = async () => {
 const getIstasyonlar = async () => {
   istasyon.value = 0;
   gridDataM.value = [];
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/istasyonal', {
       params: {
@@ -609,7 +609,7 @@ const getIstasyonlar = async () => {
 }
 
 const getAcilmisEmirler = async (itemID: number) => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/isEmriAcilmislar', {
       params: {

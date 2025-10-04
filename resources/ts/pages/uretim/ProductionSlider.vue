@@ -1,8 +1,8 @@
 <template>
   <!-- Sol detay kartı -->
-  <div class="pa-0 ma-0">
-    <VRow class="mt-0" align="stretch">
-      <VCol cols="12" md="8" class="d-flex">
+  <div class="ust-section pa-0 ma-0">
+    <VRow align="stretch">
+      <VCol cols="12" md="8" class="d-flex pt-0">
         <!-- template starts above -->
         <div class="carousel-scroll pa-2 mb-2 mt-0" ref="carouselScroll" @mouseenter="pauseAutoScroll"
           @mouseleave="resumeAutoScroll">
@@ -22,7 +22,7 @@
         </div>
       </VCol>
 
-      <VCol cols="12" md="2" class="d-flex ps-0">
+      <VCol cols="12" md="2" class="d-flex ps-0  pt-0">
         <VCard class="gosterge pa-0 ma-0 flex-grow-1" height="318">
           <VCardTitle class="text-h5 mb-4" style="border-block-end: 2px solid #ccc;">
             <div class="d-flex justify-space-between align-center mt-0">
@@ -35,7 +35,7 @@
         </VCard>
       </VCol>
 
-      <VCol cols="12" md="2" class="d-flex ps-0">
+      <VCol cols="12" md="2" class="d-flex ps-0  pt-0">
         <VCard class="gosterge pa-0 ma-0 flex-grow-1" height="318">
           <VCardTitle class="text-h5 mb-4" style="border-block-end: 2px solid #ccc;">
             <div class="d-flex justify-space-between align-center mt-0">
@@ -770,7 +770,7 @@
                     <VRow>
                       <VCol cols="12" class="mt-2 pa-0 ps-2 pe-3 text-center">
                         <h4>Malzeme Listesi ({{ gridDataMalzemeler.length }} parça) (Depo ID: {{ selectedRow.CIKIS_DEPO
-                        }})</h4>
+                          }})</h4>
                         <div style="block-size: 613px;">
                           <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataMalzemeler"
                             key-expr="item_id" :show-borders="true" :min-width="400" :column-auto-width="false"
@@ -911,7 +911,7 @@
     </template>
   </DxPopup>
 
-    <DxPopup v-model:visible="popupMesajGosterVisible" :width="400" :height="220" :hide-on-outside-click="true"
+  <DxPopup v-model:visible="popupMesajGosterVisible" :width="400" :height="220" :hide-on-outside-click="true"
     :show-close-button="true" :title="notBaslik">
     <template #content>
       <DxScrollView width="100%" height="100%">
@@ -920,7 +920,7 @@
       </DxScrollView>
     </template>
   </DxPopup>
-  
+
   <VOverlay :model-value="loadingVisible" class="align-center justify-center" persistent scrim="rgba(0,0,0,0.35)">
     <VCard class="pa-6 d-flex flex-column align-center" elevation="8" width="320">
       <VProgressCircular indeterminate color="primary" size="48" width="5" class="mb-4" />
@@ -1078,7 +1078,7 @@ const MIN_LOADING_MS = 350;
 function showLoading(msg: string = "Yükleniyor...") {
   loadingMessage.value = msg;
   if (!loadingVisible.value) {
-    loadingVisible.value = true;
+    // loadingVisible.value = true;
     loadingStartedAt = Date.now();
   }
 }
@@ -2685,6 +2685,10 @@ const onContextMenuPreparing = (e: any) => {
   margin-block-start: 0;
 }
 
+.ust-section {
+  inline-size: 100%;
+  margin-block-start: -10px;
+}
 .detail-card {
   flex: 0 0 400px;
 }

@@ -444,7 +444,7 @@ onMounted(async () => {
 async function getIstasyon() {
   try {
     loadingMessage.value = 'İstasyonlar yükleniyor...'
-    loadingVisible.value = true
+    // loadingVisible.value = true
     const res = await axios.get('/api/kapasite-istasyon-al', {
       params: {
         merkez: selectedMerkez.value,
@@ -462,7 +462,7 @@ async function getIstasyon() {
 async function getTiplerHaftalar() {
   try {
     loadingMessage.value = 'Tipler ve haftalar yükleniyor...'
-    loadingVisible.value = true
+    // loadingVisible.value = true
     const res = await axios.get('/api/kapasite-hafta', {
       params: {
         istasyon: selectedIstasyon.value,
@@ -484,7 +484,7 @@ async function getTiplerHaftalar() {
 
 async function getData() {
   loadingMessage.value = 'Veriler yükleniyor...'
-  loadingVisible.value = true
+  // loadingVisible.value = true
   dataSource.value = []
   try {
     const res = await axios.get('/api/get-kapasite-data', {

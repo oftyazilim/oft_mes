@@ -992,7 +992,7 @@ watch([isEmriNo, isEmriMiktari], ([yeniIsemri, yeniMiktar]) => {
 
 const EmirleriAl = async () => {
   try {
-    loadingVisible.value = true;
+    // loadingVisible.value = true;
     const response = await axios.get("/api/aktiflerial", {
       params: {
         istasyonId: userData.value.istasyon_id,

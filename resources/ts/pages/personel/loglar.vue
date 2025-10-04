@@ -1,13 +1,15 @@
 <template>
   <VRow>
     <VCol cols="12">
+      <!-- Yükleme sırasında üstte ince progress bar -->
+      <!-- <VProgressLinear v-show="loadingVisible" color="primary" height="3" indeterminate class="mb-2" /> -->
       <!-- Kayıt sayacı üstten kaldırıldı, summary grid içinde gösterilecek -->
       <DxDataGrid id="grid-satis" ref="dataGridRef" :data-source="gridData" key-expr="id" :show-borders="true"
         width="100%" :focused-row-enabled="true" :row-alternation-enabled="true" @exporting="onExporting"
         @focused-row-changed="onFocusedRowChanged" @cell-prepared="onCellPrepared">
         <DxSummary>
-          <DxTotalItem column="komut" summary-type="count" display-format="Toplam: {0} kayıt" />
-          <DxGroupItem column="komut" summary-type="count" display-format="Grup: {0} kayıt" />
+          <DxTotalItem column="unvan" summary-type="count" display-format="Toplam: {0} kayıt" />
+          <DxGroupItem column="unvan" summary-type="count" display-format="Grup: {0} kayıt" />
         </DxSummary>
 
         <DxColumn data-field="id" caption="ID" :visible="true" width="90" />
@@ -54,16 +56,18 @@
         <DxToolbar>
           <DxItem location="before" name="groupPanel" />
           <DxItem location="after" locate-in-menu="auto" template="yenileTemplate"
-            menu-item-template="menuYenileTemplate" @click="Yenile" />
+            menu-item-template="menuYenileTemplate" />
           <DxItem name="exportButton" />
           <DxItem name="columnChooserButton" />
           <DxItem name="searchPanel" />
         </DxToolbar>
 
-        <DxLoadPanel v-model:visible="loadingVisible" :show-indicator="true" />
+        <!-- Grid üzerine bind edilen yükleme paneli -->
+        <DxLoadPanel v-model:visible="loadingVisible" :show-indicator="true" :show-pane="true" :shading="true"
+          message="Yükleniyor..." :position="{ of: '#grid-satis' }" />
 
         <template #yenileTemplate>
-          <DxButton icon="refresh" styling-mode="text" hint="Yenile" id="sayim" />
+          <DxButton icon="refresh" styling-mode="text" hint="Yenile" id="sayim" @click="Yenile" />
         </template>
         <template #menuYenileTemplate>
           <div style="display: flex; align-items: center;">
@@ -78,6 +82,7 @@
 
 <script setup lang="ts">
 definePage({ meta: { action: 'manage', subject: 'all' } })
+import { useLoadingStore } from '@/stores/loading';
 import { usePageTitleStore } from "@/stores/pageTitle";
 import axios from 'axios';
 import { DxButton } from 'devextreme-vue/button';
@@ -119,6 +124,7 @@ const expandAll = ref(true);
 const gridData = ref([]);
 const loadingVisible = ref(false);
 const dataGridRef = ref<DxDataGrid | null>(null);
+const globalLoading = useLoadingStore()
 
 const toggleExpandAll = () => {
   expandAll.value = !expandAll.value;
@@ -139,15 +145,20 @@ const Yenile = () => {
 }
 
 const getData = async () => {
-  loadingVisible.value = true;
+  // // loadingVisible.value = true;
+  globalLoading.start()
   try {
     const response = await axios.get(apiUrl);
     gridData.value = response.data.data;
+    // Data atandıktan sonra grid'i refresh et
+    const instance = dataGridRef.value?.instance;
+    instance?.refresh();
   } catch (error) {
     console.error('Error fetching data:', error);
     notify(`Veri alınamadı`, 'error', 1500)
   } finally {
-    loadingVisible.value = false;
+    // loadingVisible.value = false;
+    globalLoading.stop()
   }
 
 };

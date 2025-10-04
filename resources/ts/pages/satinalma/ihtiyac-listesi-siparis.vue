@@ -689,7 +689,7 @@ const getSatinAlma = async () => {
 
   filterValue.value = selectedDateRange.value[0] instanceof Date ? selectedDateRange.value[0] : new Date(selectedDateRange.value[0])
   filterValue1.value = selectedDateRange.value[1] instanceof Date ? selectedDateRange.value[1] : new Date(selectedDateRange.value[1])
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/siparis-ihtiyaclar', {
       params: {
@@ -714,7 +714,7 @@ const getMalzemeler = async () => {
 
   filterValue.value = formatDate(selectedDateRange.value[0])
   filterValue1.value = formatDate(selectedDateRange.value[1])
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/istasyon-ihtiyaclar', {
       params: {
@@ -737,7 +737,7 @@ const getMalzemeler = async () => {
 }
 
 const getMerkezler = async () => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/merkezal')
     merkezler.value = response.data.merkezler
@@ -752,7 +752,7 @@ const getMerkezler = async () => {
 
 const getIstasyonlar = async () => {
   istasyon.value = 0;
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/istasyonal', {
       params: {
@@ -768,7 +768,7 @@ const getIstasyonlar = async () => {
 }
 
 const getAcilmisEmirler = async (itemID: number) => {
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/isEmriAcilmislar', {
       params: {

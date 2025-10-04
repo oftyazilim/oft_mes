@@ -126,7 +126,9 @@
 
 
 <script setup lang="ts">
+import { usePageTitleStore } from "@/stores/pageTitle";
 import axios from 'axios';
+import DxButton from 'devextreme-vue/button';
 import {
   DxAdaptiveLayout,
   DxChart,
@@ -136,6 +138,7 @@ import {
 } from 'devextreme-vue/chart';
 import DxCheckBox from 'devextreme-vue/check-box';
 import { DxColumn, DxDataGrid, DxFilterRow, DxSearchPanel, DxSorting } from 'devextreme-vue/data-grid';
+import DxDateBox from "devextreme-vue/date-box";
 import { DxLoadPanel } from 'devextreme-vue/load-panel';
 import {
   DxExport,
@@ -148,15 +151,11 @@ import {
   DxStateStoring,
 } from 'devextreme-vue/pivot-grid';
 import { DxPopup } from 'devextreme-vue/popup';
+import DxSelectBox from 'devextreme-vue/select-box';
 import { exportPivotGrid } from 'devextreme/excel_exporter';
 import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver-es';
 import { computed, onMounted, ref, watch } from 'vue';
-import DxToolbar, { DxItem } from 'devextreme-vue/toolbar';
-import DxButton, { DxButtonTypes } from 'devextreme-vue/button';
-import DxDateBox from "devextreme-vue/date-box";
-import DxSelectBox from 'devextreme-vue/select-box'
-import { usePageTitleStore } from "@/stores/pageTitle";
 
 const chart = ref<DxChart>();
 const dateRange = ref<string | null>(null);
@@ -434,7 +433,7 @@ const getData = async () => {
   filterValue.value = formatDate(selectedDateRange.value[0])
   filterValue1.value = formatDate(selectedDateRange.value[1])
 
-  loadingVisible.value = true
+  // loadingVisible.value = true
   try {
     const response = await axios.get('/api/ciro-ozettablo', {
       params: {
