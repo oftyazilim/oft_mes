@@ -1,7 +1,7 @@
 <template>
   <!-- İlk yükleme overlay -->
   <DxLoadPanel v-model:visible="firstLoadOverlayVisible" :show-indicator="true" :show-pane="true" :shading="true"
-    message="Montaj Duruşları Yükleniyor" :position="{ of: '#grid' }" />
+    message="mekanik Duruşları Yükleniyor" :position="{ of: '#grid' }" />
 
   <VCard class="mt-0 pa-4 pt-2">
     <VCardText class="mt-0 pa-4 ms-2">
@@ -35,7 +35,7 @@
               :border="{ color: chartTooltipBorderColor, width: 1, opacity: 0.35 }"
               :font="{ color: chartTooltipTextColor }" />
             <DxTitle :text="chartTitle" :font="{ color: chartTextColor }" />
-            <DxChartExport :enabled="true" file-name="montaj-durus-sureleri" :formats="['PNG', 'JPEG', 'PDF', 'SVG']"
+            <DxChartExport :enabled="true" file-name="mekanik-durus-sureleri" :formats="['PNG', 'JPEG', 'PDF', 'SVG']"
               :printing-enabled="false" />
             <DxSize :height="420" />
           </DxChart>
@@ -240,7 +240,7 @@
               <VCardText>
                 <div style="display: grid; gap: 12px;">
                   <div>
-                    <div style="color: var(--v-theme-on-surface); font-size: 12px; margin-block-end: 6px;">Sebep</div>
+                    <!-- <div style="color: var(--v-theme-on-surface); font-size: 12px; margin-block-end: 6px;">Sebep</div> -->
                     <AppSelect v-model="selectedSebep" :items="reasonOptions" item-title="description"
                       item-value="break_reason_code" return-object label="Duruş Sebebi" single-line
                       placeholder="Seçiniz..." variant="outlined" :menu-props="{ zIndex: 4000, maxHeight: 400 }"
@@ -265,7 +265,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useTheme } from "vuetify";
 
 // import { DxTooltip } from 'devextreme-vue/tooltip';
@@ -317,7 +317,7 @@ import "devextreme/viz/export";
 
 const pageTitleStore = usePageTitleStore();
 const pageName = "Duruşlar";
-const pageAlias = "Montaj";
+const pageAlias = "mekanik";
 
 pageTitleStore.setTitle(`${pageName} (${pageAlias})`);
 document.title = `OFT - ${pageName} | ${pageAlias}`;
@@ -340,10 +340,10 @@ const expandAll = ref(true);
 const goster = ref(true);
 const position = { of: "#grid" };
 const longDowntimeMin = ref<number>(
-  Number(localStorage.getItem("montaj.longDowntimeMin") || 30)
+  Number(localStorage.getItem("mekanik.longDowntimeMin") || 30)
 );
 // API minimum süre filtresi (dakika) - default 1
-const minMinutes = ref<number>(Number(localStorage.getItem("montaj.minMinutes") || 1) || 1);
+const minMinutes = ref<number>(Number(localStorage.getItem("mekanik.minMinutes") || 1) || 1);
 const fromDate = ref<Date | null>(null);
 const toDate = ref<Date | null>(null);
 // Chart için gridData'dan toplanmış veri (sebebe göre toplam süre)
@@ -363,11 +363,11 @@ const chartData = computed(() => {
 });
 
 // Top N ayarı (varsayılan 10)
-const topN = ref<number>(Number(localStorage.getItem("montaj.chartTopN") || 10) || 10);
+const topN = ref<number>(Number(localStorage.getItem("mekanik.chartTopN") || 10) || 10);
 const onTopNChanged = (e: any) => {
   const v = Math.max(1, Math.min(100, Number(e?.value || 10)));
   topN.value = v;
-  localStorage.setItem("montaj.chartTopN", String(topN.value));
+  localStorage.setItem("mekanik.chartTopN", String(topN.value));
 };
 
 // Grafikte kullanılacak veri ve kategoriler (sıra korunur)
@@ -421,7 +421,7 @@ const maxDuration = computed<number>(() => {
 });
 
 // Q95 kırpma togglesı ve etkin maksimum süre hesaplaması
-const clipQ95 = ref<boolean>(localStorage.getItem("montaj.clipQ95") === "1");
+const clipQ95 = ref<boolean>(localStorage.getItem("mekanik.clipQ95") === "1");
 const durations = computed<number[]>(() =>
   gridData.value.map((r) => Number(r?.durum_suresi) || 0)
 );
@@ -447,7 +447,7 @@ const effectiveMaxDuration = computed<number>(() => {
 
 const toggleClip = () => {
   clipQ95.value = !clipQ95.value;
-  localStorage.setItem("montaj.clipQ95", clipQ95.value ? "1" : "0");
+  localStorage.setItem("mekanik.clipQ95", clipQ95.value ? "1" : "0");
 };
 
 // Bar rengini duruma göre belirle
@@ -455,7 +455,7 @@ const getBarGradient = (status: string | null | undefined): string => {
   const dark = isDarkTheme.value;
   if (dark) {
     switch (status) {
-      case "DURUYOR":
+      case "DOWN":
         return "linear-gradient(90deg, #ff8a65, #e53935)";
       case "MOLA":
         return "linear-gradient(90deg, #ba68c8, #8e24aa)";
@@ -465,7 +465,7 @@ const getBarGradient = (status: string | null | undefined): string => {
   } else {
     // Light temada daha yumuşak/pastel tonlar
     switch (status) {
-      case "DURUYOR":
+      case "DOWN":
         return "linear-gradient(90deg, #ffccbc, #ff8a65)";
       case "MOLA":
         return "linear-gradient(90deg, #e1bee7, #ce93d8)";
@@ -575,7 +575,7 @@ const Dun = () => {
 const onEsikChanged = (e: any) => {
   const val = Number(e.value || 30);
   longDowntimeMin.value = isNaN(val) ? 30 : val;
-  localStorage.setItem("montaj.longDowntimeMin", String(longDowntimeMin.value));
+  localStorage.setItem("mekanik.longDowntimeMin", String(longDowntimeMin.value));
 };
 const onToChanged = (e: any) => {
   toDate.value = e.value ?? null;
@@ -584,7 +584,7 @@ const onToChanged = (e: any) => {
 const onMinMinutesChanged = (e: any) => {
   const v = Number(e?.value ?? 1);
   minMinutes.value = isNaN(v) ? 1 : Math.max(0, Math.min(1440, v));
-  localStorage.setItem("montaj.minMinutes", String(minMinutes.value));
+  localStorage.setItem("mekanik.minMinutes", String(minMinutes.value));
 };
 
 // Uzun duruşları kırmızı tonla vurgula
@@ -592,7 +592,7 @@ const onRowPrepared = (e: any) => {
   if (e.rowType !== "data") return;
   const r = e.data;
   if (
-    r?.durum === "DURUYOR" &&
+    r?.durum === "DOWN" &&
     Number(r?.durum_suresi) >= longDowntimeMin.value
   ) {
     e.rowElement?.classList?.add("long-downtime");
@@ -603,7 +603,7 @@ const onCellPrepared = (e: any) => {
   if (e.rowType !== "data") return;
   const r = e.data;
   const isLong =
-    r?.durum === "DURUYOR" && Number(r?.durum_suresi) >= longDowntimeMin.value;
+    r?.durum === "DOWN" && Number(r?.durum_suresi) >= longDowntimeMin.value;
   if (isLong && e.column?.dataField === "durum_suresi") {
     if (e.cellElement) {
       e.cellElement.classList.add("duration-long");
@@ -683,16 +683,27 @@ async function saveReason() {
   const row = reasonDialog.value.row;
   if (!row || !row.id) return;
   const body = {
-    durus_sebebi_kodu: reasonForm.value.kod,
-    durus_sebebi: reasonForm.value.ad,
+    break_reason_code: reasonForm.value.kod,
+    break_description: reasonForm.value.ad,
   };
   try {
-    await axios.put(`/api/duruslar-montaj/${row.id}/reason`, body);
+    await axios.put(`/api/duruslar-mekanik/${row.id}/reason`, body);
     // Grid verisini yerinde güncelle
     const idx = gridData.value.findIndex(r => r.id === row.id);
     if (idx >= 0) {
-      gridData.value[idx] = { ...gridData.value[idx], ...body };
+      const updated = {
+        ...gridData.value[idx],
+        // Backend alanları
+        break_reason_code: reasonForm.value.kod,
+        break_description: reasonForm.value.ad,
+        // Grid sütunlarının beklediği alanlar
+        durus_sebebi_kodu: reasonForm.value.kod,
+        durus_sebebi: reasonForm.value.ad,
+      };
+      // reactive güncelleme için splice kullan
+      gridData.value.splice(idx, 1, updated);
     }
+    // Gerekirse grid'i yeniden boya
     dataGridRef.value?.instance?.refresh();
     notify('Duruş sebebi güncellendi', 'success', 1200);
     closeReasonDialog();
@@ -716,13 +727,13 @@ onMounted(() => {
 }
 
 /* İlk yükleme overlay stilleri */
-.montaj-loading-overlay {
+.mekanik-loading-overlay {
   position: fixed;
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: montaj-fade-in 0.4s ease;
+  animation: mekanik-fade-in 0.4s ease;
   backdrop-filter: blur(3px);
   background:
     radial-gradient(circle at 35% 30%,
@@ -731,10 +742,10 @@ onMounted(() => {
   inset: 0;
 }
 
-.montaj-loading-content {
+.mekanik-loading-content {
   border: 1px solid rgba(255 255 255 / 8%);
   border-radius: 18px;
-  animation: montaj-scale-in 0.5s cubic-bezier(0.4, 0.14, 0.3, 1.2);
+  animation: mekanik-scale-in 0.5s cubic-bezier(0.4, 0.14, 0.3, 1.2);
   background: rgba(20 28 40 / 70%);
   box-shadow:
     0 8px 32px -4px rgba(0 0 0 / 55%),
@@ -745,13 +756,13 @@ onMounted(() => {
   text-align: center;
 }
 
-.montaj-spinner {
+.mekanik-spinner {
   position: relative;
   border: 5px solid rgba(255 255 255 / 12%);
   border-radius: 50%;
   animation:
-    montaj-spin 1.05s linear infinite,
-    montaj-pulse 2.2s ease-in-out infinite;
+    mekanik-spin 1.05s linear infinite,
+    mekanik-pulse 2.2s ease-in-out infinite;
   block-size: 68px;
   border-block-start-color: #3b82f6;
   box-shadow: 0 0 0 0 rgba(59 130 246 / 35%);
@@ -760,7 +771,7 @@ onMounted(() => {
   margin-inline: auto;
 }
 
-.montaj-loading-title {
+.mekanik-loading-title {
   background: linear-gradient(92deg, #fff, #d0e4ff 28%, #9fc5ff 67%, #fff);
   background-clip: text;
   color: transparent;
@@ -772,7 +783,7 @@ onMounted(() => {
   text-shadow: 0 2px 12px rgba(30 55 105 / 35%);
 }
 
-.montaj-loading-hint {
+.mekanik-loading-hint {
   color: #d6e1f2;
   font-size: 15px;
   font-weight: 400;
@@ -780,7 +791,7 @@ onMounted(() => {
   margin-inline: 0;
 }
 
-.montaj-loading-sub {
+.mekanik-loading-sub {
   color: #95a6bc;
   font-size: 13px;
   letter-spacing: 0.3px;
@@ -788,19 +799,19 @@ onMounted(() => {
   margin-inline: 0;
 }
 
-.montaj-loading-timeout {
+.mekanik-loading-timeout {
   color: #f0c674;
   font-size: 12px;
   margin-block: 14px 0;
   margin-inline: 0;
 }
 
-.montaj-loading-timeout .warn {
+.mekanik-loading-timeout .warn {
   color: #ffc266;
   font-weight: 600;
 }
 
-@keyframes montaj-spin {
+@keyframes mekanik-spin {
   0% {
     transform: rotate(0deg);
   }
@@ -810,7 +821,7 @@ onMounted(() => {
   }
 }
 
-@keyframes montaj-pulse {
+@keyframes mekanik-pulse {
 
   0%,
   100% {
@@ -822,7 +833,7 @@ onMounted(() => {
   }
 }
 
-@keyframes montaj-scale-in {
+@keyframes mekanik-scale-in {
   0% {
     opacity: 0;
     transform: scale(0.92) translateY(8px);
@@ -834,7 +845,7 @@ onMounted(() => {
   }
 }
 
-@keyframes montaj-fade-in {
+@keyframes mekanik-fade-in {
   0% {
     opacity: 0;
   }

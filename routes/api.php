@@ -166,7 +166,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/dataUretimPerformans', [UretimMontajController::class, 'getUretimPerformans']);
   Route::get('/durus-sebepleri-al', [UretimMontajController::class, 'DurusSebepleriAl']);
   Route::put('/duruslar-montaj/{id}/reason', [UretimMontajController::class, 'UpdateDurusSebebi']);
-
+  
   Route::post('/insert-workorder', [UretimMontajController::class, 'insertWorkOrder']);
   Route::post('/ekip-bitir-toplu', [UretimMontajController::class, 'bitirToplu']);
   Route::post('/aktif-ekipler', [UretimMontajController::class, 'EkipKaydet']);
@@ -175,7 +175,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/durusKaydet', [UretimMontajController::class, 'DurusKaydet']);
   Route::post('/mola-baslat', [UretimMontajController::class, 'baslat']);
   Route::post('/kontrolGerekKaydet', [UretimMontajController::class, 'KontrolGerekKaydet']);
-
+  
   Route::put('/aktif-ekipler/kapat', [UretimMontajController::class, 'EkipleriKapat']);
 });
 
@@ -188,11 +188,12 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/uretim-rollform/kpi', [UretimMekanikController::class, 'kpi']);
   Route::get('/duruslar-mekanik', [UretimMekanikController::class, 'MekanikDuruslar']);
   Route::get('/uretim-rollform/detect-station', [UretimMekanikController::class, 'detectStation']);
-
+  
   Route::post('/uretim-rollform/hurda-gir', [UretimMekanikController::class, 'hurdaGir']);
   Route::post('/uretim-rollform/close-and-open-down', [UretimMekanikController::class, 'closeAndOpenDown']);
   Route::post('/uretim-rollform/set-operator', [UretimMekanikController::class, 'setOperator']);
   Route::post('/uretim-rollform/adjust-counter', [UretimMekanikController::class, 'adjustCounter']);
+  Route::put('/duruslar-mekanik/{id}/reason', [UretimMekanikController::class, 'UpdateDurusSebebi']);
 });
 
 // planlama - BOM exploded ağacı

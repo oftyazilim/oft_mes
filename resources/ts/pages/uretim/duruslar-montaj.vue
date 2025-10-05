@@ -240,7 +240,7 @@
               <VCardText>
                 <div style="display: grid; gap: 12px;">
                   <div>
-                    <div style="color: var(--v-theme-on-surface); font-size: 12px; margin-block-end: 6px;">Sebep</div>
+                    <!-- <div style="color: var(--v-theme-on-surface); font-size: 12px; margin-block-end: 6px;">Sebep</div> -->
                     <AppSelect v-model="selectedSebep" :items="reasonOptions" item-title="description"
                       item-value="break_reason_code" return-object label="Duruş Sebebi" single-line
                       placeholder="Seçiniz..." variant="outlined" :menu-props="{ zIndex: 4000, maxHeight: 400 }"
