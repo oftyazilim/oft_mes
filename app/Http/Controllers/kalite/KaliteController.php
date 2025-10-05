@@ -439,11 +439,11 @@ class KaliteController extends Controller
             return response()->json(['status' => 'error', 'message' => 'isEmriID zorunlu.'], 422);
         }
 
-        Log::info('KontrolAcKaydet request', [
-            'isEmriID' => $isEmriID,
-            'istasyonID' => $istasyonID,
-            'personelID' => $personelID,
-        ]);
+        // Log::info('KontrolAcKaydet request', [
+        //     'isEmriID' => $isEmriID,
+        //     'istasyonID' => $istasyonID,
+        //     'personelID' => $personelID,
+        // ]);
 
         try {
             DB::connection('pgsql_oft')->beginTransaction();
@@ -596,7 +596,7 @@ class KaliteController extends Controller
 
     public function UrunAgaciYukle(Request $request)
     {
-        Log::info($request->all());
+        // Log::info($request->all());
         $urunKodu = $request->query('urunKodu');
 
         $ids = DB::connection('pgsql_oft')
@@ -685,7 +685,7 @@ class KaliteController extends Controller
 
     public function KontrolSil($id)
     {
-        Log::info('Kontrol silme isteği', ['id' => $id]);
+        // Log::info('Kontrol silme isteği', ['id' => $id]);
         try {
             DB::connection('pgsql_oft')->table('oftt_urun_kontrol_d')->where('id', $id)->delete();
 

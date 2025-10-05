@@ -62,14 +62,6 @@ export default [
         target: "_blank",
       },
       {
-        title: "Malzeme İhtiyaç (Test)",
-        to: "planlama-ihtiyac-listesi-test",
-        icon: { icon: "tabler-list" },
-        action: "read",
-        subject: ["planlama", "montaj"],
-        target: "_blank",
-      },
-      {
         title: "Kapasite Hesapla",
         to: "planlama-kapasite-hesapla",
         icon: { icon: "tabler-list" },

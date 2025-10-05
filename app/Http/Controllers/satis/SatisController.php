@@ -72,11 +72,11 @@ class SatisController extends Controller
             // Gelen parametreleri al
             $updateData = $request->input('updateData');
 
-            Log::info('Teslim Tarihi Değiştir', [
-                'updateData' => $updateData,
-                'userID' => $request->userID,
-                'ip' => $request->ip()
-            ]);
+            // Log::info('Teslim Tarihi Değiştir', [
+            //     'updateData' => $updateData,
+            //     'userID' => $request->userID,
+            //     'ip' => $request->ip()
+            // ]);
             return;
             if (empty($updateData) || !is_array($updateData)) {
                 return response()->json(['error' => 'Geçersiz veri!'], 400);

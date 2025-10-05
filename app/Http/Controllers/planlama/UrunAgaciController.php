@@ -96,7 +96,7 @@ class UrunAgaciController extends Controller
                 ->orderBy('pom.line_no')
                 ->get();
 
-            Log::info($rows);
+            // Log::info($rows);
 
             return response()->json($rows);
         } catch (\Throwable $th) {

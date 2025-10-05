@@ -34,7 +34,7 @@ class KapasiteController extends Controller
 
     public function getMerkezler(Request $request)
   {
-    Log::info($request->all());
+    // Log::info($request->all());
     $merkezler = DB::connection('pgsql')
       ->table('uyumsoft.zz_bk_OFTV_IS_ISTASYONLARI')
       ->select(
@@ -139,7 +139,7 @@ class KapasiteController extends Controller
 
   public function getKapasiteData(Request $request)
   {
-    Log::info('Kapasite Data İsteği:', ['request' => $request->all()]);
+    // Log::info('Kapasite Data İsteği:', ['request' => $request->all()]);
     $query = DB::connection('pgsql')->table('uyumsoft.OFTV_ISEMIRLERI_DETAY')
       ->where('IS_ISTASYONU_ID', $request->istasyon)
       ->where('hafta', '>=', $request->hafta);

@@ -13,9 +13,8 @@
             @cell-click="onCellClick">
             <DxColumn data-field="tipi" caption="TİPİ" data-type="string" :visible="true" :width="65"
               :cell-template="tipCellTemplate" />
-            <DxColumn data-field="satinalmapersoneli" caption="SATICI" :visible="true" :width="80" />
             <DxColumn data-field="mrk_adi" caption="İŞ MERKEZİ" :visible="true" :width="150" />
-            <DxColumn data-field="item_id" caption="STOK ID" data-type="number" :visible="true" :width="80" />
+            <DxColumn data-field="item_id" caption="STOK ID" data-type="number" :visible="true" :width="100" />
             <DxColumn data-field="stok_kodu" caption="STOK KODU" data-type="string" :visible="true" :width="130" />
             <DxColumn data-field="stok_adi" caption="STOK ADI" data-type="string" :visible="true" :width="400" />
             <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MİKTARI" data-type="number" :visible="true"
@@ -70,9 +69,9 @@
               <DxItem location="before" locate-in-menu="auto" template="filtreTarih2" />
               <DxItem location="before" locate-in-menu="auto" template="filtreMerkez" />
               <DxItem location="before" locate-in-menu="auto" template="filtreIstasyon" />
+              <DxItem location="before" locate-in-menu="auto" template="filtreisEmriNo" />
               <DxItem location="before" locate-in-menu="auto" template="filtreSiparis" />
               <DxItem location="before" locate-in-menu="auto" template="filtreCari" />
-              <DxItem location="before" locate-in-menu="auto" template="filtreisEmriNo" />
               <DxItem location="before" locate-in-menu="auto" template="yenileTemplate"
                 menu-item-template="menuYenileTemplate" @click="YenileMalzemeler" />
               <DxItem location="after" locate-in-menu="auto" template="filtreTemizleTemplate"
@@ -142,7 +141,7 @@
             <template #filtreisEmriNo>
               <div style="inline-size: 180px; margin-block-start: -10px; margin-inline-start: 5px;">
                 <DxSelectBox :data-source="emirnolari" v-model:value="emirNo" label="İş Emri No" label-mode="floating"
-                  display-expr="isemri_no" value-expr="isemri_no" style="inline-size: 100%;" :show-clear-button="true"
+                  display-expr="isemri_no" value-expr="isemri_id" style="inline-size: 100%;" :show-clear-button="true"
                   search-mode="contains" search-expr="isemri_no" :search-timeout="200" :search-enabled="true" />
               </div>
             </template>
@@ -498,7 +497,7 @@ const formatDate = (date: any) => {
 
 const pageTitleStore = usePageTitleStore()
 const pageName = 'İhtiyaç Listesi'
-const pageAlias = 'İstasyon Bazlı'
+const pageAlias = 'Test'
 const popupDepolarGosterVisible = ref(false)
 const popupIsEmirleriGosterVisible = ref(false)
 const popupAcilmisIsEmirleriGosterVisible = ref(false)
@@ -534,7 +533,7 @@ const merkez = ref(0)
 const siparis = ref('')
 const siparisler = ref<any[]>([])
 const cari = ref('')
-const emirNo = ref('')
+const emirNo = ref(0)
 const cariler = ref<any[]>([])
 const emirnolari = ref<any[]>([])
 const now = new Date()
@@ -583,7 +582,7 @@ const getMalzemeler = async () => {
   filterValue1.value = formatDate(selectedDateRange.value[1])
   // loadingVisible.value = true
   try {
-    const response = await axios.get('/api/istasyon-ihtiyaclar', {
+    const response = await axios.get('/api/test-ihtiyaclar', {
       params: {
         filterValue: filterValue.value,
         filterValue1: filterValue1.value,
@@ -592,7 +591,7 @@ const getMalzemeler = async () => {
         siparis: siparis.value,
         cari: cari.value,
         coID: userData.value.co_id,
-        isemriNo: emirNo.value,
+        isemriID: emirNo.value,
       },
     })
     gridDataM.value = response.data.emirler
@@ -647,7 +646,7 @@ const getIstasyonlar = async () => {
 }
 
 const getIsEmriNolari = async () => {
-  emirNo.value = '';
+  emirNo.value = 0;
   emirnolari.value = [];
   // loadingVisible.value = true
   try {
@@ -660,7 +659,7 @@ const getIsEmriNolari = async () => {
       },
     })
     emirnolari.value = response.data.emirnolari
-    // console.log(emirnolari.value);
+    console.log(emirnolari.value);
   } catch (error) {
     console.error('Veri çekilirken hata oluştu: ', error)
   } finally {

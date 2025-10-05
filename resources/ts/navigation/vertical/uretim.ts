@@ -1,25 +1,26 @@
+import planlama from "./planlama";
+
 export default [
   {
     title: "Üretim",
-    icon: { icon: "tabler-building-factory-2" },
+    icon: { icon: "tabler-automation" },
     action: "read",
-    subject: ["montaj", "mekanik"],
+    subject: ["planlama", "montaj", "mekanik"],
     children: [
       {
-        title: "Montaj",
-        // RouterLink yerine anchor ile adlandırılmış pencere hedefi kullan
-        href: `${import.meta.env.BASE_URL}uretim/uretim-montaj`,
-        icon: { icon: "tabler-assembly" },
+        title: "Duruşlar (Montaj)",
+        href: `${import.meta.env.BASE_URL}uretim/duruslar-montaj`,
+        icon: { icon: "tabler-clock-cog" },
         action: "read",
-        subject: ["montaj"],
+        subject: ["planlama", "montaj"],
         target: "oft-montaj",
       },
       {
-        title: "Rollform",
-        href: `${import.meta.env.BASE_URL}uretim/uretim-rollform`,
-        icon: { icon: "tabler-brand-bebo" },
+        title: "Duruşlar (Mekanik)",
+        href: `${import.meta.env.BASE_URL}uretim/duruslar-mekanik`,
+        icon: { icon: "tabler-clock-cog" },
         action: "read",
-        subject: ["mekanik"],
+        subject: ["planlama", "mekanik"],
         target: "oft-rollform",
       },
     ],

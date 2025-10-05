@@ -14,7 +14,7 @@ use App\Http\Controllers\planlama\EmirlerController;
 use App\Http\Controllers\planlama\KapasiteController;
 use App\Http\Controllers\planlama\IhtiyacController;
 use App\Http\Controllers\planlama\UretimMontajController;
-use App\Http\Controllers\planlama\UretimRollFormController;
+use App\Http\Controllers\planlama\UretimMekanikController;
 use App\Http\Controllers\satis\SatisController;
 use App\Http\Controllers\satinalma\SatinalmaController;
 use App\Http\Controllers\depo\DepoMamulController;
@@ -158,12 +158,14 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/uretim-haftalik', [UretimMontajController::class, 'haftalikPivot']);
   Route::get('/duruslar-istasyon', [UretimMontajController::class, 'IstasyonDuruslariniAl']);
   Route::get('/duruslar-aktif', [UretimMontajController::class, 'AktifDuruslariAl']);
+  Route::get('/duruslar-montaj', [UretimMontajController::class, 'MontajDuruslar']);
   Route::get('/dataUretimEmirler', [UretimMontajController::class, 'getUretimData']);
   Route::get('/eksik-kontrolu', [UretimMontajController::class, 'EksikKontrolu']);
   Route::get('/isEmriDetay', [UretimMontajController::class, 'getIsEmriDetay']);
   Route::get('/haftalik-gunluk-paket-toplam', [UretimMontajController::class, 'getHaftalikGunlukToplamPaketMiktarlari']);
   Route::get('/dataUretimPerformans', [UretimMontajController::class, 'getUretimPerformans']);
   Route::get('/durus-sebepleri-al', [UretimMontajController::class, 'DurusSebepleriAl']);
+  Route::put('/duruslar-montaj/{id}/reason', [UretimMontajController::class, 'UpdateDurusSebebi']);
 
   Route::post('/insert-workorder', [UretimMontajController::class, 'insertWorkOrder']);
   Route::post('/ekip-bitir-toplu', [UretimMontajController::class, 'bitirToplu']);
@@ -177,18 +179,20 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::put('/aktif-ekipler/kapat', [UretimMontajController::class, 'EkipleriKapat']);
 });
 
-// uretim-rollform
+// uretim-mekanik
 Route::middleware('auth:sanctum')->group(function () {
-  Route::get('/kapasite-works-info', [UretimRollFormController::class, 'getWorksInfo']);
-  Route::get('/uretim-rollform/is-emirleri', [UretimRollFormController::class, 'isEmirleri']);
-  Route::post('/uretim-rollform/activate-workorder', [UretimRollFormController::class, 'activateWorkorder']);
-  Route::post('/duruskaydet-mekanik', [UretimRollFormController::class, 'DurusKaydet']);
-  Route::get('/uretim-rollform/kpi', [UretimRollFormController::class, 'kpi']);
-  Route::post('/uretim-rollform/hurda-gir', [UretimRollFormController::class, 'hurdaGir']);
-  Route::get('/uretim-rollform/detect-station', [UretimRollFormController::class, 'detectStation']);
-  Route::post('/uretim-rollform/close-and-open-down', [UretimRollFormController::class, 'closeAndOpenDown']);
-  Route::post('/uretim-rollform/set-operator', [UretimRollFormController::class, 'setOperator']);
-  Route::post('/uretim-rollform/adjust-counter', [UretimRollFormController::class, 'adjustCounter']);
+  Route::get('/kapasite-works-info', [UretimMekanikController::class, 'getWorksInfo']);
+  Route::get('/uretim-rollform/is-emirleri', [UretimMekanikController::class, 'isEmirleri']);
+  Route::post('/uretim-rollform/activate-workorder', [UretimMekanikController::class, 'activateWorkorder']);
+  Route::post('/duruskaydet-mekanik', [UretimMekanikController::class, 'DurusKaydet']);
+  Route::get('/uretim-rollform/kpi', [UretimMekanikController::class, 'kpi']);
+  Route::get('/duruslar-mekanik', [UretimMekanikController::class, 'MekanikDuruslar']);
+  Route::get('/uretim-rollform/detect-station', [UretimMekanikController::class, 'detectStation']);
+
+  Route::post('/uretim-rollform/hurda-gir', [UretimMekanikController::class, 'hurdaGir']);
+  Route::post('/uretim-rollform/close-and-open-down', [UretimMekanikController::class, 'closeAndOpenDown']);
+  Route::post('/uretim-rollform/set-operator', [UretimMekanikController::class, 'setOperator']);
+  Route::post('/uretim-rollform/adjust-counter', [UretimMekanikController::class, 'adjustCounter']);
 });
 
 // planlama - BOM exploded ağacı

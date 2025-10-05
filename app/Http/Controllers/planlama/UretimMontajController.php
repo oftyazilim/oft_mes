@@ -356,9 +356,118 @@ class UretimMontajController extends Controller
     ], 200);
   }
 
+
+
+
+  
+  // Montaj duruşları listesi: oftt_calisma_sureleri_montaj
+  public function MontajDuruslar(Request $request)
+  {
+    try {
+      $conn = DB::connection('pgsql_oft');
+      $q = $conn->table('oftt_calisma_sureleri_montaj as csm')
+        ->leftJoin('oftt_work_stations as ws', 'ws.wstation_id', '=', 'csm.istasyon')
+        ->select([
+          'csm.id',
+          DB::raw("concat_ws('-', ws.wstation_code::text, NULLIF(ws.description::text, '')) as istasyon"),
+          'durum_bas_tarihi',
+          'durum_bit_tarihi',
+          // Bitiş null ise anlık süre: NOW - durum_bas_tarihi, dakika cinsinden
+          DB::raw("ROUND((CASE WHEN durum_bit_tarihi IS NULL THEN (EXTRACT(EPOCH FROM (NOW() - durum_bas_tarihi)))::numeric ELSE COALESCE(durum_suresi::numeric, 0) END) / 60, 2) AS durum_suresi"),
+          'durum',
+          'durus_sebebi_kodu',
+          'durus_sebebi',
+          'is_emri_no',
+          'urun_kodu',
+          'urun_adi',
+          'personel_id',
+          'is_emri_id',
+          'urun_id',
+        ])
+        // İstenilen filtre: durum alanı üzerinden
+        ->whereIn('durum', ['DURUYOR', 'MOLA']);
+
+      // Opsiyonel tarih aralığı filtresi
+      $from = $request->query('from');
+      $to = $request->query('to');
+      if ($from) {
+        $q->whereDate('durum_bas_tarihi', '>=', $from);
+      }
+      if ($to) {
+        $q->whereDate('durum_bas_tarihi', '<=', $to);
+      }
+
+      // Not: SELECT içindeki alias (durum_suresi) WHERE'de kullanılamaz; aynı ifadeyi whereRaw ile uygula
+      // Opsiyonel süre eşiği (saniye/dakika). Varsayılan: 0 saniye
+      $minSecondsParam = $request->query('min_seconds');
+      $minMinutesParam = $request->query('min_minutes');
+      $thresholdSeconds = 0;
+      if ($minMinutesParam !== null && $minMinutesParam !== '') {
+        $thresholdSeconds = (int) round(floatval($minMinutesParam) * 60);
+      } elseif ($minSecondsParam !== null && $minSecondsParam !== '') {
+        $thresholdSeconds = (int) $minSecondsParam;
+      }
+
+      $rows = $q
+        ->whereRaw(
+          "(CASE WHEN durum_bit_tarihi IS NULL THEN EXTRACT(EPOCH FROM (NOW() - durum_bas_tarihi)) ELSE COALESCE(durum_suresi, 0) END) > ?",
+          [$thresholdSeconds]
+        )
+        ->orderBy('csm.id', 'desc')
+        ->limit(5000)
+        ->get();
+
+      // Log::info('MontajDuruslar kayıt sayısı: ' . $rows->count());
+
+      return response()->json([
+        'data' => $rows,
+      ]);
+    } catch (\Throwable $e) {
+      Log::error('MontajDuruslar hata', [
+        'message' => $e->getMessage(),
+      ]);
+      return response()->json(['message' => 'Sunucu hatası'], 500);
+    }
+  }
+
+  // oftt_calisma_sureleri_montaj tablosunda tek kaydın duruş sebebi kodu ve açıklamasını güncelle
+  public function UpdateDurusSebebi(Request $request, int $id)
+  {
+    $validated = $request->validate([
+      'durus_sebebi_kodu' => 'required|string|max:100',
+      'durus_sebebi' => 'required|string|max:255',
+    ]);
+
+    try {
+      $affected = DB::connection('pgsql_oft')
+        ->table('oftt_calisma_sureleri_montaj')
+        ->where('id', $id)
+        ->update([
+          'durus_sebebi_kodu' => $validated['durus_sebebi_kodu'],
+          'durus_sebebi' => $validated['durus_sebebi'],
+          // 'updated_at' => now(),
+        ]);
+
+      if ($affected === 0) {
+        return response()->json(['message' => 'Kayıt bulunamadı'], 404);
+      }
+
+      return response()->json(['message' => 'Güncellendi']);
+    } catch (\Throwable $e) {
+      Log::error('UpdateDurusSebebi hata', ['id' => $id, 'err' => $e->getMessage()]);
+      return response()->json(['message' => 'Sunucu hatası'], 500);
+    }
+  }
+
+
+
+
+
+
+
   public function KontrolGerekKaydet(Request $request)
   {
-    Log::info('KontrolGerekKaydet request:', $request->all());
+    // Log::info('KontrolGerekKaydet request:', $request->all());
 
     $veri = $request->all();
 
@@ -375,7 +484,7 @@ class UretimMontajController extends Controller
     }
 
     if ($kayitVarmi === true) {
-      Log::info('Bu istasyon için kontrol kaydı zaten var.');
+      // Log::info('Bu istasyon için kontrol kaydı zaten var.');
       return response()->json(['status' => 'error', 'message' => 'Bu istasyon için kontrol kaydı zaten var.'], 400);
     }
 
@@ -458,7 +567,7 @@ class UretimMontajController extends Controller
 
   public function getUretimData(Request $request)
   {
-    Log::info('Uretim verisi alınıyor:', $request->all());
+    // Log::info('Uretim verisi alınıyor:', $request->all());
     $istasyon = $request->istasyon;
     // $istasyonArray = explode(',', $istasyon);
 
@@ -725,7 +834,7 @@ class UretimMontajController extends Controller
       ->whereDate('planlanan_bitis_tarihi', '=', now())
       ->sum('kalan_miktar');
 
-    Log::info($toplam);
+    // Log::info($toplam);
 
     $tarih = Carbon::today()->toDateString();
     // Log::info('Tarih: ' . $tarih);

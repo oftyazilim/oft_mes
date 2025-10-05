@@ -1,0 +1,1 @@
+import{x as o,c as n,aF as t,b as a,f as s,a as u,F as l,o as m}from"./main-BA6IByp5.js";const i={};function _(c,e){const r=u("router-link");return m(),n(l,null,[e[1]||(e[1]=t(" mekanik ")),a(r,{to:"/uretim/uretim-montaj"},{default:s(()=>e[0]||(e[0]=[t("Duruşlar")])),_:1,__:[0]})],64)}const k=o(i,[["render",_]]);export{k as default};

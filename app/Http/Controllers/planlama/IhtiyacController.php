@@ -1141,7 +1141,7 @@ class IhtiyacController extends Controller
       ->distinct()
       ->get();
 
-    Log::info('Emir Noları:', ['emirnolari' => $emirnolari]);
+    // Log::info('Emir Noları:', ['emirnolari' => $emirnolari]);
     return response()->json([
       'emirnolari' => $emirnolari,
       'message' => 'Veriler başarıyla alındı',

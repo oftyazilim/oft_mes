@@ -178,7 +178,7 @@ class EmirlerController extends Controller
   public function updatePlanlananBaslangic(Request $request)
   {
 
-    Log::info($request->all());
+    // Log::info($request->all());
 
     try {
       // Gelen parametreleri al
@@ -246,7 +246,7 @@ class EmirlerController extends Controller
               'plan_end_date' => $planDates->bitir,
             ]);
         } catch (\Exception $e) {
-          Log::info($e->getMessage());
+          // Log::info($e->getMessage());
         }
       }
 
@@ -412,7 +412,7 @@ class EmirlerController extends Controller
     try {
       // Gelen parametreleri al
       $updateData = $request->input('updateData');
-      Log::info($updateData);
+      // Log::info($updateData);
       if (empty($updateData) || !is_array($updateData)) {
         return response()->json(['error' => 'Geçersiz veri!'], 400);
       }
@@ -430,7 +430,7 @@ class EmirlerController extends Controller
                 ->limit(1);
             })
             ->update(['zz_aksesuar_secim_d' => $data['aksesuar']]);
-          Log::info("Aksesuar güncellendi: " . $data['aksesuar']);
+          // Log::info("Aksesuar güncellendi: " . $data['aksesuar']);
         } else {
           Log::error('isemriNo bulunamadı!', $data);
         }
@@ -571,7 +571,7 @@ class EmirlerController extends Controller
 
     $data = [];
     $istasyonArray = explode(',', $request->istasyon);
-    Log::info($istasyonArray);
+    // Log::info($istasyonArray);
     $aktifler = DB::connection('pgsql_oft')
       ->table('oftt_calisma_sureleri_montaj')
       ->select(
