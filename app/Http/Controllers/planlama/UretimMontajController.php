@@ -359,7 +359,7 @@ class UretimMontajController extends Controller
 
 
 
-  
+
   // Montaj duruşları listesi: oftt_calisma_sureleri_montaj
   public function MontajDuruslar(Request $request)
   {
@@ -1203,29 +1203,6 @@ class UretimMontajController extends Controller
     $durusSebebi = is_array($request->selectedDurus) ? $request->selectedDurus['description'] : $request->selectedDurus;
     $durusSebebiKodu = is_array($request->selectedDurus) ? $request->selectedDurus['break_reason_code'] : $request->selectedDurus;
 
-
-    // if ($request->durum === 'SON DURUMA DÖN') {
-    //   $durumAl = DB::connection('pgsql_oft')
-    //     ->table('OFTT_CALISMA_SURELERI_MONTAJ')
-    //     ->select('DURUM', 'DURUS_SEBEBI', 'DURUS_SEBEBI_KODU')
-    //     ->where('guid', $request->guid)
-    //     ->whereNotNull('DURUM_BIT_TARIHI')
-    //     ->where('DURUM', '!=', 'MOLA')
-    //     ->orderByDesc('ID')
-    //     ->first();
-
-    //   if ($durumAl) {
-    //     $durum = $durumAl->DURUM;
-    //     $durusSebebi = $durumAl->DURUS_SEBEBI;
-    //     $durusSebebiKodu = $durumAl->DURUS_SEBEBI_KODU;
-    //   } else {
-    //     $durum = 'ÇALIŞIYOR';
-    //     $durusSebebi = null;
-    //     $durusSebebiKodu = null;
-    //   }
-    // }
-
-
     $onceki = $baglanti
       ->table('oftt_calisma_sureleri_montaj')
       ->where('istasyon', $request->istasyonKodu)
@@ -1248,19 +1225,6 @@ class UretimMontajController extends Controller
           'durum_suresi' => DB::raw("EXTRACT(EPOCH FROM ('$tarih'::timestamp - durum_bas_tarihi))")
         ]);
     }
-    //  else {
-    //   $ekipno = $baglanti
-    //     ->table('OFTT_CALISMA_SURELERI_MONTAJ')
-    //     ->select('EKIP_NO')
-    //     ->where('ISTASYON', $request->istasyonKodu)
-    //     ->where('PERSONEL_ID', $request->userId)
-    //     ->whereNull('DURUM_BIT_TARIHI')
-    //     ->orderByDesc('ID', 'desc')
-    //     ->first();
-    //   // Ekip numarasını 1 artır
-    //   $yeniEkipNo = ($ekipno->EKIP_NO ?? 0) + 1;
-    // }
-
 
     if ($request->durum !== 'KAPANDI') {
       $baglanti

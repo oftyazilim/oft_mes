@@ -98,7 +98,7 @@ class KaliteController extends Controller
     public function HataKaydet(Request $request)
     {
         // Log::info('Gelen veri:', $request->all());
-        $isPhoto = $request->isPhoto ?? 0;
+        // $isPhoto = $request->isPhoto ?? 0;
         // Log::info('Resim var mı:'. $isPhoto);
         $validator = Validator::make($request->all(), [
             'urun_kontrol_m_id' => 'required|integer',
@@ -160,7 +160,7 @@ class KaliteController extends Controller
             'kontrol_tarihi'    => now(),
             'olusturan_id'      =>  $request->user_id ?? 0,
             'note'               =>  $request->hataOzet ?? null,
-            'is_photo'          => $isPhoto,
+            // 'is_photo'          => $isPhoto,
         ]);
 
         try {
@@ -170,59 +170,59 @@ class KaliteController extends Controller
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
 
-        if ($request->has('resimler') && is_array($request->resimler)) {
-            $serino = $request->serino;
-            $isemri_no = $request->isemri_no;
+        // if ($request->has('resimler') && is_array($request->resimler)) {
+        //     $serino = $request->serino;
+        //     $isemri_no = $request->isemri_no;
 
-            // Foto klasörü kökünü .env PHOTO_KK_DIR ile yapılandırılabilir yap (Windows UNC veya Linux mount)
-            $photoBase = rtrim(env('PHOTO_KK_DIR', "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\kk-fotolari\\"), '\\/');
-            $klasorYolu = $photoBase . DIRECTORY_SEPARATOR . $isemri_no;
+        //     // Foto klasörü kökünü .env PHOTO_KK_DIR ile yapılandırılabilir yap (Windows UNC veya Linux mount)
+        //     $photoBase = rtrim(env('PHOTO_KK_DIR', "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\kk-fotolari\\"), '\\/');
+        //     $klasorYolu = $photoBase . DIRECTORY_SEPARATOR . $isemri_no;
 
-            if (!File::exists($klasorYolu)) {
-                File::makeDirectory($klasorYolu, 0777, true);
-            }
+        //     if (!File::exists($klasorYolu)) {
+        //         File::makeDirectory($klasorYolu, 0777, true);
+        //     }
 
-            // Intervention Image opsiyonel: paket kurulu değilse (class bulunamazsa) orijinal base64 doğrudan yazılır.
-            $interventionAvailable = class_exists(ImageManager::class) && class_exists(Driver::class);
-            $manager = $interventionAvailable ? new ImageManager(new Driver()) : null; // 👈 Opsiyonel
+        //     // Intervention Image opsiyonel: paket kurulu değilse (class bulunamazsa) orijinal base64 doğrudan yazılır.
+        //     $interventionAvailable = class_exists(ImageManager::class) && class_exists(Driver::class);
+        //     $manager = $interventionAvailable ? new ImageManager(new Driver()) : null; // 👈 Opsiyonel
 
-            $sira = 1;
-            foreach ($request->resimler as $resim) {
-                if (!isset($resim['base64']) || !isset($resim['extension'])) {
-                    continue;
-                }
+        //     $sira = 1;
+        //     foreach ($request->resimler as $resim) {
+        //         if (!isset($resim['base64']) || !isset($resim['extension'])) {
+        //             continue;
+        //         }
 
-                $dosyaAdi = $serino . '-' . str_pad($sira, 2, '0', STR_PAD_LEFT) . '.jpg';
-                $tamYol = $klasorYolu . DIRECTORY_SEPARATOR . $dosyaAdi;
+        //         $dosyaAdi = $serino . '-' . str_pad($sira, 2, '0', STR_PAD_LEFT) . '.jpg';
+        //         $tamYol = $klasorYolu . DIRECTORY_SEPARATOR . $dosyaAdi;
 
-                try {
-                    $imageData = base64_decode($resim['base64']);
-                    if ($imageData === false) {
-                        throw new \RuntimeException('Base64 decode başarısız.');
-                    }
+        //         try {
+        //             $imageData = base64_decode($resim['base64']);
+        //             if ($imageData === false) {
+        //                 throw new \RuntimeException('Base64 decode başarısız.');
+        //             }
 
-                    if ($manager) {
-                        // Paket mevcutsa yeniden boyutlandır + kalite düşür
-                        $image = $manager->read($imageData);
-                        $originalWidth = $image->width();
-                        $originalHeight = $image->height();
-                        $targetWidth = 1024;
-                        $targetHeight = $originalWidth > 0 ? intval($originalHeight * $targetWidth / $originalWidth) : $originalHeight;
-                        $image = $image->resize($targetWidth, $targetHeight, function ($constraint) {
-                            $constraint->aspectRatio();
-                            $constraint->upsize();
-                        })->toJpeg(80);
-                        File::put($tamYol, (string) $image);
-                    } else {
-                        // Paket yok: orijinal veriyi olduğu gibi yaz
-                        File::put($tamYol, $imageData);
-                    }
-                    $sira++;
-                } catch (\Throwable $e) {
-                    Log::error('Resim kaydetme hatası: ' . $e->getMessage());
-                }
-            }
-        }
+        //             if ($manager) {
+        //                 // Paket mevcutsa yeniden boyutlandır + kalite düşür
+        //                 $image = $manager->read($imageData);
+        //                 $originalWidth = $image->width();
+        //                 $originalHeight = $image->height();
+        //                 $targetWidth = 1024;
+        //                 $targetHeight = $originalWidth > 0 ? intval($originalHeight * $targetWidth / $originalWidth) : $originalHeight;
+        //                 $image = $image->resize($targetWidth, $targetHeight, function ($constraint) {
+        //                     $constraint->aspectRatio();
+        //                     $constraint->upsize();
+        //                 })->toJpeg(80);
+        //                 File::put($tamYol, (string) $image);
+        //             } else {
+        //                 // Paket yok: orijinal veriyi olduğu gibi yaz
+        //                 File::put($tamYol, $imageData);
+        //             }
+        //             $sira++;
+        //         } catch (\Throwable $e) {
+        //             Log::error('Resim kaydetme hatası: ' . $e->getMessage());
+        //         }
+        //     }
+        // }
 
 
 

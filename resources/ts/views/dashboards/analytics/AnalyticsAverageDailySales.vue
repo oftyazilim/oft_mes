@@ -100,10 +100,6 @@ const chartOptions = {
       </h4>
     </VCardText>
 
-    <VueApexCharts
-      :options="chartOptions"
-      :series="series"
-      :height="80"
-    />
+    <VueApexCharts :options="chartOptions" :series="series" :height="80" />
   </VCard>
 </template>

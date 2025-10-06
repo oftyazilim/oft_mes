@@ -1424,17 +1424,17 @@ const KontrolKaydet = async () => {
   isSavingKontrol.value = true
   const base64Resimler: Array<{ base64: string; extension: string }> = []
 
-  for (const p of photos.value) {
-    if (p.file) {
-      const base64 = await fileToBase64(p.file)
-      const extension = p.file.name.split('.').pop() || 'jpg'
+  // for (const p of photos.value) {
+  //   if (p.file) {
+  //     const base64 = await fileToBase64(p.file)
+  //     const extension = p.file.name.split('.').pop() || 'jpg'
 
-      base64Resimler.push({
-        base64: base64.replace(/^data:image\/\w+;base64,/, ''), // sadece base64 içeriği
-        extension,
-      })
-    }
-  }
+  //     base64Resimler.push({
+  //       base64: base64.replace(/^data:image\/\w+;base64,/, ''), // sadece base64 içeriği
+  //       extension,
+  //     })
+  //   }
+  // }
 
   const payload = {
     urun_kontrol_m_id: kontroller.value.masterId,
@@ -1442,7 +1442,7 @@ const KontrolKaydet = async () => {
     serino: serino.value,
     hatalar: Object.keys(seciliHatalar.value).filter(k => seciliHatalar.value[k]),
     sonuc: sonuc.value,
-    resimler: base64Resimler,
+    // resimler: base64Resimler,
     hataOzet: hataOzet.value,
     user_id: userData.value.id,
     isPhoto: photos.value.length > 0 ? 1 : 0, // Fotoğraf var mı?

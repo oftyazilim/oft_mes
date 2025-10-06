@@ -75,23 +75,11 @@ const websiteAnalytics = [
 </script>
 
 <template>
-  <VCard
-    color="primary"
-    height="260"
-  >
-    <VCarousel
-      cycle
-      :continuous="false"
-      :show-arrows="false"
-      hide-delimiter-background
-      :delimiter-icon="() => h(VIcon, { icon: 'fa-circle', size: '8' })"
-      height="260"
-      class="carousel-delimiter-top-end web-analytics-carousel"
-    >
-      <VCarouselItem
-        v-for="item in websiteAnalytics"
-        :key="item.name"
-      >
+  <VCard color="primary" height="260">
+    <VCarousel cycle :continuous="false" :show-arrows="false" hide-delimiter-background
+      :delimiter-icon="() => h(VIcon, { icon: 'fa-circle', size: '8' })" height="260"
+      class="carousel-delimiter-top-end web-analytics-carousel">
+      <VCarouselItem v-for="item in websiteAnalytics" :key="item.name">
         <VCardText class="position-relative">
           <VRow>
             <VCol cols="12">
@@ -103,36 +91,17 @@ const websiteAnalytics = [
               </p>
             </VCol>
 
-            <VCol
-              cols="12"
-              sm="6"
-              order="2"
-              order-sm="1"
-            >
+            <VCol cols="12" sm="6" order="2" order-sm="1">
               <VRow>
-                <VCol
-                  cols="12"
-                  class="pb-0 pt-1"
-                >
+                <VCol cols="12" class="pb-0 pt-1">
                   <h6 class="text-h6 text-white mb-1 mt-5">
                     {{ item.name }}
                   </h6>
                 </VCol>
 
-                <VCol
-                  v-for="d in item.data"
-                  :key="d.number"
-                  cols="6"
-                  class="text-no-wrap pb-2"
-                >
-                  <VChip
-                    label
-                    variant="flat"
-                    size="default"
-                    color="rgb(var(--v-theme-primary-darken-1))"
-                    class="font-weight-medium text-white rounded me-2 px-2"
-                    style="block-size: 30px;"
-                  >
+                <VCol v-for="d in item.data" :key="d.number" cols="6" class="text-no-wrap pb-2">
+                  <VChip label variant="flat" size="default" color="rgb(var(--v-theme-primary-darken-1))"
+                    class="font-weight-medium text-white rounded me-2 px-2" style="block-size: 30px;">
                     <span class="text-base">{{ d.number }}</span>
                   </VChip>
                   <span class="d-inline-block">{{ d.text }}</span>
@@ -140,18 +109,9 @@ const websiteAnalytics = [
               </VRow>
             </VCol>
 
-            <VCol
-              cols="12"
-              sm="6"
-              order="1"
-              order-sm="2"
-              class="text-center"
-            >
-              <img
-                :src="item.slideImg"
-                class="card-website-analytics-img"
-                style="filter: drop-shadow(0 4px 60px rgba(0, 0, 0, 50%));"
-              >
+            <VCol cols="12" sm="6" order="1" order-sm="2" class="text-center">
+              <img :src="item.slideImg" class="card-website-analytics-img"
+                style="filter: drop-shadow(0 4px 60px rgba(0, 0, 0, 50%));">
             </VCol>
           </VRow>
         </VCardText>

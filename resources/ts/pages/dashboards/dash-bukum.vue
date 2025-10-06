@@ -1,272 +1,124 @@
 <template>
-  <div class="dash-container">
-    <!-- İlk yükleme overlay -->
-    <div v-if="initialLoading" class="loading-overlay">
-      <div class="loader-box">
-        <div class="spinner" aria-hidden="true"></div>
-        <h2>Veriler yükleniyor</h2>
-        <p>Makine durumları, OEE ve haftalık istatistikler getiriliyor. Lütfen bekleyin…</p>
-      </div>
+  <!-- İlk yükleme overlay -->
+  <div v-if="initialLoading" class="loading-overlay">
+    <div class="loader-box">
+      <div class="spinner" aria-hidden="true"></div>
+      <h2>Veriler yükleniyor</h2>
+      <p>Makine durumları, OEE ve haftalık istatistikler getiriliyor. Lütfen bekleyin…</p>
     </div>
-    <header class="dash-header">
-      <div class="header-left">
-        <div class="title-block ms-4">
-          <h1>Büküm Dashboard</h1>
-          <!-- <p class="muted">Full HD ekran için optimize, mobilde akıcı.</p> -->
-        </div>
-        <div class="summary-card stretch">
-          <div class="summary-title">Günlük Genel Değerlendirme</div>
-          <div class="summary-kpis">
-            <div class="kpi"><span>Uyg.</span><strong>{{ fmtPct(daySummary.availability) }}</strong></div>
-            <div class="kpi"><span>Perf.</span><strong>{{ fmtPct(daySummary.performance) }}</strong></div>
-            <div class="kpi"><span>Kalite</span><strong>{{ fmtPct(daySummary.quality) }}</strong></div>
-            <div class="kpi oee" :class="oeeClass(daySummary.oee)"><span>OEE</span><strong>{{ fmtPct(daySummary.oee)
-                }}</strong></div>
-          </div>
-          <div class="dash-actions mt-3">
-            <button class="refresh-btn" @click="manualRefresh" :disabled="refreshing || loading">
-              <span v-if="refreshing">⟳ Yenileniyor...</span>
-              <span v-else>⟳ Yenile</span>
-            </button>
-            <small v-if="lastUpdated" class="last-updated">Güncellendi: {{ formatTime(lastUpdated) }}</small>
-            <small v-if="transientEmpty" class="warn"
-              title="API geçici boş yanıt verdi; önceki veriler gösteriliyor">Geçici boş yanıt</small>
-            <small v-else-if="emptyData && !loading" class="warn">Veri yok</small>
-            <small v-if="backoffMs > basePoll && !loading" class="hint">Bekleme: {{ Math.round(backoffMs / 1000)
-              }}sn</small>
-          </div>
-        </div>
-      </div>
-      <div class="header-right">
-        <div class="weekly-card">
-          <h4>Haftalık Çalışma / Duruş (dk)</h4>
-          <div class="weekly-vertical mt-2">
-            <div class="wv-bars">
-              <template v-if="loading">
-                <div v-for="i in 7" :key="'wv-skel-' + i" class="wv-col">
-                  <div class="wv-stack">
-                    <div class="wv-fill sk-fill" :style="{ blockSize: (20 + i * 6) + '%' }"></div>
-                  </div>
-                  <div class="wv-day">&nbsp;</div>
-                </div>
-              </template>
-              <template v-else>
-                <div v-for="d in weekly" :key="d.date" class="wv-col">
-                  <div class="wv-stack" :title="d.work + ' dk çalışma / ' + d.stop + ' dk duruş'">
-                    <div class="wv-seg work" :style="{ blockSize: weeklyHeight(d.work) }" title="Çalışma">
-                      <span v-if="d.work > 0" class="wv-val">{{ d.work }}</span>
-                    </div>
-                    <div class="wv-seg stop" :style="{ blockSize: weeklyHeight(d.stop) }" title="Duruş">
-                      <span v-if="d.stop > 0" class="wv-val">{{ d.stop }}</span>
-                    </div>
-                  </div>
-                  <div class="wv-day">{{ d.label }}</div>
-                </div>
-              </template>
-            </div>
-          </div>
-        </div>
-        <div class="weekly-count-card">
-          <h4>Haftalık Sayaç (adet)</h4>
-          <div class="weekly-vertical mt-2">
-            <div class="wvc-bars">
-              <template v-if="loading">
-                <div v-for="i in 7" :key="'wvc-skel-' + i" class="wvc-col">
-                  <div class="wvc-stack">
-                    <div class="wvc-fill sk-fill" :style="{ blockSize: (20 + i * 4) + '%' }"></div>
-                  </div>
-                  <div class="wvc-day">&nbsp;</div>
-                </div>
-              </template>
-              <template v-else>
-                <div v-for="d in weeklyCounts" :key="d.date" class="wvc-col">
-                  <div class="wvc-stack" :title="d.count + ' adet'">
-                    <div class="wvc-bar" :style="{ blockSize: weeklyCountHeight(d.count) }" title="Adet">
-                      <span v-if="d.count > 0" class="wvc-label">{{ d.count }}</span>
-                    </div>
-                  </div>
-                  <div class="wvc-day">{{ d.label }}</div>
-                </div>
-              </template>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <section class="cards-grid">
-      <template v-if="loading">
-        <article v-for="i in 6" :key="'skeleton-' + i" class="machine-card skeleton">
-          <div class="card-top">
-            <div class="names">
-              <div class="sk-line w-60"></div>
-              <div class="sk-line w-40 mt-1"></div>
-            </div>
-            <div class="status">
-              <span class="dot"></span>
-              <span class="sk-line w-20"></span>
-            </div>
-          </div>
-
-          <div class="kpi-row">
-            <div class="kpi-item">
-              <div class="sk-line w-60"></div>
-              <div class="sk-line w-40 mt-1"></div>
-            </div>
-            <div class="kpi-item">
-              <div class="sk-line w-60"></div>
-              <div class="sk-line w-40 mt-1"></div>
-            </div>
-            <div class="kpi-item">
-              <div class="sk-line w-60"></div>
-              <div class="sk-line w-40 mt-1"></div>
-            </div>
-            <div class="kpi-item">
-              <div class="sk-line w-60"></div>
-              <div class="sk-line w-40 mt-1"></div>
-            </div>
-          </div>
-
-          <div class="mini-bars">
-            <div class="multi-bar">
-              <div class="multi-seg sk-fill" style="inline-size: 65%;"></div>
-              <div class="multi-seg sk-fill" style="inline-size: 20%;"></div>
-              <div class="multi-seg sk-fill" style="inline-size: 15%;"></div>
-            </div>
-          </div>
-        </article>
-      </template>
-      <template v-else>
-        <article v-for="m in machines" :key="m.id" class="machine-card">
-          <div class="card-top" :style="cardTopStyle(m)">
-            <div class="names">
-              <h3 class="machine-name" style="font-size: 20px;">{{ m.code }} - <span class="machine-name">{{
-                truncate(m.name, 35) }}</span></h3>
-              <p class="mb-1">Operatör: <span class="operator-name" v-if="m.operator"> {{ m.operator }}</span></p>
-            </div>
-            <div class="status" :class="m.status">
-              <span class="duration pe-3">{{ durationSinceShort(m.statuTime) }}</span>
-              <!-- <span class="label">{{ statusText(m.status) }}</span> -->
-              <span class="dot"></span>
-            </div>
-          </div>
-
-
-          <div class="meta-row" v-if="m.itemCode || m.itemName || m.counter !== undefined">
-            <div class="meta-left">
-              <span v-if="m.itemCode" class="pill code">{{ m.itemCode }}</span>
-              <span v-if="m.itemName" class="meta-name">{{ m.itemName }}</span>
-            </div>
-            <div class="meta-right" v-if="m.counter !== undefined">Sayaç: <strong>{{ m.counter }}</strong></div>
-          </div>
-
-          <div class="kpi-row">
-            <div class="kpi-item">
-              <span>Uygulanabilirlik</span>
-              <strong>{{ fmtPct(m.availability) }}</strong>
-            </div>
-            <div class="kpi-item">
-              <span>Performans</span>
-              <strong>{{ fmtPct(m.performance) }}</strong>
-            </div>
-            <div class="kpi-item">
-              <span>Kalite</span>
-              <strong>{{ fmtPct(m.quality) }}</strong>
-            </div>
-            <div class="kpi-item oee" :class="oeeClass(m.oee)">
-              <span>OEE</span>
-              <strong>{{ fmtPct(m.oee) }}</strong>
-            </div>
-          </div>
-
-          <div class="mini-bars">
-            <template v-if="m.segments && m.segments.length">
-              <div class="multi-bar">
-                <div v-for="(seg, idx) in m.segments" :key="m.id + '-seg-' + idx" class="multi-seg"
-                  :style="getSegmentStyle(seg as any, m.segments as any)" :title="getSegmentTooltip(seg as any, m)" />
-              </div>
-            </template>
-            <template v-else>
-              <div class="multi-bar" :title="'Çalışma/Duruş oranı'">
-                <div class="multi-seg work" :style="{ inlineSize: segs(m).work + '%' }" title="Çalışma"></div>
-                <div class="multi-seg stop" :style="{ inlineSize: segs(m).stop + '%' }" title="Duruş"></div>
-                <div class="multi-seg remain" v-if="segs(m).remain > 0" :style="{ inlineSize: segs(m).remain + '%' }"
-                  title="Kalan"></div>
-              </div>
-            </template>
-
-            <!-- Ek bilgi satırı: sadece duruşta (stopped) sebep göster -->
-            <div class="status-extra" v-if="m.status === 'stopped' && displayReason(m)">
-              <div class="extra-right">
-                <span>Sebep: </span>
-                <span class="value reason" :title="displayReason(m)">{{ displayReason(m) }}</span>
-              </div>
-            </div>
-          </div>
-        </article>
-      </template>
-    </section>
-
-    <section class="charts-grid">
-      <div class="chart-card">
-        <h4>Duruş Sebepleri (Süre)</h4>
-        <div v-if="loadError" class="alert error mt-2">
-          <strong>Veri alınamadı:</strong>
-          <span class="msg">{{ loadError }}</span>
-          <button class="retry-btn" @click="manualRefresh">Tekrar Dene</button>
-        </div>
-        <div v-else-if="emptyData && !loading" class="alert empty mt-2">
-          <span>Henüz veri yok.</span>
-          <button class="retry-btn subtle" @click="manualRefresh">Yenile</button>
-        </div>
-        <div v-if="loading" class="reason-bars mt-2">
-          <div v-for="i in 5" :key="'rs-' + i" class="reason-row">
-            <div class="row-label">
-              <div class="sk-line w-40"></div>
-            </div>
-            <div class="bar">
-              <div class="fill sk-fill" :style="{ width: (100 - i * 12) + '%' }" />
-            </div>
-            <div class="value">
-              <div class="sk-line w-20 ml-auto"></div>
-            </div>
-          </div>
-        </div>
-        <div v-else class="reason-bars mt-2">
-          <div v-for="r in downtimeReasons" :key="r.name" class="reason-row">
-            <div class="row-label">{{ r.name }}</div>
-            <div class="bar mt-2">
-              <div class="fill reason" :style="{ width: reasonWidth(r.minutes) }" />
-            </div>
-            <div class="value">{{ r.minutes }} dk</div>
-          </div>
-        </div>
-      </div>
-      <!-- Sağ boşluk: canlı ticker -->
-      <div class="chart-card ticker-card" aria-label="Bilgilendirme akışı">
-        <h4>Canlı Akış</h4>
-        <div class="ticker-shell" @mouseenter="pauseTicker = true" @mouseleave="pauseTicker = false">
-          <div class="ticker-track" :style="tickerStyle" ref="tickerTrackEl">
-            <span v-for="(msg, i) in tickerMessagesDoubled" :key="'tk-' + i" class="ticker-item">{{ msg }}</span>
-          </div>
-        </div>
-        <!-- <button class="ticker-pause" @click="pauseTicker = !pauseTicker"
-          :title="pauseTicker ? 'Devam Et' : 'Duraklat'">
-          {{ pauseTicker ? '▶' : 'Ⅱ' }}
-        </button> -->
-        <small class="ticker-hint" v-if="!pauseTicker">Üzerine gelince durur</small>
-        <div class="ticker-controls">
-          <button v-for="(sp, i) in speedOptions" :key="'sp-' + sp" class="speed-btn"
-            :class="{ active: speedIndex === i }" @click="speedIndex = i" :title="sp + ' px/sn'">{{ sp }}</button>
-        </div>
-      </div>
-    </section>
   </div>
+  <VRow class="match-height">
+    <!-- 👉 Günlük OEE değerlendirmesi -->
+    <VCol cols="12" md="4">
+      <VCard height="260">
+        <VCardText>
+          <h5 class="text-h5">Günlük Genel Değerlendirme</h5>
+        </VCardText>
+        <div class="summary-kpis px-4">
+          <div class="kpi"><span>Uyg.</span><strong>{{ fmtPct(daySummary.availability) }}</strong>
+            <VProgressLinear :model-value="daySummary.availability * 100" color="primary" height="10"></VProgressLinear>
+          </div>
+          <div class="kpi"><span>Perf.</span><strong>{{ fmtPct(daySummary.performance) }}</strong>
+            <VProgressLinear :model-value="daySummary.performance * 100" color="primary" height="10"></VProgressLinear>
+          </div>
+          <div class="kpi border-e pe-2"><span>Kalite</span><strong>{{ fmtPct(daySummary.quality) }}</strong>
+            <VProgressLinear :model-value="daySummary.quality * 100" color="primary" height="10"></VProgressLinear>
+          </div>
+          <div class="kpi oee" :class="oeeClass(daySummary.oee)"><span>OEE</span><strong>{{ fmtPct(daySummary.oee)
+              }}</strong>
+            <VProgressLinear :model-value="daySummary.oee * 100" color="success" height="10"></VProgressLinear>
+          </div>
+        </div>
+        <div class="dash-actions mt-3">
+          <button class="refresh-btn" @click="manualRefresh" :disabled="refreshing || loading">
+            <span v-if="refreshing">⟳ Yenileniyor...</span>
+            <span v-else>⟳ Yenile</span>
+          </button>
+          <small v-if="lastUpdated" class="last-updated">Güncellendi: {{ formatTime(lastUpdated) }}</small>
+          <small v-if="transientEmpty" class="warn"
+            title="API geçici boş yanıt verdi; önceki veriler gösteriliyor">Geçici boş yanıt</small>
+          <small v-else-if="emptyData && !loading" class="warn">Veri yok</small>
+          <small v-if="backoffMs > basePoll && !loading" class="hint">Bekleme: {{ Math.round(backoffMs / 1000)
+            }}sn</small>
+        </div>
+      </VCard>
+    </VCol>
+
+    <!-- 👉 Haftalık Çalışma -->
+    <VCol cols="12" md="4" sm="6">
+      <VCard height="260">
+        <VCardText>
+          <h5 class="text-h5">Haftalık Çalışma / Duruş (dk)</h5>
+        </VCardText>
+        <div class="weekly-vertical ma-2">
+          <template v-if="loading">
+            <div class="wv-bars">
+              <div v-for="i in 7" :key="'wv-skel-' + i" class="wv-col">
+                <div class="wv-stack">
+                  <div class="wv-fill sk-fill" :style="{ blockSize: (20 + i * 6) + '%' }"></div>
+                </div>
+                <div class="wv-day">&nbsp;</div>
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <div class="apex-weekly-wrap">
+              <VueApexCharts class="wv-chart" type="bar" width="100%" height="230" :options="apexWeeklyOptions"
+                :series="apexWeeklySeries" />
+            </div>
+          </template>
+        </div>
+      </VCard>
+    </VCol>
+
+    <!-- 👉 Sales Overview -->
+    <VCol cols="12" md="3" sm="6">
+      <h1>Sales Overview</h1>
+    </VCol>
+
+    <!-- 👉 Earning Reports Weekly Overview -->
+    <VCol cols="12" md="6">
+      <h1>Earning Reports Weekly Overview</h1>
+    </VCol>
+
+    <!-- 👉 Support Tracker -->
+    <VCol cols="12" md="6">
+      <h1>Support Tracker</h1>
+    </VCol>
+
+    <!-- 👉 Sales by Countries -->
+    <VCol cols="12" sm="6" lg="4">
+      <h1>Sales by Countries</h1>
+    </VCol>
+
+    <!-- 👉 Total Earning -->
+    <VCol cols="12" sm="6" lg="4">
+      <h1>Total Earning</h1>
+    </VCol>
+
+    <!-- 👉 Monthly Campaign State -->
+    <VCol cols="12" sm="6" lg="4">
+      <h1>Monthly Campaign State</h1>
+    </VCol>
+
+    <!-- 👉 Source Visits -->
+    <VCol cols="12" sm="6" lg="4">
+      <h1>Source Visits</h1>
+    </VCol>
+
+    <!-- 👉 Project Table -->
+    <VCol cols="12" lg="8">
+      <h1>pjjjpjpjpo</h1>
+    </VCol>
+  </VRow>
 </template>
+
+
 
 <script setup lang="ts">
 import axios from 'axios';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import VueApexCharts from 'vue3-apexcharts';
 // --- Ticker (sağ boşluk) ---
 const baseTickerMessages = ref<string[]>([
   'Üretimde süreklilik için proaktif bakım planı devrede',
@@ -401,6 +253,61 @@ const maxWeekly = () => Math.max(1, ...weekly.value.map(w => (w.work + w.stop)))
 const weeklyHeight = (mins: number) => `${Math.round((mins / maxWeekly()) * 100)}%`;
 const maxWeeklyCount = () => Math.max(1, ...weeklyCounts.value.map(w => w.count));
 const weeklyCountHeight = (cnt: number) => `${Math.round((cnt / maxWeeklyCount()) * 100)}%`;
+
+// Haftanın 7 günü için baseline oluştur (bugün dahil geriye doğru 7 gün)
+const weeklyBaseline = computed<WeeklyDay[]>(() => {
+  const days: WeeklyDay[] = [];
+  const today = new Date();
+  const day = today.getDay();
+  const offsetToMonday = (day + 6) % 7; // Pazartesi=0
+  const start = new Date(today);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(today.getDate() - offsetToMonday);
+  const TR_DAYS = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const ymd = d.toISOString().slice(0, 10);
+    const label = TR_DAYS[d.getDay()] || '';
+    days.push({ date: ymd, label, work: 0, stop: 0 });
+  }
+  return days;
+});
+
+// API weekly verisini baseline ile birleştir
+const weeklyMerged = computed<WeeklyDay[]>(() => {
+  const map = new Map<string, WeeklyDay>();
+  for (const b of weeklyBaseline.value) map.set(b.date, { ...b });
+  for (const w of weekly.value) {
+    const key = String(w.date);
+    if (!map.has(key)) continue; // sadece bu haftanın günleri
+    const prev = map.get(key)!;
+    map.set(key, {
+      date: key,
+      label: prev.label,
+      work: Number((w as any).work || 0),
+      stop: Number((w as any).stop || 0),
+    });
+  }
+  return weeklyBaseline.value.map(b => map.get(b.date) || b);
+});
+
+// ApexCharts serileri ve seçenekleri
+const apexWeeklySeries = computed(() => [
+  { name: 'Çalışma', data: weeklyMerged.value.map(d => d.work) },
+  { name: 'Duruş', data: weeklyMerged.value.map(d => d.stop) },
+]);
+
+const apexWeeklyOptions = computed(() => ({
+  chart: { stacked: true, toolbar: { show: false }, foreColor: '#cfd8dc', width: '100%' },
+  plotOptions: { bar: { horizontal: false, columnWidth: '70%', borderRadius: 4 } },
+  dataLabels: { enabled: false },
+  grid: { strokeDashArray: 3, borderColor: 'rgba(255,255,255,0.08)' },
+  xaxis: { categories: weeklyBaseline.value.map(d => d.label) },
+  yaxis: { labels: { formatter: (v: number) => `${Math.round(v)}` }, title: { text: 'dk' } },
+  tooltip: { shared: true, intersect: false },
+  colors: ['#189c49', '#efb803'],
+}))
 
 // Mini barları tek satır çok renkli bara dönüştürmek için oranları normalize eden yardımcı
 function segs(m: MachineCard) {
@@ -739,6 +646,15 @@ onBeforeUnmount(() => {
 });
 </script>
 
+
+
+
+
+
+
+
+
+
 <style scoped>
 /* stylelint-disable order/properties-order, @stylistic/declaration-colon-space-after, declaration-block-single-line-max-declarations, at-rule-empty-line-before, rule-empty-line-before, no-descending-specificity, no-duplicate-selectors, @stylistic/max-line-length */
 .dash-container {
@@ -810,6 +726,8 @@ onBeforeUnmount(() => {
 
 .weekly-vertical {
   display: flex;
+  inline-size: 100%;
+  align-items: stretch;
 }
 
 .wv-bars {
@@ -833,8 +751,8 @@ onBeforeUnmount(() => {
   inline-size: 100%;
   block-size: 140px;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+
+  /* ApexCharts içeriği, bileşenin kendi stilleriyle birlikte genişler; ek :deep kuralı kullanılmadı */
   gap: 2px;
   border: 1px solid var(--v-theme-outline-variant, #626262);
   border-radius: 6px;
@@ -998,13 +916,10 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   background: var(--v-theme-surface-variant, #171717);
-  border: 1px solid var(--v-theme-outline-variant, #535353);
-  border-radius: 8px;
-  padding: 8px;
 }
 
 .summary-kpis .kpi strong {
-  font-size: 18px;
+  font-size: 36px;
 }
 
 .summary-kpis .kpi.oee {
@@ -1020,14 +935,13 @@ onBeforeUnmount(() => {
 }
 
 .refresh-btn {
-  background: var(--v-theme-primary, #3b82f6);
-  color: #fff;
-  border: none;
+  /* background: var(--v-theme-primary, #3b82f6);
+  color: #fff; */
   cursor: pointer;
-  padding-block: 4px;
-  padding-inline: 10px;
+  padding-block: 30px;
+  padding-inline: 20px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -1878,4 +1792,19 @@ onBeforeUnmount(() => {
     opacity: 0.6;
   }
 }
+
+.wv-chart {
+  margin-block-start: -30px;
+  inline-size: 100% !important;
+  block-size: 300px !important;
+}
+
+/* ApexCharts kapsayıcı tam genişlikte olsun */
+.apex-weekly-wrap {
+  flex: 1 1 100%;
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+/* ApexCharts içeriği, bileşenin kendi stilleriyle birlikte genişler; ek :deep kuralı kullanılmadı */
 </style>

@@ -70,6 +70,7 @@ declare module 'vue-router/auto-routes' {
     'dashboards-analytics': RouteRecordInfo<'dashboards-analytics', '/dashboards/analytics', Record<never, never>, Record<never, never>>,
     'dashboards-crm': RouteRecordInfo<'dashboards-crm', '/dashboards/crm', Record<never, never>, Record<never, never>>,
     'dashboards-dash-bukum': RouteRecordInfo<'dashboards-dash-bukum', '/dashboards/dash-bukum', Record<never, never>, Record<never, never>>,
+    'dashboards-dash-bukum-bak': RouteRecordInfo<'dashboards-dash-bukum-bak', '/dashboards/dash-bukum/bak', Record<never, never>, Record<never, never>>,
     'dashboards-ecommerce': RouteRecordInfo<'dashboards-ecommerce', '/dashboards/ecommerce', Record<never, never>, Record<never, never>>,
     'debug-auth': RouteRecordInfo<'debug-auth', '/debug-auth', Record<never, never>, Record<never, never>>,
     'depo-stoklar': RouteRecordInfo<'depo-stoklar', '/depo/stoklar', Record<never, never>, Record<never, never>>,
