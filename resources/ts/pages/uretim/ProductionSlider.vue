@@ -974,6 +974,7 @@ import {
 import DxSelectBox from "devextreme-vue/select-box";
 import DxTextBox from "devextreme-vue/text-box";
 import DxTooltip from "devextreme-vue/tooltip";
+// @ts-ignore: SFC tipi shims.d.ts ile çözümlenir
 import GunlukToplamGrafik from "./GunlukToplamGrafik.vue";
 import PersonelSecDialog from "./PersonelSecDialog.vue";
 import ProductionCard from "./ProductionCard.vue";
@@ -1058,16 +1059,7 @@ const secili = ref<SeciliType>({
 const selectedIsemriNo = ref<string | null>(null);
 const items = ref<any[]>([]);
 // Mola öncesi durumu geri yüklemek için referans alanı
-interface OriginalSnapshot {
-  status?: string;
-  baslikArkarenk?: string;
-  // Eğer mola başlamadan önce DURUYOR ise, geri dönüşte tekrar kaydetmek için sebep referansı
-  returnDurus?: { break_reason_code?: string; description?: string } | null;
-  // Kart başlığında görünen sebep metni ve kodunu da geri yüklemek için sakla
-  headerSebep?: string | null;
-  headerSebepKodu?: string | null;
-}
-const originalItems = ref<Record<string, OriginalSnapshot>>({});
+// Otomatik mola kullanımı kaldırıldı
 const userData = useCookie<any>("userData");
 const pageTitleStore = usePageTitleStore();
 const currentTab = ref("tab-1");
@@ -1235,7 +1227,7 @@ const barVeri = ref<number[]>([]);
 const aktifEkip = ref<any[]>([]);
 const gridDataDuruslar = ref([]);
 const depolar = ref(false);
-const MolaOncekiDurum = ref<string | null>(null);
+// const MolaOncekiDurum = ref<string | null>(null);
 
 const popupNotGirVisible = ref(false);
 const popupDepolarGosterVisible = ref(false);
@@ -1823,239 +1815,6 @@ const tipCellTemplate = (cellElement: HTMLElement, cellInfo: any): void => {
   cellElement.insertBefore(plnIcon, cellElement.firstChild);
 };
 
-// Zamanlanmış molalar: saat HH:mm, dakika, sebep açıklaması ve kodu
-const molalar = [
-  { saat: "10:00", dakika: 15, sebep: "ÇAY MOLASI", sebep_kodu: "003" },
-  { saat: "12:45", dakika: 30, sebep: "YEMEK MOLASI", sebep_kodu: "0102" },
-  { saat: "15:00", dakika: 15, sebep: "ÇAY MOLASI", sebep_kodu: "003" },
-];
-
-const aktifMolalar = ref<Record<string, string>>({});
-// Daha stabil mola akışı için per-kart durum ve zamanlayıcı
-interface MolaState {
-  windowSaat: string;
-  endAtMs: number;
-  inFlight: boolean;
-  timerId?: ReturnType<typeof setTimeout>;
-}
-const molaStates = ref<Record<string, MolaState>>({});
-const MOLA_GRACE_MS = 5000; // sınır anlarında dalgalanmayı azaltmak için
-
-// Zamanlanmış molaları takip eden kontrol
-const endMolaForCard = async (isemriNo: string) => {
-  const item = items.value.find((x: any) => x.isemriNo === isemriNo);
-  if (!item) return;
-  const state = molaStates.value[isemriNo];
-  const aktifSaat = aktifMolalar.value[isemriNo];
-  const aktifMola = molalar.find((m) => m.saat === aktifSaat);
-  if (!aktifMola) return;
-  if (state?.inFlight) return;
-  molaStates.value[isemriNo] = {
-    ...(state || {
-      windowSaat: aktifMola.saat,
-      endAtMs: Date.now(),
-      inFlight: false,
-    }),
-    inFlight: true,
-  };
-
-  const original = originalItems.value[isemriNo] || {};
-  const restoreStatus =
-    original.status && original.status !== "MOLA"
-      ? original.status
-      : "Çalışıyor";
-
-  // UI güncelle
-  item.status = restoreStatus;
-  item.baslikArkarenk = original.baslikArkarenk || item.baslikArkarenk;
-
-  try {
-    await axios.post("/api/durumKaydet", {
-      isEmriId: item.isemriId,
-      isEmriNo: item.isemriNo,
-      urunID: item.partId,
-      urunKodu: item.partCode,
-      urunAdi: item.partName,
-      durum: restoreStatus,
-      vardiya: 2,
-      istasyonKodu: userData.value.istasyon_id,
-      userId: userData.value.id,
-      personelSayisi: 0,
-      selectedDurus: original.returnDurus ?? null,
-      guid: item.guid || null,
-    });
-  } catch (e) {
-    console.error("Mola bitiş kaydı başarısız:", e);
-  }
-
-  // Başlıkta görünen sebep ve kodu geri yükle
-  const restoreUpper = (restoreStatus || "").toUpperCase();
-  if (restoreUpper === "AYAR") {
-    (item as any).sebep = original.headerSebep || "HAZIRLIK ÇALIŞMASI";
-    (item as any).sebep_kodu = "";
-    (item as any).break_reason_code = "";
-  } else if (restoreUpper === "DURUYOR") {
-    const rd = original.returnDurus || {
-      break_reason_code: "0000",
-      description: "GİRİLMEDİ",
-    };
-    (item as any).sebep = original.headerSebep || rd.description || "GİRİLMEDİ";
-    (item as any).sebep_kodu = rd.break_reason_code || "0000";
-    (item as any).break_reason_code = rd.break_reason_code || "0000";
-  } else {
-    (item as any).sebep = original.headerSebep || "";
-    if (original.headerSebepKodu) {
-      (item as any).sebep_kodu = original.headerSebepKodu;
-      (item as any).break_reason_code = original.headerSebepKodu;
-    } else {
-      delete (item as any).sebep_kodu;
-      delete (item as any).break_reason_code;
-    }
-  }
-
-  if (molaStates.value[isemriNo]?.timerId)
-    clearTimeout(molaStates.value[isemriNo].timerId as any);
-  delete molaStates.value[isemriNo];
-  delete aktifMolalar.value[isemriNo];
-  delete originalItems.value[isemriNo];
-};
-
-const scheduleMolaEnd = (isemriNo: string, endAtMs: number) => {
-  // Önceki timer varsa iptal
-  const st = molaStates.value[isemriNo];
-  if (st?.timerId) clearTimeout(st.timerId as any);
-  const delay = Math.max(0, endAtMs - Date.now() + MOLA_GRACE_MS);
-  const timerId = setTimeout(() => {
-    endMolaForCard(isemriNo);
-  }, delay);
-  molaStates.value[isemriNo] = {
-    ...(st || { windowSaat: "", endAtMs, inFlight: false }),
-    endAtMs,
-    timerId,
-  };
-};
-
-const MolaKontrol = async () => {
-  const now = new Date();
-  const nowTime = now.getHours() * 60 + now.getMinutes();
-
-  // Her kart için kontrol
-  for (const item of items.value) {
-    // Aktif mola var mı? Varsa bitiş kontrolü
-    const aktifSaat = aktifMolalar.value[item.isemriNo];
-    if (aktifSaat) {
-      const aktifMola = molalar.find((m) => m.saat === aktifSaat);
-      if (aktifMola) {
-        const [h, m] = aktifMola.saat.split(":").map(Number);
-        const start = h * 60 + m;
-        const end = start + aktifMola.dakika;
-        const nowMs = now.getTime();
-        const startMs = new Date(now).setHours(h, m, 0, 0);
-        const endMs = startMs + aktifMola.dakika * 60_000;
-        const state = molaStates.value[item.isemriNo];
-        // Zamanlayıcıyı her seferinde güncel tutalım
-        if (!state || state.endAtMs !== endMs)
-          scheduleMolaEnd(item.isemriNo, endMs);
-
-        if (nowMs >= endMs - MOLA_GRACE_MS) {
-          if (state?.inFlight) continue; // başka bir bitiş işlemi sürüyor
-          await endMolaForCard(item.isemriNo);
-        }
-      }
-      continue; // Bu kart için bir sonraki tura geç
-    }
-
-    // Henüz aktif mola yoksa, zaman penceresi içinde mola başlat
-    for (const M of molalar) {
-      const [h, m] = M.saat.split(":").map(Number);
-      const start = h * 60 + m;
-      const end = start + M.dakika;
-      const isWithin = nowTime >= start && nowTime < end;
-      if (!isWithin) continue;
-
-      // Kart zaten MOLA'da mı? ise atla
-      if ((item.status || "").toUpperCase() === "MOLA") break;
-
-      // Aynı pencere için zaten başlatılmışsa tekrar başlatma
-      const existing = molaStates.value[item.isemriNo];
-      if (existing && existing.windowSaat === M.saat) break;
-
-      // Referansa al: mevcut durum ve eğer duruşsa sebep/kod
-      const upperStatus = (item.status || "").toUpperCase();
-      const snapshot: OriginalSnapshot = {
-        status: upperStatus,
-        baslikArkarenk: item.baslikArkarenk,
-        // Başlıktaki sebep ve kodu sakla
-        headerSebep:
-          (item as any)?.sebep ??
-          (upperStatus === "AYAR" ? "HAZIRLIK ÇALIŞMASI" : null),
-        headerSebepKodu:
-          (item as any)?.sebep_kodu || (item as any)?.break_reason_code || null,
-        // Duruş/ayar durumuna geri dönerken DB için sebebi sağlayalım
-        returnDurus:
-          upperStatus === "DURUYOR"
-            ? {
-              break_reason_code:
-                (item as any)?.sebep_kodu ||
-                (item as any)?.break_reason_code ||
-                "0000",
-              description:
-                (item as any)?.sebep ||
-                (item as any)?.durus_sebebi ||
-                "GİRİLMEDİ",
-            }
-            : upperStatus === "AYAR"
-              ? { break_reason_code: "", description: "HAZIRLIK ÇALIŞMASI" }
-              : null,
-      };
-      originalItems.value[item.isemriNo] = snapshot;
-
-      // UI'ı MOLA yap
-      item.status = "MOLA";
-      item.baslikArkarenk = "mola";
-      aktifMolalar.value[item.isemriNo] = M.saat;
-      // Kart başlığında molanın sebebi yazsın
-      (item as any).sebep = M.sebep;
-      (item as any).sebep_kodu = M.sebep_kodu;
-      (item as any).break_reason_code = M.sebep_kodu;
-
-      // Bu pencere için bitiş zamanını planla ve state'i kilitle
-      const [sh, sm] = M.saat.split(":").map(Number);
-      const startMs = new Date(now).setHours(sh, sm, 0, 0);
-      const endMs = startMs + M.dakika * 60_000;
-      molaStates.value[item.isemriNo] = {
-        windowSaat: M.saat,
-        endAtMs: endMs,
-        inFlight: false,
-      };
-      scheduleMolaEnd(item.isemriNo, endMs);
-
-      // DB'ye MOLA kaydı
-      try {
-        await axios.post("/api/durumKaydet", {
-          isEmriId: item.isemriId,
-          isEmriNo: item.isemriNo,
-          urunID: item.partId,
-          urunKodu: item.partCode,
-          urunAdi: item.partName,
-          durum: "MOLA",
-          vardiya: 2,
-          istasyonKodu: userData.value.istasyon_id,
-          userId: userData.value.id,
-          personelSayisi: 0,
-          selectedDurus: {
-            break_reason_code: M.sebep_kodu,
-            description: M.sebep,
-          },
-          guid: item.guid || null,
-        });
-      } catch (e) {
-        console.error("Mola başlangıç kaydı başarısız:", e);
-      }
-      break; // Bu kart için mola başlatıldı, diğer molalara bakma
-    }
-  }
-};
 
 const aktifEt = async () => {
   secili.value = {
@@ -2193,7 +1952,6 @@ const resumeAutoScroll = () => startAutoScroll();
 
 let interval: ReturnType<typeof setInterval>;
 let zaman: ReturnType<typeof setInterval>;
-let MolaTimer: ReturnType<typeof setInterval>;
 
 const verileriAl = async () => {
   await fetchKartlar();
@@ -2378,13 +2136,12 @@ onMounted(async () => {
   // await duruslariAl();
   startAutoScroll();
   interval = setInterval(verileriAl, 15000);
-  MolaTimer = setInterval(MolaKontrol, 5000);
+  // Otomatik mola kontrolü kaldırıldı
 });
 
 onBeforeUnmount(() => {
   clearInterval(interval);
   clearInterval(zaman);
-  clearInterval(MolaTimer);
   stopAutoScroll();
 });
 
@@ -2689,6 +2446,7 @@ const onContextMenuPreparing = (e: any) => {
   inline-size: 100%;
   margin-block-start: -10px;
 }
+
 .detail-card {
   flex: 0 0 400px;
 }

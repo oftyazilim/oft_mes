@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { onMounted, ref, watch } from 'vue';
+import { usePageTitleStore } from "@/stores/pageTitle";
 
 interface Row { id:number; created_at:string; email?:string; category?:string; rating?:number; message:string; page_url?:string; status:string; screenshot_url?: string }
 
@@ -12,6 +13,7 @@ const status = ref<string | null>(null)
 const page = ref(1)
 const perPage = ref(20)
 const total = ref(0)
+const pageTitleStore = usePageTitleStore();
 
 // Detay popup state
 const detailOpen = ref(false)
@@ -34,6 +36,9 @@ const load = async () => {
 
 onMounted(load)
 watch([search, category, status, page, perPage], load)
+  
+document.title = "OFT - Geri Bildirimler";
+pageTitleStore.setTitle("Geri Bildirimler");
 
 const exportCsv = async () => {
   const res = await axios.get('/api/feedback/export', { responseType: 'blob' })

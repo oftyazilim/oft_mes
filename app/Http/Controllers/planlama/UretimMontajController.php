@@ -1065,6 +1065,15 @@ class UretimMontajController extends Controller
         ->whereNull('end_work_time')
         ->count();
 
+      $baslamaData = DB::table('oftt_calisma_sureleri_montaj')
+        ->select('durum_bas_tarihi')
+        ->where('guid', $sonDurum->guid ?? null)
+        ->orderBy('id', 'asc')
+        ->first();
+
+      $baslamaZamani = Carbon::parse($baslamaData->durum_bas_tarihi)->format('d-m-Y H:i');
+
+      // Log::info("Kart verisi hazırlanıyor: İş Emri ID {$item->isemri_id}, Parça ID {$item->item_id}, Durum {$status}, Toplam Süre {$barTotal} dakika, Son Durum Süresi {$sonDurumSuresi} saniye, Başlama Zamanı {$baslamaZamani}");
       return [
         'status' => $status,
         'personelId' => $sonDurum->personel_id,
@@ -1098,7 +1107,7 @@ class UretimMontajController extends Controller
         'guid' => $sonDurum->guid ?? null,
         'plnNote' => $item->teknik_not1 ?? '...',
         'prdNote' => $item->teknik_not2 ?? '...',
-        'baslangicZamani' => Carbon::parse($sonDurum->durum_bas_tarihi)->format('d-m-Y H:i'),
+        'baslangicZamani' => $baslamaZamani,
         'ekipSayisi' => $ekipSayisi ?? 0,
       ];
     });

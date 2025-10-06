@@ -2,6 +2,8 @@
 
 import { computed, onMounted, ref } from 'vue'
 import { VCard, VBtn, VTextField } from 'vuetify/components'
+import { usePageTitleStore } from "@/stores/pageTitle";
+
 // Yerel JSON: ağaç verisi
 // tsconfig resolveJsonModule aktif; doğrudan import edebiliriz
 // Yol: aynı klasörde agac.json
@@ -13,9 +15,12 @@ const words = ['Verimlilik', 'İzlenebilirlik', 'Şeffaflık', 'Hız', 'Kalite']
 const activeIndex = ref(0)
 const prefersReducedMotion = ref(false)
 let rotateTimer: number | null = null
+const pageTitleStore = usePageTitleStore();
 
 
 onMounted(() => {
+  document.title = "OFT - Ana Sayfa";
+  pageTitleStore.setTitle("Ana Sayfa");
   try { prefersReducedMotion.value = window.matchMedia('(prefers-reduced-motion: reduce)')?.matches } catch (_) { }
   if (!prefersReducedMotion.value) {
     rotateTimer = window.setInterval(() => {

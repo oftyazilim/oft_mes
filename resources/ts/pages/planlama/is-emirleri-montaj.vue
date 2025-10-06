@@ -477,7 +477,7 @@
     </VRow>
   </DxPopup>
 
-  <DxPopup v-model:visible="popupDetayGosterVisible" :width="1320" :height="800" :hide-on-outside-click="true"
+  <DxPopup v-model:visible="popupDetayGosterVisible" :width="'95%'" :height="800" :hide-on-outside-click="true"
     :show-close-button="true" :title=notBaslik>
     <template #content>
       <VCard>

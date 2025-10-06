@@ -13,7 +13,7 @@ export default [
         icon: { icon: "tabler-clock-cog" },
         action: "read",
         subject: ["planlama", "montaj"],
-        target: "oft-montaj",
+        target: "_blank",
       },
       {
         title: "Duruşlar (Mekanik)",
@@ -21,7 +21,7 @@ export default [
         icon: { icon: "tabler-clock-cog" },
         action: "read",
         subject: ["planlama", "mekanik"],
-        target: "oft-rollform",
+        target: "_blank",
       },
     ],
   },

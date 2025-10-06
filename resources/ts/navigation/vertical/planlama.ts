@@ -18,7 +18,7 @@ export default [
         to: "planlama-is-emirleri-kapanmislar",
         icon: { icon: "tabler-list" },
         action: "read",
-        subject: ["planlama"],
+        subject: ["planlama", "mekanik", "montaj"],
         target: "_blank",
       },
       {
