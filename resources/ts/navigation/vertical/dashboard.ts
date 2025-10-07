@@ -11,6 +11,13 @@ export default [
         subject: ["genel"],
       },
       {
+        title: "Büküm Dashboard test",
+        to: "dashboards-dash-bukum-bak",
+        icon: { icon: "tabler-chart-pie-2" },
+        action: ["manage", "read"],
+        subject: ["genel"],
+      },
+      {
         title: "Analytics",
         to: "dashboards-analytics",
         icon: { icon: "tabler-chart-pie-2" },

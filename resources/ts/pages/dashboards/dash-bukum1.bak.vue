@@ -8,7 +8,6 @@
     </div>
   </div>
   <VRow class="match-height">
-
     <!-- 👉 Günlük OEE değerlendirmesi -->
     <VCol cols="12" md="4">
       <VCard height="260">
@@ -45,6 +44,33 @@
       </VCard>
     </VCol>
 
+    <!-- 👉 Haftalık Çalışma -->
+    <!-- <VCol cols="12" md="4" sm="6">
+      <VCard height="260">
+        <VCardText>
+          <h5 class="text-h5">Haftalık Çalışma / Duruş (dk)</h5>
+        </VCardText>
+        <div class="weekly-vertical ma-2">
+          <template v-if="loading">
+            <div class="wv-bars">
+              <div v-for="i in 7" :key="'wv-skel-' + i" class="wv-col">
+                <div class="wv-stack">
+                  <div class="wv-fill sk-fill" :style="{ blockSize: (20 + i * 6) + '%' }"></div>
+                </div>
+                <div class="wv-day">&nbsp;</div>
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <div class="apex-weekly-wrap">
+              <VueApexCharts class="wv-chart" type="bar" width="100%" height="230" :options="apexWeeklyOptions"
+                :series="apexWeeklySeries" />
+            </div>
+          </template>
+        </div>
+      </VCard>
+    </VCol> -->
+
     <!-- 👉 Haftalık Çalışma (dxChart) -->
     <VCol cols="12" md="4" sm="6">
       <VCard height="260">
@@ -52,6 +78,17 @@
           <h5 class="text-h5">Haftalık Çalışma / Duruş (dk)</h5>
         </VCardText>
         <div class="weekly-vertical ma-0 ms-2">
+          <template v-if="loading">
+            <div class="wv-bars">
+              <div v-for="i in 7" :key="'wv-dx-skel-' + i" class="wv-col">
+                <div class="wv-stack">
+                  <div class="wv-fill sk-fill" :style="{ blockSize: (20 + i * 6) + '%' }"></div>
+                </div>
+                <div class="wv-day">&nbsp;</div>
+              </div>
+            </div>
+          </template>
+          <template v-else>
             <div class="dx-weekly-wrap" ref="dxWrapEl">
               <DxChart :data-source="dxWeeklyData" :size="{ height: 180, width: dxWidth || undefined }">
                 <DxMargin :right="16" :left="8" :top="8" :bottom="0" />
@@ -69,37 +106,15 @@
                 <DxLegend position="bottom" horizontal-alignment="center" :visible="false" />
               </DxChart>
             </div>
+          </template>
         </div>
       </VCard>
     </VCol>
 
-    <!-- 👉 Haftalık Sayaç (adet) -->
-    <VCol cols="12" md="4" sm="6">
-      <VCard height="260">
-        <VCardText class="pa-5">
-          <h5 class="text-h5">Haftalık Sayaç (adet)</h5>
-        </VCardText>
-        <div class="weekly-vertical ma-0 ms-2">
-            <div class="dx-weekly-wrap" ref="dxWrapEl">
-              <DxChart :data-source="weeklyCounts" :size="{ height: 180, width: dxWidth || undefined }">
-                <DxMargin :right="16" :left="8" :top="8" :bottom="0" />
-                <DxCommonSeriesSettings argument-field="label" type="bar" />
-                <DxSeries value-field="count" name="Sayaç" color="rgba(115, 103, 240, 0.8)" />
-
-                <DxArgumentAxis discrete-axis-division-mode="betweenLabels" />
-                <DxValueAxis>
-                  <!-- <DxTitle text="dk" /> -->
-                  <DxGrid :visible="true" />
-                </DxValueAxis>
-
-                <DxTooltip :enabled="true" :shared="true" :customize-tooltip="dxWeeklyTooltip" />
-                <DxLegend position="bottom" horizontal-alignment="center" :visible="false" />
-              </DxChart>
-            </div>
-        </div>
-      </VCard>
+    <!-- 👉 Sales Overview -->
+    <VCol cols="12" md="3" sm="6">
+      <h1>Sales Overview</h1>
     </VCol>
-
 
     <!-- 👉 Earning Reports Weekly Overview -->
     <VCol cols="12" md="6">

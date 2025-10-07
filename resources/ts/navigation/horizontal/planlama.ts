@@ -5,7 +5,7 @@ export default [
     title: "Planlama",
     icon: { icon: "tabler-calendar-time" },
     action: "read",
-    subject: ["planlama", "mekanik", "montaj"],
+    subject: ["planlama", "mekanik", "montaj", "arge"],
     children: [
       {
         title: "İş Emirleri - Tümü",
