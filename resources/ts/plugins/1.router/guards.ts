@@ -1,6 +1,8 @@
 import { normalizeAbilityRules } from "@/utils/ability-normalizer";
 import { canNavigate } from "@layouts/plugins/casl";
+import axios from "axios";
 import type { RouteNamedMap, _RouterTyped } from "unplugin-vue-router";
+import { ref } from "vue";
 
 export const setupGuards = (
   router: _RouterTyped<RouteNamedMap & { [key: string]: any }>
@@ -8,6 +10,11 @@ export const setupGuards = (
   // 👉 router.beforeEach
   // Docs: https://router.vuejs.org/guide/advanced/navigation-guards.html#global-before-guards
   router.beforeEach((to) => {
+    // Policy'leri yalnızca ilk geçişte arka planda yükle (tek sefer)
+    if (!_policiesInitOnce) {
+      _policiesInitOnce = true;
+      void loadAbilityPolicies(true);
+    }
     /*
      * If it's a public route, continue navigation. This kind of pages are allowed to visited by login & non-login users. Basically, without any restrictions.
      * Examples of public routes are, 404, under maintenance, etc.
@@ -91,3 +98,56 @@ export const setupGuards = (
     return true;
   });
 };
+
+// DB tabanlı ACL meta: policy yükleyici ve yardımcı
+let _policyCache: Record<
+  string,
+  { actions: string[]; subjects: string[] }
+> | null = null;
+let _policyTs = 0;
+const POLICY_TTL = 60_000; // 1 dk cache
+let _policiesInitOnce = false;
+export const policyVersion = ref(0);
+
+export async function loadAbilityPolicies(force = false) {
+  const now = Date.now();
+  if (!force && _policyCache && now - _policyTs < POLICY_TTL)
+    return _policyCache;
+  try {
+    const { data } = await axios.get("/api/ability-policies");
+    const cache: Record<string, { actions: string[]; subjects: string[] }> = {};
+    for (const row of data || []) {
+      const key = String(row.key);
+      const actions = Array.isArray(row.actions) ? row.actions : [];
+      const subjects = Array.isArray(row.subjects) ? row.subjects : [];
+      cache[key] = { actions, subjects };
+    }
+    _policyCache = cache;
+    _policyTs = now;
+    policyVersion.value++;
+    return cache;
+  } catch (e) {
+    // Sessizce yut: DB policy yoksa mevcut statik meta ile devam
+    return _policyCache || {};
+  }
+}
+
+// Route veya bileşenler için bir anahtardan (key) aksiyon/konu listesi çek
+export function getPolicyFor(key: string): {
+  actions: string[];
+  subjects: string[];
+} {
+  const cache = _policyCache || {};
+  return cache[key] || { actions: [], subjects: [] };
+}
+
+export function clearAbilityPolicyCache() {
+  _policyCache = null;
+  _policyTs = 0;
+  policyVersion.value++;
+}
+
+export async function refreshAbilityPolicies() {
+  clearAbilityPolicyCache();
+  return await loadAbilityPolicies(true);
+}

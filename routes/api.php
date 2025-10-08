@@ -27,6 +27,7 @@ use App\Services\FileServeController;
 use App\Http\Controllers\diger\DigerController;
 use App\Http\Controllers\NotificationSettingsController;
 use App\Http\Controllers\planlama\UrunAgaciController;
+use App\Http\Controllers\AbilityPolicyController;
 
 Route::group(['prefix' => 'auth'], function () {
   Route::post('login', [AuthController::class, 'login']);
@@ -60,6 +61,12 @@ Route::middleware('auth:sanctum')->group(function () {
   // Bildirim ayarları (feedback kanalı)
   Route::get('/settings/notifications/feedback', [NotificationSettingsController::class, 'showFeedback']);
   Route::put('/settings/notifications/feedback', [NotificationSettingsController::class, 'updateFeedback']);
+
+  // Ability policies (ACL meta yönetimi)
+  Route::get('/ability-policies', [AbilityPolicyController::class, 'index']);
+  Route::post('/ability-policies', [AbilityPolicyController::class, 'store']);
+  Route::put('/ability-policies/{id}', [AbilityPolicyController::class, 'update']);
+  Route::delete('/ability-policies/{id}', [AbilityPolicyController::class, 'destroy']);
 });
 // Roles API routes
 Route::group(['prefix' => 'roles', 'middleware' => 'auth:sanctum'], function () {

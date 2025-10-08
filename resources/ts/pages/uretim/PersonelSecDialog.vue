@@ -23,8 +23,8 @@
           <!-- Sol Liste -->
           <VCol cols="6">
             <!-- <h5 class="text-subtitle-2">Tüm Personeller</h5> -->
-            <DxDataGrid :data-source="kalanPersoneller" :height="600" key-expr="register_id" :show-borders="true"
-              :hover-state-enabled="true" @row-click="e => secById(e.data.register_id)">
+            <DxDataGrid :data-source="kalanPersoneller" :height="600" key-expr="kimlik_no" :show-borders="true"
+              :hover-state-enabled="true" @row-click="e => secById(e.data.kimlik_no)">
               <DxColumn data-field="ad_soyad" caption="Ad Soyad" sort-order="asc" />
               <DxColumn data-field="sicil_no" caption="Sicil No" width="100" :visible="false" />
               <DxSearchPanel :visible="true" :highlight-case-sensitive="false" />
@@ -38,7 +38,7 @@
           <VCol cols="6">
             <h5 class="text-subtitle-2 mt-9 mb-2">Ekip Listesi</h5>
             <VList class="border rounded" style="max-block-size: 535px; overflow-y: auto;">
-              <VListItem v-for="(p, index) in secilenPersoneller" :key="p.sicil_no" @click="kaldir(index)"
+              <VListItem v-for="(p, index) in secilenPersoneller" :key="p.kimlik_no" @click="kaldir(index)"
                 class="cursor-pointer">
                 <VListItemTitle>{{ p.ad_soyad }}</VListItemTitle>
               </VListItem>
@@ -70,7 +70,7 @@ type Personel = {
   register_id: number
   ad_soyad: string
   kimlik_no: string
-  sicil_no: number
+  sicil_no: string
   istasyon_id: number
 }
 
@@ -159,6 +159,7 @@ const kaydet = async () => {
         end_work_time: null,
         guid: props.guid,
       }))
+      console.log('Eklenecekler:', payload)
       await axios.post('/api/aktif-ekipler', payload)
     }
 
@@ -171,8 +172,11 @@ const kaydet = async () => {
     }
 
     emit('kaydedildi')
-  } catch (err) {
-    console.error('KAYIT HATASI:', err)
+  } catch (err: any) {
+    // Backend dönen hata gövdesini konsola yaz ve kullanıcıya kısa bildirim göster
+    const status = err?.response?.status
+    const data = err?.response?.data
+    console.error('KAYIT HATASI:', status, data || err)
   } finally {
     loading.value = false
     dialog.value = false

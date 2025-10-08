@@ -14,7 +14,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // User::factory(10)->create();
-$this->call(\Database\Seeders\AccessControlSeeder::class);
+        $this->call(\Database\Seeders\AccessControlSeeder::class);
+        $this->call(\Database\Seeders\AbilityPoliciesSeeder::class);
         User::factory()->create([
             'name' => 'Ömer Faruk TANIR',
             'email' => 'omer@gmail.com',

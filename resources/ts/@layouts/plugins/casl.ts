@@ -1,5 +1,7 @@
+import { getPolicyFor, policyVersion } from "@/plugins/1.router/guards";
 import { useAbility } from "@casl/vue";
 import type { NavGroup } from "@layouts/types";
+import { getCurrentInstance } from "vue";
 import type { RouteLocationNormalized } from "vue-router";
 
 /**
@@ -43,21 +45,57 @@ export const can = (
   return actions.some((a) => subjects.some((s) => check(a, s)));
 };
 
+// DB policy anahtarına göre yetki kontrolü; yoksa fallback olarak action/subject kullanır
+export const canByPolicyKey = (
+  policyKey?: string,
+  fallbackAction?: string | string[],
+  fallbackSubject?: string | string[]
+) => {
+  const ability = useAbility();
+  // Reaktivite: policy yüklenince yeniden değerlendirme için policyVersion'a dokun
+  // eslint-disable-next-line no-unused-expressions
+  policyVersion.value;
+
+  if (policyKey) {
+    const p = getPolicyFor(policyKey);
+    if (p.actions?.length && p.subjects?.length) {
+      return p.actions.some((a) => p.subjects.some((s) => ability.can(a, s)));
+    }
+  }
+  // Policy bulunamadıysa veya boşsa fallback'a dön
+  if (fallbackAction && fallbackSubject)
+    return can(fallbackAction, fallbackSubject);
+  // Hiçbiri yoksa görünmesin
+  return false;
+};
+
+// Tekil nav item için görünürlük kontrolü (policyKey veya action/subject)
+export const canViewNavMenuItem = (item: any) => {
+  const key = (item && (item as any).policyKey) as string | undefined;
+  return canByPolicyKey(key, (item as any)?.action, (item as any)?.subject);
+};
+
 /**
  * Check if user can view item based on it's ability
  * Based on item's action and subject & Hide group if all of it's children are hidden
  * @param {object} item navigation object item
  */
 export const canViewNavMenuGroup = (item: NavGroup) => {
-  const hasAnyVisibleChild = item.children.some((i) =>
-    can(i.action, i.subject)
+  const hasAnyVisibleChild = item.children.some((i: any) =>
+    canViewNavMenuItem(i)
   );
 
   // If subject and action is defined in item => Return based on children visibility (Hide group if no child is visible)
   // Else check for ability using provided subject and action along with checking if has any visible child
-  if (!(item.action && item.subject)) return hasAnyVisibleChild;
+  const groupKey = (item as any).policyKey as string | undefined;
+  if (!(groupKey || (item.action && item.subject))) return hasAnyVisibleChild;
 
-  return can(item.action, item.subject) && hasAnyVisibleChild;
+  const allowed = canByPolicyKey(
+    groupKey,
+    item.action as any,
+    item.subject as any
+  );
+  return allowed && hasAnyVisibleChild;
 };
 
 export const canNavigate = (to: RouteLocationNormalized) => {
@@ -69,21 +107,28 @@ export const canNavigate = (to: RouteLocationNormalized) => {
   // console.log("Target route meta:", targetRoute?.meta);  //oft_not
   // console.log("Ability rules:", ability.rules); //oft_not
 
-  // If no route in the matched chain defines ACL meta (action & subject), allow by default
-  const hasAclMeta = to.matched.some(
-    (route) => (route.meta as any)?.action && (route.meta as any)?.subject
-  );
-  if (!hasAclMeta) {
-    // console.log(
-    //   "No ACL meta found on route chain. Allowing navigation by default."
-    // ); //oft_not
-    return true;
-  }
+  // Route meta yoksa DB policy’den dene (key: route:<name>)
+  const routeName = to.name ? String(to.name) : "";
+  const policyKey = routeName ? `route:${routeName}` : "";
+  const routePolicy = policyKey
+    ? getPolicyFor(policyKey)
+    : { actions: [], subjects: [] };
+  const hasAclMeta =
+    to.matched.some(
+      (route) => (route.meta as any)?.action && (route.meta as any)?.subject
+    ) ||
+    (routePolicy.actions.length && routePolicy.subjects.length);
+  if (!hasAclMeta) return true;
 
   // If the target route has specific permissions, check those first
-  if (targetRoute?.meta?.action && targetRoute?.meta?.subject) {
-    const action = targetRoute.meta.action as string | string[];
-    const subject = targetRoute.meta.subject as string | string[];
+  if (
+    (targetRoute?.meta?.action && targetRoute?.meta?.subject) ||
+    routePolicy.actions.length
+  ) {
+    const action =
+      (targetRoute?.meta?.action as string | string[]) || routePolicy.actions;
+    const subject =
+      (targetRoute?.meta?.subject as string | string[]) || routePolicy.subjects;
     const actions = Array.isArray(action) ? action : [action];
     const subjects = Array.isArray(subject) ? subject : [subject];
     const canAccess = actions.some((a) =>

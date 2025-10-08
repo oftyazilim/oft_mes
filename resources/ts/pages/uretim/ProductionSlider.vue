@@ -123,11 +123,12 @@
           <VCardText class="pa-2">
             <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" />
             <DxDataGrid id="grid" class="grid" ref="dataGridRef" :key="gridKey" :data-source="gridData"
-              key-expr="satir_id" :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true"
-              :min-width="200" @exporting="onExporting" :allow-column-reordering="true" :column-auto-width="false"
-              @content-ready="onContentReady" @focused-row-changed="onFocusedRowChanged" :allow-column-resizing="true"
-              column-resizing-mode="widget" @cell-prepared="onCellPrepared" @selection-changed="onSelectionChanged"
-              :auto-navigate-to-focused-row="true" v-model:focused-row-key="focusedRowKey" height="670">
+              :key-expr="['isemri_id', 'OPERASYON']" :show-borders="true" :focused-row-enabled="true"
+              :row-alternation-enabled="true" :min-width="200" @exporting="onExporting" :allow-column-reordering="true"
+              :column-auto-width="false" @content-ready="onContentReady" @focused-row-changed="onFocusedRowChanged"
+              :allow-column-resizing="true" column-resizing-mode="widget" @cell-prepared="onCellPrepared"
+              @selection-changed="onSelectionChanged" :auto-navigate-to-focused-row="true"
+              v-model:focused-row-key="focusedRowKey" height="670">
               <!-- <DxColumn type="selection" :fixed="true" fixedPosition="left" /> -->
               <DxColumn data-field="id" caption="ID" :visible="false" :min-width="90" />
               <DxColumn data-field="aktif" caption="AKTIF" :visible="true" :min-width="50"
@@ -770,7 +771,7 @@
                     <VRow>
                       <VCol cols="12" class="mt-2 pa-0 ps-2 pe-3 text-center">
                         <h4>Malzeme Listesi ({{ gridDataMalzemeler.length }} parça) (Depo ID: {{ selectedRow.CIKIS_DEPO
-                          }})</h4>
+                        }})</h4>
                         <div style="block-size: 613px;">
                           <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataMalzemeler"
                             key-expr="item_id" :show-borders="true" :min-width="400" :column-auto-width="false"
@@ -836,9 +837,10 @@
 
               <VWindowItem>
                 <VRow>
-                  <DxDataGrid id="gridDetay" ref="dataGridRefD" :data-source="gridDataDetay" key-expr="satir_id"
-                    :show-borders="true" :min-width="200" :column-auto-width="false" :allow-column-resizing="true"
-                    column-resizing-mode="widget" @cell-prepared="onCellPrepared" height="195">
+                  <DxDataGrid id="gridDetay" ref="dataGridRefD" :data-source="gridDataDetay"
+                    :key-expr="['isemri_id', 'OPERASYON']" :show-borders="true" :min-width="200"
+                    :column-auto-width="false" :allow-column-resizing="true" column-resizing-mode="widget"
+                    @cell-prepared="onCellPrepared" height="195">
 
                     <DxColumn data-field="IS_ISTASYONU" caption="İSTASYON ADI" :width="180" />
                     <DxColumn data-field="OPERASYON" caption="OPERASYON" :width="180" />
@@ -1217,7 +1219,8 @@ const malzemeId = ref(0);
 const montajVerileri = ref<MontajVeri[]>([]);
 const guid = ref("");
 const ekipSecDialog = ref(false);
-const focusedRowKey = ref(0);
+// Composite key kullanıldığı için focusedRowKey bir dizi veya nesne olabilir
+const focusedRowKey = ref<any>(null);
 const selectedSebep = ref<{
   break_reason_code: string;
   description: string;
@@ -2298,7 +2301,8 @@ const onFocusedRowChanged = (e: any) => {
   if (e.rowIndex === -1) return;
   const data = e.row!.data!;
   selectedRow.value = data;
-  focusedRowKey.value = data.satir_id;
+  // Ana gridde composite key: ['isemri_id','OPERASYON']
+  focusedRowKey.value = [data.isemri_id, data.OPERASYON];
   selectedRow.value.siparis_belge_no =
     data.siparis_belge_no != null ? data.siparis_belge_no : "";
   // textAreaValue.value = data.teknik_not1 != null ? data.teknik_not1 : '';

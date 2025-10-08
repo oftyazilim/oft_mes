@@ -71,26 +71,78 @@ class UretimMontajController extends Controller
   public function EkipKaydet(Request $request)
   {
     $personeller = $request->all();
+    if (empty($personeller) || !is_array($personeller)) {
+      return response()->json(['message' => 'Geçersiz payload: personel listesi bekleniyor'], 400);
+    }
+
     $now = Carbon::now();
+
+    $conn = DB::connection('pgsql_oft');
+    $table = $conn->table('oftt_aktif_ekipler');
+
+    $inserted = 0;
+    $skipped = 0;
+
     try {
       foreach ($personeller as $p) {
-        DB::connection('pgsql_oft')->table('oftt_aktif_ekipler')->insert([
-          'istasyon_id' => $p['istasyon_id'],
-          'worder_m_id' => $p['worder_m_id'],
-          'register_id' => $p['register_id'],
-          'sicil_no' => $p['sicil_no'],
-          'personel_full_name' => $p['personel_full_name'],
-          'citizenship_no' => $p['citizenship_no'],
+        // Zorunlu alan kontrolü
+        $guid = $p['guid'] ?? null;
+        $registerId = $p['register_id'] ?? null;
+        $istasyonId = $p['istasyon_id'] ?? null;
+        $worderMid = $p['worder_m_id'] ?? null;
+
+        if (!$guid || !$registerId || !$istasyonId || !$worderMid) {
+          // Eksik alan varsa bu kaydı atla
+          $skipped++;
+          continue;
+        }
+
+        // Aynı guid + register_id için açık (end_work_time IS NULL) kayıt varsa atla (idempotent)
+        $exists = $table
+          ->where('guid', $guid)
+          ->where('register_id', $registerId)
+          ->whereNull('end_work_time')
+          ->exists();
+
+        if ($exists) {
+          $skipped++;
+          continue;
+        }
+
+        // Güvenli alan atamaları
+        $sicilNo = $p['sicil_no'] ?? null; // string olabilir
+        $fullname = $p['personel_full_name'] ?? '';
+        $citizenshipNo = $p['citizenship_no'] ?? '';
+
+        Log::info("EkipKaydet: istasyon_id={$istasyonId}, worder_m_id={$worderMid}, register_id={$registerId}, sicil_no={$sicilNo}, fullname={$fullname}, citizenship_no={$citizenshipNo}, guid={$guid}");
+        
+        $table->insert([
+          'istasyon_id' => $istasyonId,
+          'worder_m_id' => $worderMid,
+          'register_id' => $registerId,
+          'sicil_no' => $sicilNo,
+          'personel_full_name' => $fullname,
+          'citizenship_no' => $citizenshipNo,
           'co_id' => 2517,
           'start_work_time' => $now,
           'end_work_time' => null,
-          'guid' => $p['guid'],
+          'guid' => $guid,
         ]);
+
+        $inserted++;
       }
 
-      return response()->json(['success' => true], 201);
+      return response()->json([
+        'success' => true,
+        'inserted' => $inserted,
+        'skipped' => $skipped,
+      ], 201);
     } catch (\Throwable $e) {
-      return response()->json(['error' => $e->getMessage()], 500);
+      return response()->json([
+        'success' => false,
+        'error' => 'Kayıt sırasında sunucu hatası',
+        'detail' => app()->hasDebugModeEnabled() ? $e->getMessage() : null,
+      ], 500);
     }
   }
 

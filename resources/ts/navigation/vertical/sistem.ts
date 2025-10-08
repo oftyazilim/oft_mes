@@ -2,16 +2,19 @@ export default [
   {
     title: "Sistem Yönetimi",
     icon: { icon: "tabler-settings" },
+    policyKey: "menu:sistem",
     children: [
       {
         title: "Kullanıcılar",
         icon: { icon: "tabler-users" },
+        policyKey: "menu:sistem:kullanicilar",
         children: [
           {
             title: "Kullanıcı Listesi",
             to: "personel-kullanicilar",
             action: "manage",
             subject: "all",
+            policyKey: "menu:sistem:kullanicilar:liste",
             target: "_blank",
           },
           {
@@ -20,6 +23,7 @@ export default [
             icon: { icon: "tabler-shield-lock" },
             action: "manage",
             subject: "users",
+            policyKey: "menu:sistem:kullanicilar:yetki-yonetimi",
             target: "_blank",
           },
           {
@@ -28,6 +32,7 @@ export default [
             icon: { icon: "tabler-list-details" },
             action: "manage",
             subject: "all",
+            policyKey: "menu:sistem:kullanicilar:loglar",
             target: "_blank",
           },
         ],
@@ -38,6 +43,7 @@ export default [
         icon: { icon: "tabler-message-dots" },
         action: "manage",
         subject: "all",
+        policyKey: "menu:sistem:feedback",
         target: "_blank",
       },
       {
@@ -46,6 +52,7 @@ export default [
         icon: { icon: "tabler-bell" },
         action: "manage",
         subject: "all",
+        policyKey: "menu:sistem:feedback:ayarlar",
         target: "_blank",
       },
     ],
