@@ -524,10 +524,10 @@ class IhtiyacController extends Controller
         }
 
         $anaDepoVal = (float)($list['ana_depo'] ?? 0);
-        $digerDepoVal = (float)($list['diger_depo'] ?? 0);
+        // $digerDepoVal = (float)($list['diger_depo'] ?? 0);
         $stokVal = (float)($list['stok'] ?? 0);
         $ihtiyacVal = (float)($list['ihtiyac'] ?? 0);
-        $list['bakiye'] = ($anaDepoVal + $stokVal + $digerDepoVal) - $ihtiyacVal;
+        $list['bakiye'] = ($anaDepoVal + $stokVal) - $ihtiyacVal;
         $list['depo_ihtiyaci'] = ($ihtiyacVal - $stokVal) > 0 ? ($ihtiyacVal - $stokVal) : 0;
       }
       unset($list);

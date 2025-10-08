@@ -55,6 +55,13 @@ export default [
         policyKey: "menu:sistem:feedback:ayarlar",
         target: "_blank",
       },
+      {
+        title: "ACL Policy Yönetimi",
+        to: { path: "/sistem/acl-policy-yonetimi" },
+        icon: { icon: "tabler-lock-cog" },
+        policyKey: "menu:sistem:acl-policy-yonetimi",
+        target: "_self",
+      },
     ],
   },
 ];
