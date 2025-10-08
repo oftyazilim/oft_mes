@@ -84,18 +84,11 @@ export const canViewNavMenuGroup = (item: NavGroup) => {
   const hasAnyVisibleChild = item.children.some((i: any) =>
     canViewNavMenuItem(i)
   );
+  // Yeni mantık: En az bir çocuk görünürse grup da görünsün (group policyKey çocukları engellemesin)
+  if (hasAnyVisibleChild) return true;
 
-  // If subject and action is defined in item => Return based on children visibility (Hide group if no child is visible)
-  // Else check for ability using provided subject and action along with checking if has any visible child
-  const groupKey = (item as any).policyKey as string | undefined;
-  if (!(groupKey || (item.action && item.subject))) return hasAnyVisibleChild;
-
-  const allowed = canByPolicyKey(
-    groupKey,
-    item.action as any,
-    item.subject as any
-  );
-  return allowed && hasAnyVisibleChild;
+  // Hiç görünür çocuk yoksa, grubu gizle
+  return false;
 };
 
 export const canNavigate = (to: RouteLocationNormalized) => {

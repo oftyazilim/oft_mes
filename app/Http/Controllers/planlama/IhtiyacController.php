@@ -295,6 +295,9 @@ class IhtiyacController extends Controller
         ->when($request->isemriID, function ($query, $isemriID) {
           return $query->where('isemri_id', $isemriID);
         })
+        ->when($request->operasyon, function ($query, $operasyon) {
+          return $query->where('OPERASYON', $operasyon);
+        })
         ->whereNot('OPERASYON', 'HAYALET')
         //->whereNot('OPERASYON_KODU', 'M12')
         ->where('Rotadaki_Son_Operasyon', 1)
@@ -1146,9 +1149,22 @@ class IhtiyacController extends Controller
       ->distinct()
       ->get();
 
+      $operasyonlar = DB::connection('pgsql')
+      ->table('uyumsoft.OFTV_ISEMIRLERI_DETAY')
+      ->select('OPERASYON')
+      ->whereDate('planlanan_bitis_tarihi', '>=', $request->filterValue)
+      ->whereDate('planlanan_bitis_tarihi', '<=', $request->filterValue1)
+      ->where('IS_MERKEZI_ID', $request->ismerkezi)
+      ->where('IS_ISTASYONU_ID', $request->istasyon)
+      ->orderBy('OPERASYON')
+      ->distinct()
+      ->get();
+
+
     // Log::info('Emir Noları:', ['emirnolari' => $emirnolari]);
     return response()->json([
       'emirnolari' => $emirnolari,
+      'operasyonlar' => $operasyonlar,
       'message' => 'Veriler başarıyla alındı',
       'success' => true,
     ]);

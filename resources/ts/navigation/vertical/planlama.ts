@@ -12,17 +12,17 @@ export default [
         target: "_blank",
       },
       {
-        title: "İş Emirleri - Kapanmışlar",
-        to: "planlama-is-emirleri-kapanmislar",
-        icon: { icon: "tabler-list" },
-        policyKey: "menu:planlama:is-emirleri-kapanmislar",
-        target: "_blank",
-      },
-      {
         title: "İş Emirleri - Master",
         to: "planlama-is-emirleri-master",
         icon: { icon: "tabler-list" },
         policyKey: "menu:planlama:is-emirleri-master",
+        target: "_blank",
+      },
+      {
+        title: "İş Emirleri - Kapanmışlar",
+        to: "planlama-is-emirleri-kapanmislar",
+        icon: { icon: "tabler-list" },
+        policyKey: "menu:planlama:is-emirleri-kapanmislar",
         target: "_blank",
       },
       {

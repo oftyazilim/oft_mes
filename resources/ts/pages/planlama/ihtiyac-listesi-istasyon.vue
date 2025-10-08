@@ -70,6 +70,7 @@
               <DxItem location="before" locate-in-menu="auto" template="filtreMerkez" />
               <DxItem location="before" locate-in-menu="auto" template="filtreIstasyon" />
               <DxItem location="before" locate-in-menu="auto" template="filtreisEmriNo" />
+              <DxItem location="before" locate-in-menu="auto" template="filtreOperasyon" />
               <DxItem location="before" locate-in-menu="auto" template="filtreSiparis" />
               <!-- <DxItem location="before" locate-in-menu="auto" template="filtreCari" /> -->
               <DxItem location="before" locate-in-menu="auto" template="yenileTemplate"
@@ -144,6 +145,14 @@
                 <DxSelectBox :data-source="emirnolari" v-model:value="emirNo" label="İş Emri No" label-mode="floating"
                   display-expr="isemri_no" value-expr="isemri_id" style="inline-size: 100%;" :show-clear-button="true"
                   search-mode="contains" search-expr="isemri_no" :search-timeout="200" :search-enabled="true" />
+              </div>
+            </template>
+            
+            <template #filtreOperasyon>
+              <div style="inline-size: 160px; margin-block-start: -10px; margin-inline-start: 5px;">
+                <DxSelectBox :data-source="operasyonlar" v-model:value="operasyon" label="Operasyon" label-mode="floating"
+                  display-expr="OPERASYON" value-expr="OPERASYON" style="inline-size: 100%;" :show-clear-button="true"
+                  search-mode="contains" search-expr="OPERASYON" :search-timeout="200" :search-enabled="true" />
               </div>
             </template>
 
@@ -540,8 +549,10 @@ const siparis = ref('')
 const siparisler = ref<any[]>([])
 const cari = ref('')
 const emirNo = ref(0)
+const operasyon = ref('')
 const cariler = ref<any[]>([])
 const emirnolari = ref<any[]>([])
+const operasyonlar = ref<any[]>([])
 const now = new Date()
 const firstDayOfWeek = new Date(now)
 firstDayOfWeek.setDate(now.getDate() - now.getDay() + 1) // Pazartesi
@@ -598,6 +609,7 @@ const getMalzemeler = async () => {
         cari: cari.value,
         coID: userData.value.co_id,
         isemriID: emirNo.value,
+        operasyon: operasyon.value,
         detay: detay.value === 'Detaylı' ? 1 : 0,
       },
     })
@@ -666,6 +678,7 @@ const getIsEmriNolari = async () => {
       },
     })
     emirnolari.value = response.data.emirnolari
+    operasyonlar.value = response.data.operasyonlar
     //console.log(emirnolari.value);
   } catch (error) {
     console.error('Veri çekilirken hata oluştu: ', error)
