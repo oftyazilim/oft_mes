@@ -100,6 +100,26 @@ let lastActivity = Date.now();
 const SESSION_MAX_MINUTES = Number(import.meta.env.VITE_SESSION_MAX_MINUTES || 360);
 const SESSION_MAX_MS = SESSION_MAX_MINUTES * 60 * 1000;
 
+// Auth ekranlarında overlay göstermemek için basit path kontrolü
+function isAuthPath(): boolean {
+  const p = (window.location?.pathname || '').toLowerCase();
+  return p === '/login'
+    || p.startsWith('/pages/authentication')
+    || p.startsWith('/forgot-password')
+    || p.startsWith('/reset-password')
+    || p.startsWith('/force-password')
+    || p.startsWith('/verify-email')
+    || p.startsWith('/register');
+}
+
+function removeSessionExpiredOverlay() {
+  try {
+    if (overlayEl && overlayEl.parentNode) overlayEl.parentNode.removeChild(overlayEl);
+  } catch (_) {}
+  overlayEl = null;
+  sessionExpired = false;
+}
+
 function markActivity() {
   if (sessionExpired) return;
   lastActivity = Date.now();
@@ -122,21 +142,32 @@ function startIdleWatcher() {
 }
 
 function showSessionExpiredOverlay(fromIdle = false) {
+  // Login/auth sayfasındayken overlay göstermeyelim
+  if (isAuthPath()) {
+    // erişim tokenını temizle ve login’de kal
+    try {
+      useCookie("accessToken").value = null as any;
+    } catch (_) {}
+    removeSessionExpiredOverlay();
+    return;
+  }
   if (sessionExpired) return;
   sessionExpired = true;
 
-  overlayEl = document.createElement('div');
-  overlayEl.id = 'session-expired-overlay';
-  overlayEl.style.position = 'fixed';
-  overlayEl.style.inset = '0';
-  overlayEl.style.zIndex = '9999';
-  overlayEl.style.background = 'rgba(0,0,0,0.65)';
-  overlayEl.style.display = 'flex';
-  overlayEl.style.alignItems = 'center';
-  overlayEl.style.justifyContent = 'center';
-  overlayEl.style.fontFamily = 'system-ui, sans-serif';
-  overlayEl.style.cursor = 'pointer';
-  const reasonText = fromIdle ? 'Hareketsizlik nedeniyle' : 'Güvenlik nedeniyle';
+  overlayEl = document.createElement("div");
+  overlayEl.id = "session-expired-overlay";
+  overlayEl.style.position = "fixed";
+  overlayEl.style.inset = "0";
+  overlayEl.style.zIndex = "9999";
+  overlayEl.style.background = "rgba(0,0,0,0.65)";
+  overlayEl.style.display = "flex";
+  overlayEl.style.alignItems = "center";
+  overlayEl.style.justifyContent = "center";
+  overlayEl.style.fontFamily = "system-ui, sans-serif";
+  overlayEl.style.cursor = "pointer";
+  const reasonText = fromIdle
+    ? "Hareketsizlik nedeniyle"
+    : "Güvenlik nedeniyle";
   overlayEl.innerHTML = `
     <div style="max-width:480px;background:#1e1e1e;color:#fff;padding:32px 28px;border-radius:14px;box-shadow:0 8px 28px -6px rgba(0,0,0,.55);text-align:center;">
       <h2 style="margin:0 0 12px;font-size:22px;letter-spacing:.5px;">Oturum Süresi Doldu</h2>
@@ -151,18 +182,34 @@ function showSessionExpiredOverlay(fromIdle = false) {
 
   const redirect = () => {
     // accessToken cookie temizle
-    try { useCookie('accessToken').value = null as any; } catch (_) {}
-    window.location.href = '/login';
+    try {
+      useCookie("accessToken").value = null as any;
+    } catch (_) {}
+    // Overlay'i kaldır ve login'e kesin yönlendir
+    removeSessionExpiredOverlay();
+    // Safari/iOS için assign kullanmak daha belirgin
+    window.location.assign("/login");
   };
 
-  overlayEl.addEventListener('click', redirect, { once: true });
-  window.addEventListener('keydown', redirect, { once: true });
-  overlayEl.querySelector('#session-expired-relogin')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    redirect();
-  }, { once: true });
+  overlayEl.addEventListener("click", redirect, { once: true });
+  window.addEventListener("keydown", redirect, { once: true });
+  overlayEl.querySelector("#session-expired-relogin")?.addEventListener(
+    "click",
+    (e) => {
+      e.stopPropagation();
+      redirect();
+    },
+    { once: true }
+  );
 
   document.body.appendChild(overlayEl);
+
+  // Kullanıcı etkileşimi olmasa bile 2 sn sonra otomatik yönlendir
+  setTimeout(() => {
+    try {
+      if (sessionExpired) redirect();
+    } catch (_) {}
+  }, 2000);
 }
 
 axios.interceptors.response.use(
@@ -176,7 +223,15 @@ axios.interceptors.response.use(
   (error) => {
     const status = error?.response?.status;
     if (status === 401 || status === 419) {
-      showSessionExpiredOverlay();
+      // Auth ekranında isek overlay göstermeyelim; yalnızca token temizleyelim
+      if (isAuthPath()) {
+        try {
+          useCookie("accessToken").value = null as any;
+        } catch (_) {}
+        removeSessionExpiredOverlay();
+      } else {
+        showSessionExpiredOverlay();
+      }
     }
     // Global loading stop (hata durumunda)
     try {
@@ -193,5 +248,13 @@ axios.interceptors.response.use(
 // Uygulama açılışında idle watcher başlat
 startIdleWatcher();
 markActivity();
+
+// İlk yüklemede auth path ise overlay varsa temizle
+if (isAuthPath()) {
+  removeSessionExpiredOverlay();
+  try {
+    useLoadingStore().stop();
+  } catch (_) {}
+}
 
 
