@@ -59,7 +59,7 @@
             <DxHeaderFilter :visible="true" />
             <DxFilterPanel :visible="true" />
             <DxFilterRow :visible="gosterM" />
-            <DxSearchPanel :visible="true" :width="240" />
+            <DxSearchPanel :visible="true" :width="160" />
             <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
             <DxSorting mode="multiple" />
             <DxExport :enabled="true" :allow-export-selected-data="false" />
@@ -71,21 +71,22 @@
               <DxItem location="before" locate-in-menu="auto" template="filtreIstasyon" />
               <DxItem location="before" locate-in-menu="auto" template="filtreisEmriNo" />
               <DxItem location="before" locate-in-menu="auto" template="filtreSiparis" />
-              <DxItem location="before" locate-in-menu="auto" template="filtreCari" />
+              <!-- <DxItem location="before" locate-in-menu="auto" template="filtreCari" /> -->
               <DxItem location="before" locate-in-menu="auto" template="yenileTemplate"
-                menu-item-template="menuYenileTemplate" @click="YenileMalzemeler" />
+              menu-item-template="menuYenileTemplate" @click="YenileMalzemeler" />
+              <DxItem location="before" locate-in-menu="auto" template="agac" />
               <DxItem location="after" locate-in-menu="auto" template="filtreTemizleTemplate"
                 menu-item-template="menuFiltreTemizleTemplate" @click="FiltreTemizleM" />
               <DxItem location="after" locate-in-menu="auto" template="filtreGosterTemplate"
                 menu-item-template="menuFiltreGosterTemplate" @click="toggleGosterM" />
               <DxItem name="exportButton" />
-              <DxItem name="searchPanel" />
+              <DxItem name="searchPanel"/>
             </DxToolbar>
 
             <DxSummary>
-              <DxGroupItem :align-by-column="true" column="stok_adi" summary-type="count" display-format="{0} adet"
+              <DxGroupItem :align-by-column="true" column="stok_adi" summary-type="count" display-format="{0} çeşit"
                 :alignment="right" />
-              <DxTotalItem :align-by-column="true" column="stok_adi" summary-type="count" display-format="{0} adet"
+              <DxTotalItem :align-by-column="true" column="stok_adi" summary-type="count" display-format="{0} çeşit"
                 :alignment="right" />
             </DxSummary>
 
@@ -157,8 +158,13 @@
               </div>
             </template>
 
+            <template #agac>
+              <VSwitch v-model="detay" :label="detay.toString()" true-value="Detaylı" false-value="Detaysız"
+                :color="primary" class="ms-2"/>
+            </template>
+
             <template #yenileTemplate>
-              <DxButton :visible="bothSelected" id="sayim" icon="refresh" styling-mode="text" hint="Yenile" />
+              <VBtn :disabled="!bothSelected" variant="outlined" size="small" class="ms-2">Listele</VBtn>
             </template>
             <template #menuYenileTemplate>
               <div :visible="bothSelected" style="display: flex; align-items: center; margin-inline-start: 13px;">
@@ -511,7 +517,7 @@ const gridDataDagilim = ref<any[]>([])
 const gridSatinalma = ref<any[]>([])
 const gridTalepler = ref<any[]>([])
 const gridKeyM = ref(Date.now())
-
+const detay = ref('Detaysız')
 const userData = useCookie<any>('userData')
 const dataGridRefM = ref<DxDataGrid | null>(null)
 const dataGridRefB = ref<DxDataGrid | null>(null)
@@ -592,6 +598,7 @@ const getMalzemeler = async () => {
         cari: cari.value,
         coID: userData.value.co_id,
         isemriID: emirNo.value,
+        detay: detay.value === 'Detaylı' ? 1 : 0,
       },
     })
     gridDataM.value = response.data.emirler
@@ -659,7 +666,7 @@ const getIsEmriNolari = async () => {
       },
     })
     emirnolari.value = response.data.emirnolari
-    console.log(emirnolari.value);
+    //console.log(emirnolari.value);
   } catch (error) {
     console.error('Veri çekilirken hata oluştu: ', error)
   } finally {

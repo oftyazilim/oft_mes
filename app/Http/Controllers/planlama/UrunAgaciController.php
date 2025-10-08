@@ -96,9 +96,15 @@ class UrunAgaciController extends Controller
                 ->orderBy('pom.line_no')
                 ->get();
 
+            $satir = $rows->count();
+            // Log::info("UrunAgaciController satir: $satir");
             // Log::info($rows);
 
-            return response()->json($rows);
+            // return response()->json($rows);
+            return response()->json([
+                'data' => $rows,
+                'satir' => $satir,
+            ], 200);
         } catch (\Throwable $th) {
             Log::error('UrunAgaciController@index hata', [
                 'work_order_no' => $request->query('work_order_no'),

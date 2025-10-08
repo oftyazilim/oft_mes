@@ -41,27 +41,22 @@
       <DxColumn data-field="item_name" caption="Stok Adı" :min-width="220" />
       <DxColumn data-field="operation_no" caption="Operasyon No" :width="110" />
       <DxColumn data-field="operation_name" caption="Operasyon Adı" :width="180" />
-      <DxColumn data-field="qty_prm_exploded" caption="Miktar" data-type="number" :width="110" :format="{
-        type: 'fixedPoint',
-        precision: 1,
-        thousandsSeparator: ',',
-      }" />
-      <DxColumn data-field="ihtiyac" caption="İhtiyaç" data-type="number" :width="110" :format="{
-        type: 'fixedPoint',
-        precision: 1,
-        thousandsSeparator: ',',
-      }" />
-      <DxColumn data-field="stok" caption="Stok" data-type="number" :width="110" :format="{
-        type: 'fixedPoint',
-        precision: 1,
-        thousandsSeparator: ',',
-      }" />
-      <DxColumn data-field="bakiye" caption="Bakiye" data-type="number" :width="110" :format="{
-        type: 'fixedPoint',
-        precision: 1,
-        thousandsSeparator: ',',
-      }" />
+      <DxColumn data-field="qty_prm_exploded" caption="Miktar" data-type="number" :width="110"
+        :format="numberFormat1" />
+      <DxColumn data-field="ihtiyac" caption="İhtiyaç" data-type="number" :width="110" :format="numberFormat1" />
+      <DxColumn data-field="stok" caption="Stok" data-type="number" :width="110" :format="numberFormat1" />
+      <DxColumn data-field="bakiye" caption="Bakiye" data-type="number" :width="110" :format="numberFormat1" />
+
+      <DxSummary>
+        <DxGroupItem :align-by-column="true" column="item_name" summary-type="count" display-format="{0} çeşit"
+          alignment="right" />
+        <DxTotalItem :align-by-column="true" column="item_name" summary-type="count" display-format="{0} çeşit"
+          alignment="right" />
+      </DxSummary>
     </DxTreeList>
+    <div class="mt-2">
+      Toplam Satır: {{ satir }}
+    </div>
   </div>
 
 </template>
@@ -104,11 +99,14 @@ const bakiyeMiktar = ref<number>(1)
 const noResultMessage = ref<string>('')
 const noResultType = ref<'warning' | 'error' | 'info' | undefined>(undefined)
 
+// DevExtreme format nesnesini stabil referans yapmak için sabit
+const numberFormat1 = Object.freeze({ type: 'fixedPoint', precision: 1, thousandsSeparator: ',' })
+
 // Sorgu inputları
 const stokKodu = ref<string>('')
 const stokAdi = ref<string>('')
 const isEmriNo = ref<string>('')
-
+const satir = ref<number>(0)
 // TreeList veri kaynağı: kökleri gösterebilmek için parent_exploded_id = 0 -> null
 const treeData = computed<any[]>(() => {
   const m = Number(appliedMiktar.value || 1)
@@ -162,8 +160,15 @@ async function loadData() {
   noResultMessage.value = ''
   noResultType.value = undefined
   try {
-    const { data } = await axios.get('/api/urun-agaci-sorgula', { params })
-    rows.value = Array.isArray(data) ? data : []
+    const response = await axios.get('/api/urun-agaci-sorgula', { params })
+    // console.log('urun-agaci-sorgula response:', response.data)
+    // Önce rows'u doldur
+    rows.value = Array.isArray(response.data?.data) ? response.data.data : []
+    // satir değerini güvenli şekilde sayıya çevir; geçersizse rows.length'e düş
+    const sat = Number(response.data?.satir)
+    // eslint-disable-next-line no-console
+    // console.debug('urun-agaci-sorgula satir ham:', response.data?.satir, '-> parsed:', sat)
+    satir.value = Number.isFinite(sat) ? sat : rows.value.length
     if (rows.value.length === 0) {
       noResultMessage.value = 'Kayıt bulunamadı.'
       noResultType.value = 'warning'
@@ -175,6 +180,7 @@ async function loadData() {
     console.error('urun-agaci-sorgula çağrısı hata verdi:', e)
 
     rows.value = []
+    satir.value = 0
     const status = e?.response?.status as number | undefined
     if (status === 401 || status === 419) {
       noResultMessage.value = 'Oturum doğrulaması gerekli. Lütfen giriş yapın ve tekrar deneyin.'

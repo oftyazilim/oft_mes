@@ -369,15 +369,18 @@ class IhtiyacController extends Controller
             DB::raw('(select sum(ibi.qty_prm) from uyumsoft.invd_bwh_item ibi 
                             left join uyumsoft.invd_whouse iw on iw.whouse_id = ibi.whouse_id	
                             where ibi.item_id = ii.item_id and iw.whouse_width in (1,2,3,4)
-                            and iw.whouse_id = '.$cikisDepo.') as stok')
+                            and iw.whouse_id = ' . $cikisDepo . ') as stok')
           ])
           ->where('pom.main_bom_m_id', $bomId)
+          ->when($request->detay === '0', function ($query, $detay) {
+            return $query->where('parent_exploded_id', $detay);
+          })
           ->orderBy('pom.exploded_level')
           ->orderBy('pom.exploded_id')
           ->orderBy('pom.line_no')
           ->get();
 
-        // Log::info("liste:".json_encode($liste));
+        Log::info("liste:".$request->detay, ['count' => count($liste)]);
 
 
 
@@ -521,9 +524,10 @@ class IhtiyacController extends Controller
         }
 
         $anaDepoVal = (float)($list['ana_depo'] ?? 0);
+        $digerDepoVal = (float)($list['diger_depo'] ?? 0);
         $stokVal = (float)($list['stok'] ?? 0);
         $ihtiyacVal = (float)($list['ihtiyac'] ?? 0);
-        $list['bakiye'] = ($anaDepoVal + $stokVal) - $ihtiyacVal;
+        $list['bakiye'] = ($anaDepoVal + $stokVal + $digerDepoVal) - $ihtiyacVal;
         $list['depo_ihtiyaci'] = ($ihtiyacVal - $stokVal) > 0 ? ($ihtiyacVal - $stokVal) : 0;
       }
       unset($list);
