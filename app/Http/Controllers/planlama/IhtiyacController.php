@@ -380,7 +380,7 @@ class IhtiyacController extends Controller
           ->orderBy('pom.line_no')
           ->get();
 
-        Log::info("liste:".$request->detay, ['count' => count($liste)]);
+        // Log::info("liste:".$request->detay, ['count' => count($liste)]);
 
 
 
@@ -399,8 +399,9 @@ class IhtiyacController extends Controller
           // O(1) indexler
           $itemId = (int)$list->item_id;
           $existingKey = $bulkIndex[$itemId] ?? false;
-          // hangiIsemirleri: (item_id|isemri_id)
-          $dagKey = $itemId . '|' . (int)$request->isemriID;
+          // $hangiIsemirleri = (item_id|isemri_id);
+          // $dagKey = $itemId . '|' . (int)$list->worder_m_id;
+          $dagKey = $itemId . '|' . (int)$emir->isemri_id;
           $existingKey1 = $dagilimIndex[$dagKey] ?? false;
 
           // Güvenli hesap (0'a bölme yok)
