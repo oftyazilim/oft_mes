@@ -27,19 +27,22 @@ function sendPageLoadLog(title: string) {
   try {
     // userData cookie mevcutsa al
     const userData: any = useCookie('userData')
+    const path = window.location?.pathname || ''
+    if (path === '/login') return
     const uid = userData?.value?.id
-    if (!uid || !title) return
+    if (uid) {
+      axios.post('/api/log-kayit', {
+        userId: uid,
+        sayfa: title,
+        eylem: 'Yükleme',
+      }).finally(() => {
+        // 1 sn sonra tekrar gönderilebilir olsun (ör. dinamik başlık değişimleri)
+        setTimeout(() => { __pageLogSentForThisNavCycle = false }, 1000)
+      })
+    }
     // Aynı navigasyon döngüsünde bir kez gönder
     if (__pageLogSentForThisNavCycle) return
     __pageLogSentForThisNavCycle = true
-    axios.post('/api/log-kayit', {
-      userId: uid,
-      sayfa: title,
-      eylem: 'Yükleme',
-    }).finally(() => {
-      // 1 sn sonra tekrar gönderilebilir olsun (ör. dinamik başlık değişimleri)
-      setTimeout(() => { __pageLogSentForThisNavCycle = false }, 1000)
-    })
   } catch (e) {
     // sessiz geç
     // console.debug(e)
