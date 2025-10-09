@@ -10,9 +10,9 @@ import AnalyticsSupportTracker from '@/views/dashboards/analytics/AnalyticsSuppo
 import AnalyticsTotalEarning from '@/views/dashboards/analytics/AnalyticsTotalEarning.vue'
 import AnalyticsWebsiteAnalytics from '@/views/dashboards/analytics/AnalyticsWebsiteAnalytics.vue'
 
-definePage({
-  meta: { action: ['manage', 'read'], subject: ['genel', 'montaj', 'all'] }
-})
+// definePage({
+//   meta: { action: ['manage', 'read'], subject: ['genel', 'montaj', 'all'] }
+// })
 
 </script>
 

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import UserFormDrawer from './UserFormDrawer.vue';
 
-definePage({
-  meta: { action: ['manage', 'read'], subject: ['montaj', 'all'] }
-});
+// definePage({
+//   meta: { action: ['manage', 'read'], subject: ['montaj', 'all'] }
+// });
 
 const itemsPerPage = ref(10)
 const page = ref(1)

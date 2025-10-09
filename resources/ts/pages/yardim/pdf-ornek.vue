@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { definePage } from 'unplugin-vue-router';
 
-definePage({
-  meta: { action: 'read', subject: 'genel' },
-})
+// definePage({
+//   meta: { action: 'read', subject: 'genel' },
+// })
 
 const pdfUrl = '/docs/sample.pdf'
 </script>

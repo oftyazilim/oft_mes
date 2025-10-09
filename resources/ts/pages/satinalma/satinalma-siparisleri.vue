@@ -436,9 +436,9 @@ import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver-es';
 import { ref } from 'vue';
 
-definePage({
-  meta: { action: ['read'], subject: ['planlama', 'satinalma'] }
-})
+// definePage({
+//   meta: { action: ['read'], subject: ['planlama', 'satinalma'] }
+// })
 
 const formatDate = date => {
   if (!date)

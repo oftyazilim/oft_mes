@@ -1,4 +1,5 @@
 import { getPolicyFor, policyVersion } from "@/plugins/1.router/guards";
+import { normalizeAbilityRules } from "@/utils/ability-normalizer";
 import { useAbility } from "@casl/vue";
 import type { NavGroup } from "@layouts/types";
 import { getCurrentInstance } from "vue";
@@ -51,15 +52,88 @@ export const canByPolicyKey = (
   fallbackAction?: string | string[],
   fallbackSubject?: string | string[]
 ) => {
-  const ability = useAbility();
+  // Ability enjekte edilmemişse (plugin henüz yüklenmeden çağrıldıysa) hata fırlatma
+  // yerine zarifçe fallback/false dönelim.
+  let ability: ReturnType<typeof useAbility> | null = null;
+  try {
+    ability = useAbility();
+  } catch (e) {
+    ability = null;
+  }
   // Reaktivite: policy yüklenince yeniden değerlendirme için policyVersion'a dokun
   // eslint-disable-next-line no-unused-expressions
   policyVersion.value;
 
+  // Ability yoksa cookie tabanlı OR kontrolü yapalım (userAbilityRules)
+  if (!ability) {
+    try {
+      // Cookie'den kuralları çek ve normalize et
+      const raw = useCookie("userAbilityRules").value as any;
+      const rules = normalizeAbilityRules(raw);
+      const aclDebug =
+        typeof window !== "undefined" &&
+        localStorage.getItem("acl-debug") === "1";
+      if (policyKey) {
+        const p = getPolicyFor(policyKey);
+        if ((p.actions?.length || 0) && (p.subjects?.length || 0)) {
+          // subject aliasları
+          const SUBJECT_ALIASES: Record<string, string[]> = {
+            arge: ["arge", "planlama"],
+          };
+          const expandSubjects = (s: string): string[] =>
+            SUBJECT_ALIASES[s] ?? [s];
+          // OR kombinasyonu: herhangi bir kural eşleşirse true
+          let matched: { a: string; s: string } | null = null;
+          const ok = p.actions.some((a) =>
+            p.subjects.some((s) =>
+              expandSubjects(s).some((sx) => {
+                const hit = rules.some(
+                  (r) => r.action === a && r.subject === sx
+                );
+                if (hit && !matched) matched = { a, s: sx };
+                return hit;
+              })
+            )
+          );
+          if (aclDebug) {
+            // eslint-disable-next-line no-console
+            console.debug("[ACL][cookie-fallback]", {
+              policyKey,
+              actions: p.actions,
+              subjects: p.subjects,
+              matched,
+            });
+          }
+          if (ok) return true;
+        }
+      }
+      // Cookie fallback'ta da eşleşme olmadıysa optional fallbackAction/Subject dene
+      if (fallbackAction && fallbackSubject)
+        return can(fallbackAction, fallbackSubject);
+      return false;
+    } catch {
+      // Cookie erişimi başarısızsa, fallbackAction/Subject varsa dene, yoksa gizle
+      if (fallbackAction && fallbackSubject)
+        return can(fallbackAction, fallbackSubject);
+      return false;
+    }
+  }
+
   if (policyKey) {
     const p = getPolicyFor(policyKey);
     if (p.actions?.length && p.subjects?.length) {
-      return p.actions.some((a) => p.subjects.some((s) => ability.can(a, s)));
+      // Subject aliasları: bazı domain adları eş anlamlı kullanılabiliyor.
+      // Örn: 'arge' => 'planlama' ile eşdeğer kabul edilsin.
+      const SUBJECT_ALIASES: Record<string, string[]> = {
+        arge: ["arge", "planlama"],
+      };
+      const expandSubjects = (s: string): string[] => SUBJECT_ALIASES[s] ?? [s];
+
+      return p.actions.some((a) =>
+        p.subjects.some((s) =>
+          expandSubjects(s).some((sx) => ability!.can(a as any, sx as any))
+        )
+      );
     }
   }
   // Policy bulunamadıysa veya boşsa fallback'a dön
@@ -92,7 +166,13 @@ export const canViewNavMenuGroup = (item: NavGroup) => {
 };
 
 export const canNavigate = (to: RouteLocationNormalized) => {
-  const ability = useAbility();
+  // Router guard çalışırken ability henüz sağlanmamış olabilir; güvenli erişim yapalım
+  let ability: ReturnType<typeof useAbility> | null = null;
+  try {
+    ability = useAbility();
+  } catch (e) {
+    ability = null;
+  }
 
   // Get the most specific route (last one in the matched array)
   const targetRoute = to.matched[to.matched.length - 1];
@@ -124,9 +204,9 @@ export const canNavigate = (to: RouteLocationNormalized) => {
       (targetRoute?.meta?.subject as string | string[]) || routePolicy.subjects;
     const actions = Array.isArray(action) ? action : [action];
     const subjects = Array.isArray(subject) ? subject : [subject];
-    const canAccess = actions.some((a) =>
-      subjects.some((s) => ability.can(a, s))
-    );
+    const canAccess = ability
+      ? actions.some((a) => subjects.some((s) => ability!.can(a, s)))
+      : true; // Ability yoksa engelleme yapma (login akışında router izin vermeli)
     console.log("Checking", action, "on", subject, ":", canAccess);
     return canAccess;
   }
@@ -138,7 +218,9 @@ export const canNavigate = (to: RouteLocationNormalized) => {
     if (!action || !subject) return false;
     const actions = Array.isArray(action) ? action : [action];
     const subjects = Array.isArray(subject) ? subject : [subject];
-    return actions.some((a) => subjects.some((s) => ability.can(a, s)));
+    return ability
+      ? actions.some((a) => subjects.some((s) => ability!.can(a, s)))
+      : true;
   });
   console.log("Has any access:", hasAnyAccess);
   return hasAnyAccess;

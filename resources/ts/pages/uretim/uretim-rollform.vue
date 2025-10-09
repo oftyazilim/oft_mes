@@ -463,9 +463,9 @@ import { DxPopup, DxToolbarItem } from 'devextreme-vue/popup';
 import notify from 'devextreme/ui/notify';
 import { computed, nextTick, onActivated, onMounted, onUnmounted, ref, watch } from 'vue';
 
-definePage({
-  meta: { action: ['manage', 'read'], subject: ['mekanik', 'all'] }
-})
+// definePage({
+//   meta: { action: ['manage', 'read'], subject: ['mekanik', 'all'] }
+// })
 
 const pageTitleStore = usePageTitleStore();
 

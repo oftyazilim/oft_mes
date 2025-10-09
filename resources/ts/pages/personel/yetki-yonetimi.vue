@@ -197,7 +197,7 @@ import axios from 'axios'
 import { computed, onMounted, ref } from 'vue'
 
 // Sayfa yetkisi
-definePage({ meta: { action: ['manage', 'read'], subject: ['users', 'roles', 'genel', 'all'] } })
+// definePage({ meta: { action: ['manage', 'read'], subject: ['users', 'roles', 'genel', 'all'] } })
 
 // State
 const activeTab = ref<'users' | 'roles' | 'perms'>('users')

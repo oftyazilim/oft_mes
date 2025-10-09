@@ -6,9 +6,9 @@ import { definePage } from 'unplugin-vue-router'
 // eslint-disable-next-line import/no-unresolved
 import guideMd from '../../../../docs/yetki-yonetimi-kilavuzu.md?raw'
 
-definePage({
-  meta: { action: 'read', subject: 'genel', layout: 'default'  },
-})
+// definePage({
+//   meta: { action: 'read', subject: 'genel', layout: 'default'  },
+// })
 
 const mdText = guideMd
 </script>

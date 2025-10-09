@@ -566,9 +566,9 @@
 
 
 <script setup lang="ts">
-definePage({
-  meta: { action: ['read'], subject: ['planlama', 'satinalma'] }
-})
+// definePage({
+//   meta: { action: ['read'], subject: ['planlama', 'satinalma'] }
+// })
 
 import { usePageTitleStore } from '@/stores/pageTitle'
 import axios from 'axios'

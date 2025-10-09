@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-definePage({ meta: { action: 'manage', subject: 'all' } })
+// definePage({ meta: { action: 'manage', subject: 'all' } })
 import { useLoadingStore } from '@/stores/loading';
 import { usePageTitleStore } from "@/stores/pageTitle";
 import axios from 'axios';

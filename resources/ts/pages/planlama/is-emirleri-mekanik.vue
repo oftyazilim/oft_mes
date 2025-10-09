@@ -786,9 +786,9 @@ import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver';
 import SurecCell from './SurecCell.vue';
 
-definePage({
-  meta: { action: ['read'], subject: ['planlama', 'mekanik'] }
-})
+// definePage({
+//   meta: { action: ['read'], subject: ['planlama', 'mekanik'] }
+// })
 
 function formatliNumber(value: number): string {
   return new Intl.NumberFormat("tr-TR", {

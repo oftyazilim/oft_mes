@@ -322,9 +322,9 @@ const pageAlias = "mekanik";
 pageTitleStore.setTitle(`${pageName} (${pageAlias})`);
 document.title = `OFT - ${pageName} | ${pageAlias}`;
 
-definePage({
-  meta: { action: ["read"], subject: ["planlama", "mekanik"] },
-});
+// definePage({
+//   meta: { action: ["read"], subject: ["planlama", "mekanik"] },
+// });
 
 // Basit durumlar için yardımcılar şimdilik gereksiz; gerekirse ekleriz.
 const gridKey = ref(0);

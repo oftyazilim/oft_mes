@@ -398,9 +398,9 @@ const pageAlias = 'PLN-KAPASİTE'
 pageTitleStore.setTitle(`${pageName} (${pageAlias})`)
 document.title = `OFT - ${pageName} | ${pageAlias}`
 
-definePage({
-  meta: { action: ['create'], subject: ['planlama'] }
-})
+// definePage({
+//   meta: { action: ['create'], subject: ['planlama'] }
+// })
 
 
 interface Hafta {

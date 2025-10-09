@@ -139,7 +139,7 @@ const userProfileList = [
                     {{ userData.fullName || userData.username }}
                   </h6>
                   <VListItemSubtitle class="text-capitalize text-disabled">
-                    {{ userData.role }}
+                    {{ userData.unvan }}
                   </VListItemSubtitle>
                 </div>
               </div>

@@ -218,9 +218,9 @@ import Swal from "sweetalert2";
 // pageTitleStore.setToplam('');
 document.title = "OFT - Kullanıcılar";
 
-definePage({
-  meta: { action: ['manage', 'read'], subject: ['genel', 'all'] }
-})
+// definePage({
+//   meta: { action: ['manage', 'read'], subject: ['genel', 'all'] }
+// })
 
 const apiUrl = '/api/users'; // Backend API rotası
 const gridData = ref<any[]>([]);

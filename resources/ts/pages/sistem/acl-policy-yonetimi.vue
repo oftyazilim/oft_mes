@@ -3,7 +3,7 @@ import { usePageTitleStore } from '@/stores/pageTitle';
 import axios from 'axios';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
-definePage({ meta: { action: ['manage'], subject: ['all'] } })
+// definePage({ meta: { action: ['manage'], subject: ['all'] } })
 const pageTitleStore = usePageTitleStore()
 const pageName = 'Policy Yönetimi'
 const pageAlias = 'ACL'
@@ -158,7 +158,7 @@ onMounted(load)
         <span>ACL Policy Yönetimi</span>
         <div>
           <VTextField v-model="search" density="compact" label="Ara (key/description)" class="me-2" />
-          <VBtn color="primary" @click="startCreate" class="mt-2">Yeni Policy</VBtn>
+          <VBtn color="primary" @click="startCreate" variant="outlined" class="mt-2">Yeni Policy</VBtn>
         </div>
       </VCardTitle>
       <VCardText>
@@ -176,61 +176,39 @@ onMounted(load)
             <div>{{ item.subjects?.join(', ') }}</div>
           </template>
           <template #item.act="{ item }" width="250">
-            <VBtn size="small" class="me-2" @click="startEdit(item)">Düzenle</VBtn>
-            <VBtn size="small" color="error" @click="remove(item)">Sil</VBtn>
+            <div class="d-inline-flex align-center" style="gap: 6px;">
+              <VBtn size="small" :icon="'tabler-edit'" variant="outlined" aria-label="Düzenle" @click="startEdit(item)" />
+              <VBtn size="small" color="error" :icon="'tabler-trash'" variant="outlined" aria-label="Sil" @click="remove(item)" />
+            </div>
           </template>
         </VDataTable>
       </VCardText>
     </VCard>
 
-  <VDialog v-model="isDialogOpen" max-width="640">
+    <VDialog v-model="isDialogOpen" max-width="640">
       <VCard v-if="editItem">
         <VCardTitle>{{ editItem?.id ? 'Policy Düzenle' : 'Yeni Policy' }}</VCardTitle>
         <VCardText>
-          <VCombobox
-            class="mb-4"
-            v-model="editItem.key"
-            :items="keyOptions"
-            label="Key (örn: route:dashboards-analytics)"
-            hide-details="auto"
-            clearable
-          />
+          <VCombobox class="mb-4" v-model="editItem.key" :items="keyOptions"
+            label="Key (örn: route:dashboards-analytics)" hide-details="auto" clearable />
 
-          <VCombobox
-            class="mb-4"
-            v-model="actionsSel"
-            :items="actionOptions"
-            label="Actions (çoklu)"
-            multiple
-            chips
-            closable-chips
-            hide-details="auto"
-            clearable
-          />
+          <VCombobox class="mb-4" v-model="actionsSel" :items="actionOptions" label="Actions (çoklu)" multiple chips
+            closable-chips hide-details="auto" clearable />
 
-          <VCombobox
-            class="mb-4"
-            v-model="subjectsSel"
-            :items="subjectOptions"
-            label="Subjects (çoklu)"
-            multiple
-            chips
-            closable-chips
-            hide-details="auto"
-            clearable
-          />
+          <VCombobox class="mb-4" v-model="subjectsSel" :items="subjectOptions" label="Subjects (çoklu)" multiple chips
+            closable-chips hide-details="auto" clearable />
 
           <VTextField class="mb-2" v-model="editItem.description" label="Açıklama" />
         </VCardText>
         <VCardActions>
-          <VSpacer/>
+          <VSpacer />
           <VBtn variant="text" @click="cancelDialog">İptal</VBtn>
           <VBtn color="primary" @click="save">Kaydet</VBtn>
         </VCardActions>
       </VCard>
     </VDialog>
   </VContainer>
-  
+
 </template>
 
 

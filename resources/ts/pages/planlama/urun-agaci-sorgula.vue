@@ -77,9 +77,9 @@ import "jspdf-autotable";
 import { computed, nextTick, onMounted, ref } from 'vue';
 
 
-definePage({
-  meta: { action: ['read'], subject: ['planlama', 'montaj', 'satinalma', 'satis'] }
-})
+// definePage({
+//   meta: { action: ['read'], subject: ['planlama', 'montaj', 'satinalma', 'satis'] }
+// })
 
 const pageTitleStore = usePageTitleStore()
 const pageName = 'Ürün Ağacı Sorgula'

@@ -2,9 +2,9 @@
 import { emailValidator, requiredValidator } from '@core/utils/validators';
 import { VForm } from 'vuetify/components/VForm';
 
-definePage({
-  meta: { action: ['manage', 'read'], subject: ['montaj', 'all'] }
-});
+// definePage({
+//   meta: { action: ['manage', 'read'], subject: ['montaj', 'all'] }
+// });
 
 interface UserPayload {
   id?: number

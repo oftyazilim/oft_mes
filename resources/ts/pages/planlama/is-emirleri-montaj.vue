@@ -19,7 +19,8 @@
     <VCardText class="mt-0 pa-0 ms-2 me-1">
       <VCol cols="12" class="mt-0 pa-1 pe-2">
         <div id="liste" style="margin-block-end: -10px;">
-          <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" />
+          <DxContextMenu :key="contextMenuKey" :data-source="menuItems" :width="200" target="#grid"
+            @item-click="itemClick" />
 
           <DxDataGrid id="grid" ref="dataGridRef" :key="gridKey" :data-source="gridData" key-expr="satir_id"
             :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true" :min-width="200"
@@ -69,15 +70,15 @@
             <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" :allow-sorting="false" />
             <DxColumn data-field="teslim_tarihi" caption="TESLİM TARİHİ" data-type="date" :width="140" :visible="true"
               :format="{
-  formatter: (date: Date | string): string => {
-    const formattedDate: string = new Intl.DateTimeFormat('tr-TR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(new Date(date));
-    return formattedDate.replace(/\//g, '.');
-  },
-}" :cell-template="getIconType" :allow-sorting="false" />
+                formatter: (date: Date | string): string => {
+                  const formattedDate: string = new Intl.DateTimeFormat('tr-TR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                  }).format(new Date(date));
+                  return formattedDate.replace(/\//g, '.');
+                },
+              }" :cell-template="getIconType" :allow-sorting="false" />
             <DxColumn data-field="planlanan_baslangic" caption="PLN BŞL" data-type="date" :width="130" :visible="true"
               :format="{
                 formatter: (date: Date | string): string => {
@@ -753,7 +754,8 @@
 // *********** İzinler *****************************************************
 // import type { Rule } from "./ability";
 
-import { useAbility } from "@casl/vue";
+import { canByPolicyKey } from '@/@layouts/plugins/casl';
+import { refreshAbilityPolicies } from '@/plugins/1.router/guards';
 import { computed, nextTick, onMounted, ref } from "vue";
 
 // import { DxTooltip } from 'devextreme-vue/tooltip';
@@ -801,9 +803,9 @@ import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver';
 import SurecCell from './SurecCell.vue';
 
-definePage({
-  meta: { action: ['read'], subject: ['planlama', 'montaj'] }
-})
+// definePage({
+//   meta: { action: ['read'], subject: ['planlama', 'montaj'] }
+// })
 
 function formatliNumber(value: number): string {
   return new Intl.NumberFormat("tr-TR", {
@@ -1222,7 +1224,7 @@ const getIconType = (cellElement: HTMLElement, cellInfo: any): void => {
   date2.setHours(0, 0, 0, 0)
 
   const diffInDays = Math.floor(
-    (date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24),
+    (date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24)
   )
 
   // Ana metni ekle (hafta değeri)
@@ -1868,7 +1870,7 @@ const getDetay = async () => {
         isemri_id: selectedRow.value.isemri_id,
       },
     })
-console.log('Detay response:', response);
+    console.log('Detay response:', response);
     gridDataDetay.value = response.data.data
     numberedSteps.value[1].subtitle = `${response.data.toplamIsEmri} ad / ${response.data.toplamSure} dk`
     gridDataMalzemeler.value = response.data.malzemeler
@@ -1940,6 +1942,8 @@ const refreshGrid = (): void => {
 }
 
 onMounted(async () => {
+  // Policy cache'in güncel olduğundan emin ol (menü görünürlüğü için gerekli)
+  try { await refreshAbilityPolicies() } catch { }
   await getData()
   loadGridState()
   stateRestored.value = true
@@ -1950,7 +1954,10 @@ onMounted(async () => {
     // Bir frame sonra render tamam say
     requestAnimationFrame(() => { postMountIdle.value = true })
   })
-  console.log('Kullanıcı bilgileri:', userData.value)
+  // console.log('Kullanıcı bilgileri:', userData.value)
+
+  // Not: useAbility() bazı anlarda injection hazır olmadan çağrılırsa hata atabiliyor.
+  // Teşhis loglarını kaldırdık; menü görünürlüğü DB policy + cookie fallback ile doğru çalışır.
 })
 
 const Yenile = async (): Promise<void> => {
@@ -1987,26 +1994,56 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
   e.cancel = true
 }
 
-const ability = useAbility()
-const canManagePlanlama = computed(() => ability.can('manage', 'planlama'))
+// const ability = useAbility()
+// const canManagePlanlama = computed(() => ability.can('manage', 'planlama'))
 
 const baseMenuItems = [
   { text: 'Yenile' },
   { text: 'Haftaya Göre Grupla' },
   { text: 'Detay Göster' },
-  { text: 'İstasyona Gönder', requiresManage: true },
-  { text: 'Üretim Tarihini Değiştir', requiresManage: true },
-  { text: 'Teslim Tarihini Değiştir', requiresManage: true },
-  { text: 'Aksesuar', requiresManage: true },
+  { text: 'İstasyona Gönder', policyKey: 'button:planlama:isemri-rota' },
+  { text: 'Üretim Tarihini Değiştir', policyKey: 'button:planlama:isemri-uretim-tarihi' },
+  { text: 'Teslim Tarihini Değiştir', policyKey: 'button:planlama:isemri-teslim-tarihi' },
+  { text: 'Aksesuar', policyKey: 'button:planlama:isemri-aksesuar' },
   { text: 'Teknik Resim Göster' },
   { text: 'Düzen Yükle' },
   { text: 'Düzen Kaydet' },
   { text: 'Düzen Sıfırla' },
 ]
 
-const menuItems = computed(() =>
-  baseMenuItems.filter(item => canManagePlanlama.value || !('requiresManage' in item))
-)
+// Policy/ability hazır olana kadar kısıtlı öğeleri göstermeyelim
+const policiesReady = ref(false)
+  // policiesReady işaretini policy refresh sonrası set et
+  ; (async () => { try { await refreshAbilityPolicies(); policiesReady.value = true } catch { policiesReady.value = true } })()
+
+// ContextMenu yeniden mount anahtarı (policy sonrası)
+const contextMenuKey = ref(0)
+watch(policiesReady, v => { if (v) contextMenuKey.value++ })
+
+const menuItems = computed(() => {
+  if (!policiesReady.value) return baseMenuItems.filter((i: any) => !i.policyKey)
+  return baseMenuItems.filter((item: any) => {
+    if (item.policyKey) return canByPolicyKey(item.policyKey)
+    return true
+  })
+})
+// const baseMenuItems = [
+//   { text: 'Yenile' },
+//   { text: 'Haftaya Göre Grupla' },
+//   { text: 'Detay Göster' },
+//   { text: 'İstasyona Gönder', requiresManage: true },
+//   { text: 'Üretim Tarihini Değiştir', requiresManage: true },
+//   { text: 'Teslim Tarihini Değiştir', requiresManage: true },
+//   { text: 'Aksesuar', requiresManage: true },
+//   { text: 'Teknik Resim Göster' },
+//   { text: 'Düzen Yükle' },
+//   { text: 'Düzen Kaydet' },
+//   { text: 'Düzen Sıfırla' },
+// ]
+
+// const menuItems = computed(() =>
+//   baseMenuItems.filter(item => canManagePlanlama.value || !('requiresManage' in item))
+// )
 
 function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
   if (!itemData?.items) {
@@ -2092,6 +2129,13 @@ const RalKodlariGuncelle = async () => {
   inline-size: 100% !important;
 }
 
+/* Navbar'ın bu sayfada her zaman üstte ve tıklanabilir kalmasını sağla */
+.layout-navbar,
+.layout-navbar-and-nav-container,
+.v-app-bar {
+  position: relative;
+  z-index: 3001;
+}
 /* İlk yükleme overlay stilleri */
 .montaj-loading-overlay {
   position: fixed;

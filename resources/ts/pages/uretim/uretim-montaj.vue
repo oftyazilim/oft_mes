@@ -19,7 +19,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import ProductionSlider from './ProductionSlider.vue'
 
-definePage({ meta: { action: ['manage', 'read'], subject: ['montaj', 'all'] } })
+// definePage({ meta: { action: ['manage', 'read'], subject: ['montaj', 'all'] } })
 
 // Bu pencereyi isimlendir: menüden target: 'oft-montaj' ile çağrılınca mevcut sekme odaklansın
 onMounted(() => { try { if (window.name !== 'oft-montaj') window.name = 'oft-montaj' } catch (e) { /* noop */ } })

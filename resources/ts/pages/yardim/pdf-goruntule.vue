@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-definePage({
-    meta: { action: 'read', subject: 'genel' },
-})
+// definePage({
+//     meta: { action: 'read', subject: 'genel' },
+// })
 
 // Default sample; allow query override ?src=/docs/your.pdf
 const params = new URLSearchParams(location.search)
