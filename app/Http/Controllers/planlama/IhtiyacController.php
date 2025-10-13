@@ -274,6 +274,7 @@ class IhtiyacController extends Controller
           'CIKIS_DEPO',
           'siparis_belge_no',
           'cari_ad',
+          'OPERASYON',
           DB::raw("concat_ws('-', \"IS_MERKEZI_KODU\", \"IS_MERKEZI_ADI\") as mrk_adi"),
           DB::raw('SUM(isemri_miktari) AS miktar'),
           DB::raw('SUM(kalan_miktar) AS kalan'),
@@ -301,7 +302,7 @@ class IhtiyacController extends Controller
         ->whereNot('OPERASYON', 'HAYALET')
         //->whereNot('OPERASYON_KODU', 'M12')
         ->where('Rotadaki_Son_Operasyon', 1)
-        ->groupBy('isemri_id', 'isemri_no', 'stok_id', 'stok_kodu', 'stok_adi', 'CIKIS_DEPO', 'siparis_belge_no', 'cari_ad', 'IS_MERKEZI_KODU', 'IS_MERKEZI_ADI')
+        ->groupBy('isemri_id', 'isemri_no', 'stok_id', 'stok_kodu', 'stok_adi', 'OPERASYON', 'CIKIS_DEPO', 'siparis_belge_no', 'cari_ad', 'IS_MERKEZI_KODU', 'IS_MERKEZI_ADI')
         ->orderBy('stok', 'asc')
         ->distinct()
         ->get();
@@ -446,6 +447,7 @@ class IhtiyacController extends Controller
               'stok_kodu' => $list->item_code,
               'stok_adi' => $list->item_name,
               'mrk_adi' => $emir->mrk_adi,
+              'operasyon' => $emir->OPERASYON,
               'cikis_depo' => $cikisDepo,
               'isemri_miktari' => $emir->miktar,
               'kalan' => $emir->kalan,
@@ -845,6 +847,7 @@ class IhtiyacController extends Controller
           'CIKIS_DEPO',
           'siparis_belge_no',
           'cari_ad',
+          'OPERASYON',
           DB::raw("concat_ws('-', \"IS_MERKEZI_KODU\", \"IS_MERKEZI_ADI\") as mrk_adi"),
           DB::raw('SUM(isemri_miktari) AS miktar'),
           DB::raw('SUM(kalan_miktar) AS kalan'),
@@ -870,7 +873,7 @@ class IhtiyacController extends Controller
         ->whereNot('OPERASYON', 'HAYALET')
         ->whereNot('OPERASYON_KODU', 'M12')
         ->where('Rotadaki_Son_Operasyon', 1)
-        ->groupBy('isemri_id', 'isemri_no', 'stok_id', 'stok_kodu', 'stok_adi', 'CIKIS_DEPO', 'siparis_belge_no', 'cari_ad', 'IS_MERKEZI_KODU', 'IS_MERKEZI_ADI')
+        ->groupBy('isemri_id', 'isemri_no', 'stok_id', 'stok_kodu', 'stok_adi', 'CIKIS_DEPO', 'siparis_belge_no', 'cari_ad', 'OPERASYON', 'IS_MERKEZI_KODU', 'IS_MERKEZI_ADI')
         ->orderBy('stok', 'asc')
         ->distinct()
         ->get();
@@ -939,6 +942,7 @@ class IhtiyacController extends Controller
               'stok_kodu' => $list->stok_kodu,
               'stok_adi' => $list->stok_adi,
               'mrk_adi' => $emir->mrk_adi,
+              'operasyon' => $emir->OPERASYON,
               'cikis_depo' => $cikisDepo,
               'isemri_miktari' => $emir->miktar,
               'kalan' => $emir->kalan,
@@ -957,6 +961,7 @@ class IhtiyacController extends Controller
           }
         }
       }
+      Log::info('Toplam farklı item:', $bulkUpdates);
 
       // Depo bakiyelerini toplu hesapla
       $anaDepoIds = $anadepolar->pluck('whouse_id')->toArray();

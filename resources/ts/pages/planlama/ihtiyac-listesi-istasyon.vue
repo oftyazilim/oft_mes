@@ -14,6 +14,7 @@
             <DxColumn data-field="tipi" caption="TİPİ" data-type="string" :visible="true" :width="65"
               :cell-template="tipCellTemplate" />
             <DxColumn data-field="mrk_adi" caption="İŞ MERKEZİ" :visible="true" :width="150" />
+            <DxColumn data-field="operasyon" caption="OPERASYON" :visible="true" :width="120" />
             <DxColumn data-field="item_id" caption="STOK ID" data-type="number" :visible="true" :width="100" />
             <DxColumn data-field="stok_kodu" caption="STOK KODU" data-type="string" :visible="true" :width="130" />
             <DxColumn data-field="stok_adi" caption="STOK ADI" data-type="string" :visible="true" :width="400" />
@@ -614,6 +615,7 @@ const getMalzemeler = async () => {
       },
     })
     gridDataM.value = response.data.emirler
+    console.log(response.data.emirler);
     gridDataDagilim.value = response.data.dagilim
 
   } catch (error) {
