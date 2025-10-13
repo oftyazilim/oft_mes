@@ -478,7 +478,7 @@
     </VRow>
   </DxPopup>
 
-  <DxPopup v-model:visible="popupDetayGosterVisible" :width="'95%'" :height="800" :hide-on-outside-click="true"
+  <DxPopup v-model:visible="popupDetayGosterVisible" :width="1320" :height="800" :hide-on-outside-click="true"
     :show-close-button="true" :title=notBaslik>
     <template #content>
       <VCard>
@@ -618,7 +618,7 @@
                               :cell-template="tipCellTemplate" />
                             <DxColumn data-field="user_line_no" caption="LINE NO" :width="60" :visible="false" />
                             <DxColumn data-field="item_id" caption="ITEM ID" :width="180" :visible="false" />
-                            <DxColumn data-field="stok_kodu" caption="STOK KODU" :min-width="100" />
+                            <DxColumn data-field="stok_kodu" caption="STOK KODU" :min-width="120" />
                             <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="180" />
                             <DxColumn data-field="worder_m_id" caption="İŞ EMRİ ID" :width="150" :visible="false" />
                             <DxColumn data-field="qty_base_bom" caption="BOM" :width="80" data-type=number :format="{
@@ -626,7 +626,7 @@
                               precision: 2,
                               thousandsSeparator: ',',
                             }" />
-                            <DxColumn data-field="kalan" caption="İHTİYAÇ" :width="80" data-type="number" :format="{
+                            <DxColumn data-field="ihtiyac" caption="İHTİYAÇ" :width="80" data-type="number" :format="{
                               type: 'fixedPoint',
                               precision: 2,
                               thousandsSeparator: ',',
@@ -1868,6 +1868,7 @@ const getDetay = async () => {
         tablo: 'DETAY',
         depo: selectedRow.value.CIKIS_DEPO || 0,
         isemri_id: selectedRow.value.isemri_id,
+        coID: userData.value.co_id,
       },
     })
     console.log('Detay response:', response);

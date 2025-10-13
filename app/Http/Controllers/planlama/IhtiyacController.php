@@ -1052,7 +1052,7 @@ class IhtiyacController extends Controller
       ], 500);
     }
   }
-
+  
   public function getMerkezler(Request $request)
   {
     // Log::info($request->all());

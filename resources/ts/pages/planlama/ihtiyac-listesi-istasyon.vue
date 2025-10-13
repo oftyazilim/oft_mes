@@ -615,7 +615,7 @@ const getMalzemeler = async () => {
       },
     })
     gridDataM.value = response.data.emirler
-    console.log(response.data.emirler);
+    // console.log(response.data.emirler);
     gridDataDagilim.value = response.data.dagilim
 
   } catch (error) {

@@ -20,7 +20,7 @@ export default [
       },
       {
         title: "Malzeme İhtiyaç Listesi",
-        to: "satis-ihtiyac-listesi-siparis",
+        to: "satinalma-ihtiyac-listesi-siparis",
         icon: { icon: "tabler-list" },
         policyKey: "menu:satis:ihtiyac-listesi-siparis",
         target: "_blank",

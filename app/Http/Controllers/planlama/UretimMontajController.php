@@ -757,6 +757,7 @@ class UretimMontajController extends Controller
         'qty_base_bom',
         'qty_net',
         'kalan',
+        DB::raw('0 AS ihtiyac'),
         DB::raw('0 AS qty_prm'),
         DB::raw('0 AS qty_min_inv'),
         DB::raw('0 AS qty_max_inv'),
@@ -796,7 +797,7 @@ class UretimMontajController extends Controller
           $malzeme->qty_prm = $stok->qty_prm;
           $malzeme->qty_min_inv = $stok->qty_min_inv;
           $malzeme->qty_max_inv = $stok->qty_max_inv;
-
+          $malzeme->ihtiyac = ($malzeme->kalan ?? 0) * ($stok->qty_base_bom ?? 0);
           $bakiye = ($stok->qty_prm ?? 0) - (($stok->kalan ?? 0) * ($stok->qty_base_bom ?? 0));
           $malzeme->bakiye = round($bakiye, 2);
         }

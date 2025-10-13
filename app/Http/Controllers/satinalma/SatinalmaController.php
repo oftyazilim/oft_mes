@@ -172,4 +172,6 @@ class SatinalmaController extends Controller
             return response()->json(['error' => 'Bir hata oluştu: ' . $e->getMessage()], 500);
         }
     }
+
+
 }

@@ -625,7 +625,7 @@
                               precision: 2,
                               thousandsSeparator: ',',
                             }" />
-                            <DxColumn data-field="qty_net" caption="İHTİYAÇ" :width="80" data-type="number" :format="{
+                            <DxColumn data-field="ihtiyac" caption="İHTİYAÇ" :width="80" data-type="number" :format="{
                               type: 'fixedPoint',
                               precision: 2,
                               thousandsSeparator: ',',

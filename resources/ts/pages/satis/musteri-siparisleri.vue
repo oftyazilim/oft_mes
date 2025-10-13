@@ -426,6 +426,9 @@
 
 
 <script setup lang="ts">
+import { canByPolicyKey } from '@/@layouts/plugins/casl';
+import { refreshAbilityPolicies } from '@/plugins/1.router/guards';
+
 import { usePageTitleStore } from '@/stores/pageTitle';
 import axios from 'axios';
 import { DxButton } from 'devextreme-vue/button';
@@ -807,24 +810,35 @@ const clearSelection = () => {
   dataGrid.clearSelection()
 }
 
-const ability = useAbility()
-const canManagePlanlama = computed(() => ability.can('manage', 'planlama'))
 
 const baseMenuItems = [
   { text: 'Filtre Yenile' },
   { text: 'Açıklar' },
   { text: 'Kapalılar' },
   { text: 'Tümünü Yenile' },
-  { text: 'Teslim Tarihi Değiştir', requiresManage: true },
-  { text: 'Not Gir', requiresManage: true },
+  { text: 'Teslim Tarihi Değiştir', policyKey: 'sagtus:satis:teslim-tarihi' },
+  { text: 'Not Gir', policyKey: 'sagtus:satis:not-gir' },
   { text: 'Düzen Yükle' },
   { text: 'Düzen Kaydet' },
   { text: 'Düzen Sıfırla' },
 ]
 
-const menuItems = computed(() =>
-  baseMenuItems.filter(item => canManagePlanlama.value || !('requiresManage' in item))
-)
+// Policy/ability hazır olana kadar kısıtlı öğeleri göstermeyelim
+const policiesReady = ref(false)
+  // policiesReady işaretini policy refresh sonrası set et
+  ; (async () => { try { await refreshAbilityPolicies(); policiesReady.value = true } catch { policiesReady.value = true } })()
+
+// ContextMenu yeniden mount anahtarı (policy sonrası)
+const contextMenuKey = ref(0)
+watch(policiesReady, v => { if (v) contextMenuKey.value++ })
+
+const menuItems = computed(() => {
+  if (!policiesReady.value) return baseMenuItems.filter((i: any) => !i.policyKey)
+  return baseMenuItems.filter((item: any) => {
+    if (item.policyKey) return canByPolicyKey(item.policyKey)
+    return true
+  })
+})
 
 function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
   if (!itemData?.items) {

@@ -658,8 +658,8 @@ const lastDayOfWeek = new Date(now)
 lastDayOfWeek.setDate(now.getDate() - now.getDay() + 7) // Pazar
 const initialDates = [firstDayOfWeek, lastDayOfWeek]
 const selectedDateRange = ref(initialDates)
-const filterValue = ref(firstDayOfWeek) // Formatlanmış başlangıç tarihi
-const filterValue1 = ref(lastDayOfWeek) // Formatlanmış bitiş tarihi
+const filterValue = ref<any>(firstDayOfWeek) // Formatlanmış başlangıç tarihi
+const filterValue1 = ref<any>(lastDayOfWeek) // Formatlanmış bitiş tarihi
 const gridBakiyeler = ref([])
 const selectedRow = ref<any | null>(null);
 
@@ -716,7 +716,7 @@ const getMalzemeler = async () => {
   filterValue1.value = formatDate(selectedDateRange.value[1])
   // loadingVisible.value = true
   try {
-    const response = await axios.get('/api/istasyon-ihtiyaclar', {
+    const response = await axios.get('/api/test-ihtiyaclar', {
       params: {
         filterValue: filterValue.value,
         filterValue1: filterValue1.value,
@@ -724,9 +724,12 @@ const getMalzemeler = async () => {
         istasyonID: istasyon.value,
         siparis: siparis.value,
         cari: cari.value,
+        coID: userData.value.co_id,
+        detay: 1,
       },
     })
     gridDataM.value = response.data.emirler
+    // console.log(response.data.emirler);
     gridDataDagilim.value = response.data.dagilim
 
   } catch (error) {
@@ -739,7 +742,11 @@ const getMalzemeler = async () => {
 const getMerkezler = async () => {
   // loadingVisible.value = true
   try {
-    const response = await axios.get('/api/merkezal')
+    const response = await axios.get('/api/merkezal', {
+      params: {
+        coID: userData.value.co_id,
+      },
+    })
     merkezler.value = response.data.merkezler
     siparisler.value = response.data.siparisler
     cariler.value = response.data.cariler

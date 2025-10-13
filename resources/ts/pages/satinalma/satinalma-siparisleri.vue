@@ -31,6 +31,18 @@
             <DxColumn data-field="ACIK_KAPALI" caption="AÇIK-KAPALI" :visible="true" :width="80" />
             <DxColumn data-field="KANAL_TIPI" caption="KANAL TİPİ" :visible="true" :width="80" />
             <DxColumn data-field="CARI_TIPI" caption="CARİ TİPİ" :visible="true" :width="80" />
+            <DxColumn data-field="teklif_no" caption="TEKLİF NO" :visible="true" :width="120" />
+            <DxColumn data-field="teklif_tarihi" caption="TEKLİF TARİHİ" data-type="date" :visible="true" :width="150" :format="{
+                formatter: (date) => {
+                  const formattedDate = new Intl.DateTimeFormat('tr-TR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                  }).format(new Date(date));
+
+                  return formattedDate.replace(/\//g, '.');
+                },
+              }" alignment="center" />
             <DxColumn data-field="teslim_tarihi" caption="TESLİM TARİHİ" data-type="date" :width="150" :visible="true"
               :format="{
                 formatter: (date) => {
@@ -396,6 +408,9 @@
 
 
 <script setup lang="ts">
+import { canByPolicyKey } from '@/@layouts/plugins/casl';
+import { refreshAbilityPolicies } from '@/plugins/1.router/guards';
+
 import { usePageTitleStore } from '@/stores/pageTitle';
 import axios from 'axios';
 import { DxButton } from 'devextreme-vue/button';
@@ -772,16 +787,28 @@ const baseMenuItems = [
   { text: 'Açıklar' },
   { text: 'Kapalılar' },
   { text: 'Tümünü Yenile' },
-  { text: 'Teslim Tarihi Değiştir', requiresManage: true },
-  { text: 'Not Gir', requiresManage: true },
+  { text: 'Teslim Tarihi Değiştir', policyKey: 'sagtus:satinalma:teslim-tarihi' },
+  { text: 'Not Gir', policyKey: 'sagtus:satinalma:not-gir' },
   { text: 'Düzen Yükle' },
   { text: 'Düzen Kaydet' },
   { text: 'Düzen Sıfırla' },
 ]
+// Policy/ability hazır olana kadar kısıtlı öğeleri göstermeyelim
+const policiesReady = ref(false)
+  // policiesReady işaretini policy refresh sonrası set et
+  ; (async () => { try { await refreshAbilityPolicies(); policiesReady.value = true } catch { policiesReady.value = true } })()
 
-const menuItems = computed(() =>
-  baseMenuItems.filter(item => canManagePlanlama.value || !('requiresManage' in item))
-)
+// ContextMenu yeniden mount anahtarı (policy sonrası)
+const contextMenuKey = ref(0)
+watch(policiesReady, v => { if (v) contextMenuKey.value++ })
+
+const menuItems = computed(() => {
+  if (!policiesReady.value) return baseMenuItems.filter((i: any) => !i.policyKey)
+  return baseMenuItems.filter((item: any) => {
+    if (item.policyKey) return canByPolicyKey(item.policyKey)
+    return true
+  })
+})
 
 function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
   if (!itemData?.items) {

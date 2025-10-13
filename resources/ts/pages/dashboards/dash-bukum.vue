@@ -276,7 +276,7 @@ const meta = ref<any>(null);
 // İlk yükleme (hiç başarı yokken) durumunu ayırt et
 const initialLoading = computed(() => loading.value && !lastUpdated.value);
 
-const fmtPct = (v: number) => isFinite(v) ? `${Math.round(v * 100)}%` : '-';
+const fmtPct = (v: number) => isFinite(v) ? `%${Math.round(v * 100)}` : '-';
 const oeeClass = (v: number) => {
   const pct = v * 100;
   if (pct < 50) return 'oee-red';
