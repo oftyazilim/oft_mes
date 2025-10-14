@@ -19,8 +19,8 @@
     <VCardText class="mt-0 pa-0 ms-2 me-1">
       <VCol cols="12" class="mt-0 pa-1 pe-2">
         <div id="liste" style="margin-block-end: -10px;">
-          <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" />
-
+          <DxContextMenu :key="contextMenuKey" :data-source="menuItems" :width="200" target="#grid"
+            @item-click="itemClick" />
           <DxDataGrid id="grid" ref="dataGridRef" :key="gridKey" :data-source="gridData" key-expr="satir_id"
             :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true" :min-width="200"
             @exporting="onExporting" :allow-column-reordering="true" :column-auto-width="false"
