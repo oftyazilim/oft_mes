@@ -24,11 +24,9 @@
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
             <DxColumn data-field="ihtiyac" caption="İHTİYAÇ" data-type="number" :visible="true" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="diger_depo" caption="STOK" data-type="number" :visible="true"
-              :width="100"
+            <DxColumn data-field="diger_depo" caption="STOK" data-type="number" :visible="true" :width="100"
               :format="{ type: 'fixedPoint', precision: 0, thousandsSeparator: ',', }" />
-            <DxColumn data-field="bakiye" caption="BAKİYE" data-type="number" :visible="true" :width="100"
-               :format="{
+            <DxColumn data-field="bakiye" caption="BAKİYE" data-type="number" :visible="true" :width="100" :format="{
                 type: 'fixedPoint',
                 precision: 0,
                 thousandsSeparator: ',',
@@ -151,6 +149,45 @@
     </VCardText>
   </VCard>
 
+  <!-- Düzen Kaydet Dialog -->
+  <VDialog v-model="layoutDialog" max-width="520">
+    <VCard>
+      <VCardTitle>Düzen Kaydet</VCardTitle>
+      <VCardText>
+        <VTextField v-model="layoutName" label="Düzen Adı" autofocus />
+        <VCheckbox v-model="layoutIncludeFilters" label="Filtreleri dahil et" />
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn variant="text" @click="layoutDialog = false">İptal</VBtn>
+        <VBtn color="primary" @click="saveGridState">Kaydet</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+
+  <!-- Düzen Yükle Dialog -->
+  <VDialog v-model="selectingLayout" max-width="520">
+    <VCard>
+      <VCardTitle>Düzen Yükle</VCardTitle>
+      <VCardText>
+        <VList lines="one">
+          <VListItem v-for="l in layouts" :key="l.id" :title="l.name" @click="selectedLayoutId = l.id"
+            :active="selectedLayoutId === l.id">
+            <template #append>
+              <VChip v-if="l?.meta?.last_used" size="small" color="primary" variant="flat">son</VChip>
+            </template>
+          </VListItem>
+        </VList>
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn variant="text" @click="selectingLayout = false">Kapat</VBtn>
+        <VBtn color="error" :disabled="!selectedLayoutId" variant="text" @click="deleteSelectedLayout">Sil</VBtn>
+        <VBtn color="primary" :disabled="!selectedLayoutId" @click="confirmLoadLayout">Yükle</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+
   <DxPopup v-model:visible="popupDepolarGosterVisible" :hide-on-outside-click="true" title='Stok Detayları'
     :show-close-button="false" :show-title="true" :width="600" :height="600">
     <VCol class="text-center">
@@ -178,10 +215,10 @@
           <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
 
 
-            <DxSummary>
-              <DxTotalItem :align-by-column="true" column="qty_prm" summary-type="sum" display-format="{0}"
-                :alignment="right" />
-            </DxSummary>
+          <DxSummary>
+            <DxTotalItem :align-by-column="true" column="qty_prm" summary-type="sum" display-format="{0}"
+              :alignment="right" />
+          </DxSummary>
 
         </DxDataGrid>
       </VCol>
@@ -391,9 +428,9 @@
           <DxColumn data-field="cari_ad" caption="CARİ ADI" :width="150" :visible="true" />
           <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="100" :visible="false" />
           <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" />
-          <DxColumn data-field="stok_id" caption="STOK ID" :visible="false"  :width="50"/>
-          <DxColumn data-field="stok_kodu" caption="STOK KODU"  :width="150"/>
-          <DxColumn data-field="stok_adi" caption="STOK ADI"  :width="auto" />
+          <DxColumn data-field="stok_id" caption="STOK ID" :visible="false" :width="50" />
+          <DxColumn data-field="stok_kodu" caption="STOK KODU" :width="150" />
+          <DxColumn data-field="stok_adi" caption="STOK ADI" :width="auto" />
           <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MİKTARI" :width="120" data-type="number" :format="{
             type: 'fixedPoint',
             precision: 2,
@@ -405,12 +442,12 @@
             thousandsSeparator: ',',
           }" />
 
-            <DxSummary>
-              <DxTotalItem :align-by-column="true" column="isemri_miktari" summary-type="sum" display-format="{0} ad"
-                :alignment="right" />
-              <DxTotalItem :align-by-column="true" column="kalan" summary-type="sum" display-format="{0} ad"
-                :alignment="right" />
-            </DxSummary>
+          <DxSummary>
+            <DxTotalItem :align-by-column="true" column="isemri_miktari" summary-type="sum" display-format="{0} ad"
+              :alignment="right" />
+            <DxTotalItem :align-by-column="true" column="kalan" summary-type="sum" display-format="{0} ad"
+              :alignment="right" />
+          </DxSummary>
 
           <DxGroupPanel :visible="false" />
           <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
@@ -452,7 +489,7 @@ import { DxItem } from 'devextreme-vue/tabs'
 import { exportDataGrid } from 'devextreme/excel_exporter'
 import { Workbook } from 'exceljs'
 import { saveAs } from 'file-saver-es'
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 
 // definePage({
 //   meta: { action: ['read'], subject: ['planlama', 'montaj', 'satinalma', 'satis'] }
@@ -624,33 +661,77 @@ const getAcilmisEmirler = async (itemID: number) => {
   }
 }
 
+// --- DB tabanlı grid düzenleri ---
+const layoutDialog = ref(false)
+const layoutName = ref('')
+const layoutIncludeFilters = ref(true)
+const layouts = ref<any[]>([])
+const selectingLayout = ref(false)
+const selectedLayoutId = ref<number | null>(null)
+const PAGE_KEY = 'planlama:ihtiyac-listesi-toplu'
+
+async function fetchLayouts() {
+  try {
+    const { data } = await axios.get('/api/grid-layouts', { params: { page: PAGE_KEY } })
+    layouts.value = Array.isArray(data) ? data : []
+  } catch (e) { console.error('Düzenler alınamadı:', e) }
+}
+
+function getCurrentGridState() {
+  const inst: any = dataGridRefM.value?.instance
+  if (!inst) return null
+  const state = inst.state()
+  if (state && !layoutIncludeFilters.value) {
+    if ('filterValue' in state) delete (state as any).filterValue
+    if ('filterPanel' in state) delete (state as any).filterPanel
+    if (Array.isArray(state.columns)) {
+      state.columns.forEach((c: any) => {
+        if (!c || typeof c !== 'object') return
+        delete c.filterValue
+        delete c.filterType
+        delete c.filterValues
+        delete c.selectedFilterOperation
+      })
+    }
+  }
+  return state
+}
+
+async function saveGridState() {
+  const state = getCurrentGridState()
+  if (!state) return
+  if (!layoutName.value.trim()) { layoutDialog.value = true; return }
+  try {
+    await axios.post('/api/grid-layouts', {
+      page_key: PAGE_KEY,
+      name: layoutName.value.trim(),
+      include_filters: layoutIncludeFilters.value,
+      state,
+      meta: { version: 1, last_used: true },
+    })
+    layoutDialog.value = false
+    await fetchLayouts()
+    const saved = layouts.value.find(l => l.name === layoutName.value.trim())
+    if (saved?.id) { try { await axios.put(`/api/grid-layouts/${saved.id}/last-used`, { page_key: PAGE_KEY }) } catch { } }
+  } catch (e) { console.error('Düzen kayıt hatası:', e) }
+}
+
+async function openLoadLayouts() { await fetchLayouts(); selectedLayoutId.value = null; selectingLayout.value = true }
+function applyLayoutState(state: any) { if (dataGridRefM.value?.instance) (dataGridRefM.value.instance as any).state(state) }
+function confirmLoadLayout() { const sel = layouts.value.find(l => l.id === selectedLayoutId.value); if (!sel) return; applyLayoutState(sel.state); selectingLayout.value = false; if (sel.id) axios.put(`/api/grid-layouts/${sel.id}/last-used`, { page_key: PAGE_KEY }).catch(() => { }) }
+async function deleteSelectedLayout() { if (!selectedLayoutId.value) return; try { await axios.delete(`/api/grid-layouts/${selectedLayoutId.value}`); await fetchLayouts(); selectedLayoutId.value = null; if (layouts.value.length === 0) selectingLayout.value = false } catch (e) { console.error('Düzen silme hatası:', e) } }
+
+const onStateResetClick = () => { if (dataGridRefM.value?.instance) (dataGridRefM.value.instance as any).state(null) }
+
 onMounted(async () => {
-  loadGridState()
+  try {
+    await fetchLayouts()
+    const last = layouts.value.find(l => l?.meta?.last_used)
+    if (last?.state) { await nextTick(); applyLayoutState(last.state) }
+  } catch { }
   getMerkezler()
   const currentWeek = getCurrentWeek()
-
 })
-
-const loadGridState = () => {
-  const savedState = localStorage.getItem(`${userData.value.id}_malzemeler`)
-  if (savedState)
-    dataGridRefM.value?.instance?.state(JSON.parse(savedState))
-
-  // console.log("Grid durumu yüklendi:", savedState);
-}
-
-const saveGridState = () => {
-  const state = dataGridRefM.value?.instance?.state()
-
-  localStorage.setItem(`${userData.value.id}_malzemeler`, JSON.stringify(state))
-
-  // console.log("Grid durumu kaydedildi:", state);
-}
-
-const onStateResetClick = () => {
-  localStorage.removeItem(`${userData.value.id}_malzemeler`)
-  dataGridRefM.value!.instance!.state(null)
-}
 
 const getCurrentWeek = (): string => {
   const today = new Date()
@@ -914,10 +995,12 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
         popupTaleplerGosterVisible.value = true
         break;
       case 'Düzen Yükle':
-        loadGridState()
+        openLoadLayouts()
         break;
       case 'Düzen Kaydet':
-        saveGridState()
+        layoutName.value = ''
+        layoutIncludeFilters.value = true
+        layoutDialog.value = true
         break;
       case 'Düzen Sıfırla':
         onStateResetClick()

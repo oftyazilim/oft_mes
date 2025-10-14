@@ -367,8 +367,9 @@ class IhtiyacController extends Controller
             'ii.item_code',
             'ii.item_name',
             'pom.qty_prm_exploded',
-            'pom.operation_id',
+            'po.operation_id',
             'pom.operation_no',
+            'po.operation_code',
             'po.description as operation_name',
             DB::raw('(select sum(ibi.qty_prm) from uyumsoft.invd_bwh_item ibi 
                             left join uyumsoft.invd_whouse iw on iw.whouse_id = ibi.whouse_id	
@@ -447,7 +448,7 @@ class IhtiyacController extends Controller
               'stok_kodu' => $list->item_code,
               'stok_adi' => $list->item_name,
               'mrk_adi' => $emir->mrk_adi,
-              'operasyon' => $emir->OPERASYON,
+              'operasyon' => $list->operation_no . ' - ' . $list->operation_name,
               'cikis_depo' => $cikisDepo,
               'isemri_miktari' => $emir->miktar,
               'kalan' => $emir->kalan,
