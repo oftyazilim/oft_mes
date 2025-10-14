@@ -28,6 +28,7 @@ use App\Http\Controllers\diger\DigerController;
 use App\Http\Controllers\NotificationSettingsController;
 use App\Http\Controllers\planlama\UrunAgaciController;
 use App\Http\Controllers\AbilityPolicyController;
+use App\Http\Controllers\UserGridLayoutController;
 
 Route::group(['prefix' => 'auth'], function () {
   Route::post('login', [AuthController::class, 'login']);
@@ -67,6 +68,13 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/ability-policies', [AbilityPolicyController::class, 'store']);
   Route::put('/ability-policies/{id}', [AbilityPolicyController::class, 'update']);
   Route::delete('/ability-policies/{id}', [AbilityPolicyController::class, 'destroy']);
+
+  // Grid düzenleri (kullanıcı+sayfa)
+  Route::get('/grid-layouts', [UserGridLayoutController::class, 'index']);
+  Route::post('/grid-layouts', [UserGridLayoutController::class, 'store']);
+  Route::get('/grid-layouts/{id}', [UserGridLayoutController::class, 'show']);
+  Route::delete('/grid-layouts/{id}', [UserGridLayoutController::class, 'destroy']);
+  Route::put('/grid-layouts/{id}/last-used', [UserGridLayoutController::class, 'markLastUsed']);
 });
 // Roles API routes
 Route::group(['prefix' => 'roles', 'middleware' => 'auth:sanctum'], function () {

@@ -291,13 +291,46 @@
     </template>
   </DxPopup>
 
+  <!-- Düzen Kaydet Dialog -->
+  <VDialog v-model="layoutDialog" max-width="520">
+    <VCard>
+      <VCardTitle>Sayfa Düzenini Kaydet</VCardTitle>
+      <VCardText>
+        <VTextField v-model="layoutName" label="Düzen adı" density="comfortable" clearable />
+        <VSwitch v-model="layoutIncludeFilters" label="Filtreler dahil edilsin" color="primary" hide-details />
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn variant="text" @click="layoutDialog = false">İptal</VBtn>
+        <VBtn color="primary" @click="saveGridState">Kaydet</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+
+  <!-- Düzen Yükle Dialog -->
+  <VDialog v-model="selectingLayout" max-width="520">
+    <VCard>
+      <VCardTitle>Kayıtlı Düzenler</VCardTitle>
+      <VCardText>
+        <VSelect :items="layouts" item-title="name" item-value="id" label="Bir düzen seçin"
+          v-model="selectedLayoutId" />
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn variant="text" @click="selectingLayout = false">Kapat</VBtn>
+        <VBtn color="error" variant="tonal" :disabled="!selectedLayoutId" @click="deleteSelectedLayout">Sil</VBtn>
+        <VBtn color="primary" :disabled="!selectedLayoutId" @click="confirmLoadLayout">Yükle</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+
 </template>
 
 <script setup lang="ts">
 
 
 import { usePageTitleStore } from "@/stores/pageTitle";
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 // import { DxTooltip } from 'devextreme-vue/tooltip';
 import axios from "axios";
 import { DxButton } from "devextreme-vue/button";
@@ -335,7 +368,7 @@ import { saveAs } from "file-saver-es";
 import SurecCell from "./SurecCell.vue";
 
 // Tarihi yyyy-MM-dd formatına dönüştüren fonksiyon
-const formatDate = (date) => {
+const formatDate = (date: Date | string | null): string | null => {
   if (!date) return null;
   const d = new Date(date);
   const year = d.getFullYear();
@@ -371,7 +404,7 @@ const initialDatesMonth = [
   new Date(now.getTime()), // Geçerli gün
 ];
 
-function formatSummaryText(e) {
+function formatSummaryText(e: any) {
   return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(e.value);
 }
 
@@ -384,30 +417,74 @@ const selectedDateRange = ref(initialDates);
 const filterValue = ref(formatDate(selectedDateRange.value[0])); // Formatlanmış başlangıç tarihi
 const filterValue1 = ref(formatDate(selectedDateRange.value[1])); // Formatlanmış bitiş tarihi
 
-// Durumu localStorage'dan yükle
-const loadGridState = () => {
-  const savedState = localStorage.getItem("Kapanmislar");
-  if (savedState) {
-    dataGridRef.value?.instance.state(JSON.parse(savedState));
-    // console.log("Grid durumu yüklendi:", savedState);
-  }
-};
-const onStateResetClick = () => {
-  localStorage.removeItem("Kapanmislar");
-  dataGridRef.value!.instance!.state(null);
-};
-const saveGridState = () => {
-  const state = dataGridRef.value?.instance.state();
-  localStorage.setItem("Kapanmislar", JSON.stringify(state));
-  // console.log("Grid durumu kaydedildi:", state);
-};
+// --- DB tabanlı grid düzenleri ---
+const layoutDialog = ref(false)
+const layoutName = ref('')
+const layoutIncludeFilters = ref(true)
+const layouts = ref<any[]>([])
+const selectingLayout = ref(false)
+const selectedLayoutId = ref<number | null>(null)
+const PAGE_KEY = 'planlama:is-emirleri-kapanmislar'
 
-const onDateRangeChanged = (newValue) => {
+async function fetchLayouts() {
+  try {
+    const { data } = await axios.get('/api/grid-layouts', { params: { page: PAGE_KEY } })
+    layouts.value = Array.isArray(data) ? data : []
+  } catch (e) { console.error('Düzenler alınamadı:', e) }
+}
+
+function getCurrentGridState() {
+  const inst: any = dataGridRef.value?.instance
+  if (!inst) return null
+  const state = inst.state()
+  if (state && !layoutIncludeFilters.value) {
+    if ('filterValue' in state) delete (state as any).filterValue
+    if ('filterPanel' in state) delete (state as any).filterPanel
+    if (Array.isArray(state.columns)) {
+      state.columns.forEach((c: any) => {
+        if (!c || typeof c !== 'object') return
+        delete c.filterValue
+        delete c.filterType
+        delete c.filterValues
+        delete c.selectedFilterOperation
+      })
+    }
+  }
+  return state
+}
+
+async function saveGridState() {
+  const state = getCurrentGridState()
+  if (!state) return
+  if (!layoutName.value.trim()) { layoutDialog.value = true; return }
+  try {
+    await axios.post('/api/grid-layouts', {
+      page_key: PAGE_KEY,
+      name: layoutName.value.trim(),
+      include_filters: layoutIncludeFilters.value,
+      state,
+      meta: { version: 1, last_used: true },
+    })
+    layoutDialog.value = false
+    await fetchLayouts()
+    const saved = layouts.value.find(l => l.name === layoutName.value.trim())
+    if (saved?.id) { try { await axios.put(`/api/grid-layouts/${saved.id}/last-used`, { page_key: PAGE_KEY }) } catch { } }
+  } catch (e) { console.error('Düzen kayıt hatası:', e) }
+}
+
+async function openLoadLayouts() { await fetchLayouts(); selectedLayoutId.value = null; selectingLayout.value = true }
+function applyLayoutState(state: any) { if (dataGridRef.value?.instance) (dataGridRef.value.instance as any).state(state) }
+function confirmLoadLayout() { const sel = layouts.value.find(l => l.id === selectedLayoutId.value); if (!sel) return; applyLayoutState(sel.state); selectingLayout.value = false; if (sel.id) axios.put(`/api/grid-layouts/${sel.id}/last-used`, { page_key: PAGE_KEY }).catch(() => { }) }
+async function deleteSelectedLayout() { if (!selectedLayoutId.value) return; try { await axios.delete(`/api/grid-layouts/${selectedLayoutId.value}`); await fetchLayouts(); selectedLayoutId.value = null; if (layouts.value.length === 0) selectingLayout.value = false } catch (e) { console.error('Düzen silme hatası:', e) } }
+
+const onStateResetClick = () => { if (dataGridRef.value?.instance) (dataGridRef.value.instance as any).state(null) }
+
+const onDateRangeChanged = (newValue: any) => {
   if (!newValue || !newValue.value || newValue.value.length !== 2) {
     console.warn("Geçersiz tarih aralığı");
     selectedDateRange.value = initialDates;
-    filterValue.value = formatDate(selectedDateRange.value.startDate);
-    filterValue1.value = formatDate(selectedDateRange.value.endDate);
+    filterValue.value = formatDate(selectedDateRange.value[0]);
+    filterValue1.value = formatDate(selectedDateRange.value[1]);
     return;
   }
   const [startDate, endDate] = newValue.value;
@@ -666,18 +743,7 @@ const numberedSteps = ref([
 
 const currentStep = ref(0)
 
-const vazgecOptions = {
-  width: 100,
-  type: 'normal',
-  text: 'Vazgeç',
-  stylingMode: 'contained',
-  onClick: () => {
-    popupTarihVisible.value = false;
-    popupAksesuarVisible.value = false;
-    popupDetayGosterVisible.value = false;
-    popupIstasyonVisible.value = false;
-  },
-};
+// vazgecOptions: kullanılmıyor; popup yapılarını bu sayfa kullanmıyor
 
 const clearSelection = () => {
   const dataGrid = dataGridRef.value!.instance!;
@@ -708,7 +774,8 @@ const onCellPrepared = (e: any) => {
 };
 
 const FiltreTemizle = () => {
-  dataGridRef.value?.instance.clearFilter();
+  const inst = dataGridRef.value?.instance
+  if (inst) inst.clearFilter();
 };
 
 const onFocusedRowChanged = (e: any) => {
@@ -733,7 +800,6 @@ const handleOptionChanged = (e: any) => {
 };
 
 const toggleGoster = () => {
-  generatePDF();
   goster.value = !goster.value;
 };
 const getData = async () => {
@@ -765,10 +831,12 @@ onMounted(async () => {
   // await getData();
   pageTitleStore.setTitle("Kapanmış İş Emirleri");
 
-  loadGridState();
-  nextTick(() => {
-    dataGridRef.value?.instance.clearSelection();
-  });
+  try {
+    await fetchLayouts()
+    const last = layouts.value.find(l => l?.meta?.last_used)
+    if (last?.state) { await nextTick(); applyLayoutState(last.state) }
+  } catch { }
+  nextTick(() => { const inst = dataGridRef.value?.instance; if (inst) inst.clearSelection(); })
   axios
     .post("/api/log-kayit", {
       userId: userData.value.id,
@@ -821,10 +889,12 @@ function itemClick({itemData}: DxContextMenuTypes.ItemClickEvent) {
         getData()
         break;
       case 'Düzen Yükle':
-        loadGridState();
+        openLoadLayouts();
         break;
       case 'Düzen Kaydet':
-        saveGridState();
+        layoutName.value = ''
+        layoutIncludeFilters.value = true
+        layoutDialog.value = true
         break;
       case 'Düzen Sıfırla':
         onStateResetClick();

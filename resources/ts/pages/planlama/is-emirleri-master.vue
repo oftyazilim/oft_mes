@@ -19,7 +19,7 @@
     <VCardText class="mt-0 pa-0 ms-2 me-1">
       <VCol cols="12" class="mt-0 pa-1 pe-2">
         <div id="liste" style="margin-block-end: -10px;">
-          <!-- <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" /> -->
+          <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" />
 
           <DxDataGrid id="grid" ref="dataGridRef" :key="gridKey" :data-source="gridData" key-expr="satir_id"
             :show-borders="true" :focused-row-enabled="true" :row-alternation-enabled="true" :min-width="200"
@@ -31,24 +31,24 @@
             :selected-rows-keys="selectedRows">
 
             <!-- <DxColumn type="selection" :fixed="true" fixedPosition="left" /> -->
- <DxColumn data-field="id" caption="ID" :visible="false" :min-width="90"/>
+            <DxColumn data-field="id" caption="ID" :visible="false" :min-width="90" />
             <DxColumn data-field="hafta" caption="HAFTA" :fixed="true" :width="120" :visible="true" alignment="left"
-                      :cell-template="weekCellTemplate"/>
-            <DxColumn data-field="grup_id" caption="GRUP ID" data-type="string" :visible="props.grup" :width="40"/>
-            <DxColumn data-field="IS_ISTASYONU" caption="İST. ADI" :visible="operasyon" :width="130"/>
-            <DxColumn data-field="IS_ISTASYONU_KODU" caption="İSTASYON KODU" :visible="false" :width="150"/>
-            <DxColumn data-field="IS_ISTASYONU_ADI" caption="İSTASYON ADIx" :visible="false" :width="150"/>
-            <DxColumn data-field="OPERASYON" caption="OPRSYN" :visible="operasyon" :width="120"/>
+              :cell-template="weekCellTemplate" />
+            <DxColumn data-field="grup_id" caption="GRUP ID" data-type="string" :visible="props.grup" :width="40" />
+            <DxColumn data-field="IS_ISTASYONU" caption="İST. ADI" :visible="operasyon" :width="130" />
+            <DxColumn data-field="IS_ISTASYONU_KODU" caption="İSTASYON KODU" :visible="false" :width="150" />
+            <DxColumn data-field="IS_ISTASYONU_ADI" caption="İSTASYON ADIx" :visible="false" :width="150" />
+            <DxColumn data-field="OPERASYON" caption="OPRSYN" :visible="operasyon" :width="120" />
             <DxColumn data-field="siparis_belge_no" caption="SİPARİŞ NO" :width="90" :visible="true"
-                      :allow-sorting="false"/>
-            <DxColumn data-field="cari_ad" caption="MÜŞTERİ" :visible="true" :min-width="140" :allow-sorting="false"/>
-            <DxColumn data-field="stok_kodu" caption="STOK KODU" :visible="true" :width="120" :allow-sorting="false"/>
-            <DxColumn data-field="stok_adi" caption="STOK ADI" min-width="200" :allow-sorting="false"/>
+              :allow-sorting="false" />
+            <DxColumn data-field="cari_ad" caption="MÜŞTERİ" :visible="true" :min-width="140" :allow-sorting="false" />
+            <DxColumn data-field="stok_kodu" caption="STOK KODU" :visible="true" :width="120" :allow-sorting="false" />
+            <DxColumn data-field="stok_adi" caption="STOK ADI" min-width="200" :allow-sorting="false" />
             <DxColumn data-field="isemri_id" caption="İŞ EMRİ ID" :width="150" :visible="false"
-                      :allow-sorting="false"/>
-            <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" :allow-sorting="false"/>
+              :allow-sorting="false" />
+            <DxColumn data-field="isemri_no" caption="İŞ EMRİ NO" :width="120" :allow-sorting="false" />
             <DxColumn data-field="teslim_tarihi" caption="TESLİM TARİHİ" data-type="date" :width="140"
-                      :visible="operasyon" :format="{
+              :visible="operasyon" :format="{
                 formatter: (date) => {
                   const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
@@ -57,9 +57,9 @@
                   }).format(new Date(date));
                   return formattedDate.replace(/\//g, '.');
                 },
-              }" :cell-template="getIconType" :allow-sorting="false"/>
+              }" :cell-template="getIconType" :allow-sorting="false" />
             <DxColumn data-field="planlanan_baslangic" caption="PLN BŞL" data-type="date" :width="130" :visible="true"
-                      :format="{
+              :format="{
                 formatter: (date) => {
                   const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
@@ -71,9 +71,9 @@
 
                   return formattedDate.replace(/\//g, '.');
                 },
-              }"/>
+              }" />
             <DxColumn data-field="planlanan_bitis_tarihi" caption="PLN BTŞ" data-type="date" :width="110"
-                      :visible="true" :format="{
+              :visible="true" :format="{
                 formatter: (date) => {
                   const formattedDate = new Intl.DateTimeFormat('tr-TR', {
                     year: 'numeric',
@@ -83,58 +83,58 @@
 
                   return formattedDate.replace(/\//g, '.');
                 },
-              }" alignment="left"/>
+              }" alignment="left" />
             <DxColumn data-field="kalan_miktar" caption="KALAN MİKTAR" data-type="number" :width="90" :visible="true"
-            :allow-sorting="false" />
+              :allow-sorting="false" />
 
             <DxColumn data-field="surec" caption="SÜREÇ" data-type="number" :width="150" :visible="true"
-                      cell-template="surecCellTemplate" alignment="center" :allow-sorting="false"/>
+              cell-template="surecCellTemplate" alignment="center" :allow-sorting="false" />
             <DxColumn data-field="siparis_miktari" caption="SİPARİŞ MİKTARI" data-type="number" :width="60"
-                      :visible="true" :allow-sorting="false"/>
+              :visible="true" :allow-sorting="false" />
             <DxColumn data-field="isemri_miktari" caption="İŞ EMRİ MİKTARI" data-type="number" :width="60"
-                      :visible="true"/>
+              :visible="true" />
             <DxColumn data-field="uretilen_toplam_miktar" caption="TOPLAM URETİLEN" data-type="number" :width="60"
-                      :visible="false" :allow-sorting="false"/>
+              :visible="false" :allow-sorting="false" />
             <DxColumn data-field="uretilen_net_miktar" caption="NET URETILEN" data-type="number" :width="60"
-                      :visible="true"/>
+              :visible="true" />
             <DxColumn data-field="toplam_hurda_miktari" caption="HURDA MİKTARI" data-type="number" :width="60"
-                      :visible="true" :allow-sorting="false"/>
+              :visible="true" :allow-sorting="false" />
             <DxColumn data-field="operasyon_hazirlik_suresi" caption="HAZIRLIK SÜRESİ" data-type="number" :width="60"
-                      :visible="true" :format="{
+              :visible="true" :format="{
                 type: 'fixedPoint',
                 precision: 1,
                 thousandsSeparator: ',',
-              }"/>
+              }" />
             <DxColumn data-field="operasyon_suresi" caption="OPERASYON SÜRESİ" data-type="number" :width="60"
-                      :visible="true" :format="{
+              :visible="true" :format="{
                 type: 'fixedPoint',
                 precision: 1,
                 thousandsSeparator: ',',
-              }" :allow-sorting="false"/>
+              }" :allow-sorting="false" />
             <!-- <DxColumn data-field="sip_detay_id" :min-width="120" :width="140" :allow-sorting="false" /> -->
             <DxColumn data-field="aksesuar" caption="AKSESUAR" :visible="props.operasyon" :width="60"
-                      cell-template="aksesuarTemplate" alignment="center" :allow-sorting="false"/>
+              cell-template="aksesuarTemplate" alignment="center" :allow-sorting="false" />
             <DxColumn data-field="eksikler" caption="EKSİKLER" :visible="true" :width="60"
-                      cell-template="eksiklerTemplate" alignment="center" :allow-sorting="false"/>
+              cell-template="eksiklerTemplate" alignment="center" :allow-sorting="false" />
 
             <DxColumn data-field="isemri_tipi" caption="İŞ EMRİ TİPİ" :min-width="120" :width="140"
-                      :allow-sorting="false"/>
+              :allow-sorting="false" />
 
-            <DxColumn data-field="teknik_not1" caption="PLN NOTU" :width="60" :allow-sorting="false"/>
+            <DxColumn data-field="teknik_not1" caption="PLN NOTU" :width="60" :allow-sorting="false" />
             <DxColumn data-field="teknik_not2" caption="OPR NOTU" :width="90" :visible="props.grup" alignment="center"
-                      :allow-sorting="false"/>
+              :allow-sorting="false" />
             <DxColumn data-field="kaydi_giren_kullanici" caption="KAYIT YAPAN" :min-width="120" :width="140"
-                      :allow-sorting="false"/>
-            <DxColumn data-field="item_id" caption="ITEM ID" :visible="false" :min-width="90" :allow-sorting="false"/>
+              :allow-sorting="false" />
+            <DxColumn data-field="item_id" caption="ITEM ID" :visible="false" :min-width="90" :allow-sorting="false" />
             <DxColumn data-field="satir_id" caption="SATIR ID" :visible="false" :min-width="90"
-                      :allow-sorting="false"/>
+              :allow-sorting="false" />
 
 
-            <DxColumn data-field="sip_not1" caption="SİP NOT 1" :min-width="120" :allow-sorting="false"/>
-            <DxColumn data-field="sip_not2" caption="SİP NOT 2" :min-width="120" :allow-sorting="false"/>
-            <DxColumn data-field="sip_not3" caption="SİP NOT 3" :min-width="120" :allow-sorting="false"/>
-            <DxColumn data-field="sip_not4" caption="SİP NOT 4" :min-width="120" :allow-sorting="false"/>
-            <DxColumn data-field="CIKIS_DEPO" caption="ÇIKIŞ DEPO" :min-width="80" :allow-sorting="false"/>
+            <DxColumn data-field="sip_not1" caption="SİP NOT 1" :min-width="120" :allow-sorting="false" />
+            <DxColumn data-field="sip_not2" caption="SİP NOT 2" :min-width="120" :allow-sorting="false" />
+            <DxColumn data-field="sip_not3" caption="SİP NOT 3" :min-width="120" :allow-sorting="false" />
+            <DxColumn data-field="sip_not4" caption="SİP NOT 4" :min-width="120" :allow-sorting="false" />
+            <DxColumn data-field="CIKIS_DEPO" caption="ÇIKIŞ DEPO" :min-width="80" :allow-sorting="false" />
 
 
 
@@ -579,7 +579,7 @@
                     <VRow>
                       <VCol cols="12" class="mt-2 pa-0 ps-2 pe-3 text-center">
                         <h4>Malzeme Listesi ({{ gridDataMalzemeler.length }} parça) (Depo ID: {{ selectedRow.CIKIS_DEPO
-                          }})</h4>
+                        }})</h4>
                         <div style="block-size: 613px;">
                           <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataMalzemeler"
                             key-expr="item_id" :show-borders="true" :min-width="400" :column-auto-width="false"
@@ -720,6 +720,39 @@
     </template>
   </DxPopup>
 
+  <!-- Düzen Kaydet Dialog -->
+  <VDialog v-model="layoutDialog" max-width="520">
+    <VCard>
+      <VCardTitle>Sayfa Düzenini Kaydet</VCardTitle>
+      <VCardText>
+        <VTextField v-model="layoutName" label="Düzen adı" density="comfortable" clearable />
+        <VSwitch v-model="layoutIncludeFilters" label="Filtreler dahil edilsin" color="primary" hide-details />
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn variant="text" @click="layoutDialog = false">İptal</VBtn>
+        <VBtn color="primary" @click="saveGridState">Kaydet</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+
+  <!-- Düzen Yükle Dialog -->
+  <VDialog v-model="selectingLayout" max-width="520">
+    <VCard>
+      <VCardTitle>Kayıtlı Düzenler</VCardTitle>
+      <VCardText>
+        <VSelect :items="layouts" item-title="name" item-value="id" label="Bir düzen seçin"
+          v-model="selectedLayoutId" />
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn variant="text" @click="selectingLayout = false">Kapat</VBtn>
+        <VBtn color="error" variant="tonal" :disabled="!selectedLayoutId" @click="deleteSelectedLayout">Sil</VBtn>
+        <VBtn color="primary" :disabled="!selectedLayoutId" @click="confirmLoadLayout">Yükle</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+
 </template>
 
 <script setup lang="ts">
@@ -735,7 +768,7 @@ import axios from "axios";
 import { DxButton } from 'devextreme-vue/button';
 import DxCalendar from 'devextreme-vue/calendar';
 import DxSelectBox from 'devextreme-vue/cjs/select-box';
-import type { DxContextMenuTypes } from 'devextreme-vue/context-menu';
+import DxContextMenu, { type DxContextMenuTypes } from 'devextreme-vue/context-menu';
 import type { DxDataGridTypes } from 'devextreme-vue/data-grid';
 import {
   DxColumn,
@@ -1012,26 +1045,68 @@ const copyToClipboard = () => {
   document.body.removeChild(tempTextArea)
 }
 
-const saveGridState = (): void => {
-  let state: unknown = null
-  if (dataGridRef.value?.instance) {
-    state = dataGridRef.value.instance.state()
-    const serialized = JSON.stringify(state)
-    localStorage.setItem(props.tab, serialized)
+// --- DB tabanlı grid düzenleri ---
+const layoutDialog = ref(false)
+const layoutName = ref('')
+const layoutIncludeFilters = ref(true)
+const layouts = ref<any[]>([])
+const selectingLayout = ref(false)
+const selectedLayoutId = ref<number | null>(null)
+const PAGE_KEY = 'planlama:is-emirleri-master'
+
+async function fetchLayouts() {
+  try {
+    const { data } = await axios.get('/api/grid-layouts', { params: { page: PAGE_KEY } })
+    layouts.value = Array.isArray(data) ? data : []
+  } catch (e) { console.error('Düzenler alınamadı:', e) }
+}
+
+function getCurrentGridState(): any | null {
+  const inst = dataGridRef.value?.instance as any
+  if (!inst) return null
+  const state = inst.state()
+  if (state && !layoutIncludeFilters.value) {
+    if ('filterValue' in state) delete (state as any).filterValue
+    if ('filterPanel' in state) delete (state as any).filterPanel
+    if (Array.isArray(state.columns)) {
+      state.columns.forEach((c: any) => {
+        if (!c || typeof c !== 'object') return
+        delete c.filterValue
+        delete c.filterType
+        delete c.filterValues
+        delete c.selectedFilterOperation
+      })
+    }
   }
+  return state
 }
 
-const loadGridState = (): void => {
-  const savedState = localStorage.getItem(props.tab);
-  if (savedState && dataGridRef.value && dataGridRef.value.instance)
-    dataGridRef.value.instance.state(JSON.parse(savedState))
+async function saveGridState(): Promise<void> {
+  const state = getCurrentGridState()
+  if (!state) return
+  if (!layoutName.value.trim()) { layoutDialog.value = true; return }
+  try {
+    await axios.post('/api/grid-layouts', {
+      page_key: PAGE_KEY,
+      name: layoutName.value.trim(),
+      include_filters: layoutIncludeFilters.value,
+      state,
+      meta: { version: 1, last_used: true },
+    })
+    // notify('Düzen kaydedildi', 'success', 1200)
+    layoutDialog.value = false
+    await fetchLayouts()
+    const saved = layouts.value.find(l => l.name === layoutName.value.trim())
+    if (saved?.id) { try { await axios.put(`/api/grid-layouts/${saved.id}/last-used`, { page_key: PAGE_KEY }) } catch { } }
+  } catch (e) { console.error('Düzen kayıt hatası:', e) /* notify('Kayıt sırasında hata', 'error', 1500) */ }
 }
 
-const onStateResetClick = (): void => {
-  localStorage.removeItem(props.tab)
-  if (dataGridRef.value?.instance)
-    (dataGridRef.value.instance as any).state(null)
-}
+async function openLoadLayouts(): Promise<void> { await fetchLayouts(); selectedLayoutId.value = null; selectingLayout.value = true }
+function applyLayoutState(state: any) { if (dataGridRef.value?.instance) (dataGridRef.value.instance as any).state(state) }
+function confirmLoadLayout() { const sel = layouts.value.find(l => l.id === selectedLayoutId.value); if (!sel) return; applyLayoutState(sel.state); selectingLayout.value = false; if (sel.id) axios.put(`/api/grid-layouts/${sel.id}/last-used`, { page_key: PAGE_KEY }).catch(() => { }) }
+async function deleteSelectedLayout(): Promise<void> { if (!selectedLayoutId.value) return; try { await axios.delete(`/api/grid-layouts/${selectedLayoutId.value}`); await fetchLayouts(); selectedLayoutId.value = null; if (layouts.value.length === 0) selectingLayout.value = false } catch (e) { console.error('Düzen silme hatası:', e) } }
+
+const onStateResetClick = (): void => { if (dataGridRef.value?.instance) (dataGridRef.value.instance as any).state(null) }
 
 const onSelectionChanged = (e: any): void => {
   selectedRows.value = e.selectedRowsData // Seçilen satırların tüm verileri
@@ -1917,7 +1992,11 @@ const refreshGrid = (): void => {
 
 onMounted(async () => {
   await getData()
-  loadGridState()
+  try {
+    await fetchLayouts()
+    const last = layouts.value.find(l => l?.meta?.last_used)
+    if (last?.state) { await nextTick(); applyLayoutState(last.state) }
+  } catch { }
   stateRestored.value = true
   nextTick(() => {
     if (dataGridRef.value && dataGridRef.value.instance) {
@@ -2011,13 +2090,15 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
         AksesuarGoster()
         break;
       case 'Düzen Yükle':
-        loadGridState()
+        openLoadLayouts()
         break;
       case 'Teknik Resim Göster':
         ResimGoster()
         break;
       case 'Düzen Kaydet':
-        saveGridState()
+        layoutName.value = ''
+        layoutIncludeFilters.value = true
+        layoutDialog.value = true
         break;
       case 'Düzen Sıfırla':
         onStateResetClick()

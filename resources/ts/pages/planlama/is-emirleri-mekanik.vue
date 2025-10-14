@@ -732,6 +732,39 @@
     </template>
   </DxPopup>
 
+  <!-- Düzen Kaydet Dialog -->
+  <VDialog v-model="layoutDialog" max-width="520">
+    <VCard>
+      <VCardTitle>Sayfa Düzenini Kaydet</VCardTitle>
+      <VCardText>
+        <VTextField v-model="layoutName" label="Düzen adı" density="comfortable" clearable />
+        <VSwitch v-model="layoutIncludeFilters" label="Filtreler dahil edilsin" color="primary" hide-details />
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn variant="text" @click="layoutDialog = false">İptal</VBtn>
+        <VBtn color="primary" @click="saveGridState">Kaydet</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+
+  <!-- Düzen Yükle Dialog -->
+  <VDialog v-model="selectingLayout" max-width="520">
+    <VCard>
+      <VCardTitle>Kayıtlı Düzenler</VCardTitle>
+      <VCardText>
+        <VSelect :items="layouts" item-title="name" item-value="id" label="Bir düzen seçin"
+          v-model="selectedLayoutId" />
+      </VCardText>
+      <VCardActions>
+        <VSpacer />
+        <VBtn variant="text" @click="selectingLayout = false">Kapat</VBtn>
+        <VBtn color="error" variant="tonal" :disabled="!selectedLayoutId" @click="deleteSelectedLayout">Sil</VBtn>
+        <VBtn color="primary" :disabled="!selectedLayoutId" @click="confirmLoadLayout">Yükle</VBtn>
+      </VCardActions>
+    </VCard>
+  </VDialog>
+
 </template>
 
 <script setup lang="ts">
@@ -992,26 +1025,68 @@ const copyToClipboard = () => {
   document.body.removeChild(tempTextArea)
 }
 
-const saveGridState = (): void => {
-  let state: unknown = null
-  if (dataGridRef.value?.instance) {
-    state = dataGridRef.value.instance.state()
-    const serialized = JSON.stringify(state)
-    localStorage.setItem(props.tab, serialized)
+// --- DB tabanlı grid düzenleri ---
+const layoutDialog = ref(false)
+const layoutName = ref('')
+const layoutIncludeFilters = ref(true)
+const layouts = ref<any[]>([])
+const selectingLayout = ref(false)
+const selectedLayoutId = ref<number | null>(null)
+const PAGE_KEY = 'planlama:is-emirleri-mekanik'
+
+async function fetchLayouts() {
+  try {
+    const { data } = await axios.get('/api/grid-layouts', { params: { page: PAGE_KEY } })
+    layouts.value = Array.isArray(data) ? data : []
+  } catch (e) { console.error('Düzenler alınamadı:', e) }
+}
+
+function getCurrentGridState(): any | null {
+  const inst = dataGridRef.value?.instance as any
+  if (!inst) return null
+  const state = inst.state()
+  if (state && !layoutIncludeFilters.value) {
+    if ('filterValue' in state) delete (state as any).filterValue
+    if ('filterPanel' in state) delete (state as any).filterPanel
+    if (Array.isArray(state.columns)) {
+      state.columns.forEach((c: any) => {
+        if (!c || typeof c !== 'object') return
+        delete c.filterValue
+        delete c.filterType
+        delete c.filterValues
+        delete c.selectedFilterOperation
+      })
+    }
   }
+  return state
 }
 
-const loadGridState = (): void => {
-  const savedState = localStorage.getItem(props.tab);
-  if (savedState && dataGridRef.value && dataGridRef.value.instance)
-    dataGridRef.value.instance.state(JSON.parse(savedState))
+async function saveGridState(): Promise<void> {
+  const state = getCurrentGridState()
+  if (!state) return
+  if (!layoutName.value.trim()) { layoutDialog.value = true; return }
+  try {
+    await axios.post('/api/grid-layouts', {
+      page_key: PAGE_KEY,
+      name: layoutName.value.trim(),
+      include_filters: layoutIncludeFilters.value,
+      state,
+      meta: { version: 1, last_used: true },
+    })
+    notify('Düzen kaydedildi', 'success', 1200)
+    layoutDialog.value = false
+    await fetchLayouts()
+    const saved = layouts.value.find(l => l.name === layoutName.value.trim())
+    if (saved?.id) { try { await axios.put(`/api/grid-layouts/${saved.id}/last-used`, { page_key: PAGE_KEY }) } catch { } }
+  } catch (e) { console.error('Düzen kayıt hatası:', e); notify('Kayıt sırasında hata', 'error', 1500) }
 }
 
-const onStateResetClick = (): void => {
-  localStorage.removeItem(props.tab)
-  if (dataGridRef.value?.instance)
-    (dataGridRef.value.instance as any).state(null)
-}
+async function openLoadLayouts(): Promise<void> { await fetchLayouts(); selectedLayoutId.value = null; selectingLayout.value = true }
+function applyLayoutState(state: any) { if (dataGridRef.value?.instance) (dataGridRef.value.instance as any).state(state) }
+function confirmLoadLayout() { const sel = layouts.value.find(l => l.id === selectedLayoutId.value); if (!sel) return; applyLayoutState(sel.state); selectingLayout.value = false; if (sel.id) axios.put(`/api/grid-layouts/${sel.id}/last-used`, { page_key: PAGE_KEY }).catch(() => { }) }
+async function deleteSelectedLayout(): Promise<void> { if (!selectedLayoutId.value) return; try { await axios.delete(`/api/grid-layouts/${selectedLayoutId.value}`); notify('Düzen silindi', 'success', 1200); await fetchLayouts(); selectedLayoutId.value = null; if (layouts.value.length === 0) selectingLayout.value = false } catch (e) { console.error('Düzen silme hatası:', e); notify('Silme sırasında hata', 'error', 1500) } }
+
+const onStateResetClick = (): void => { if (dataGridRef.value?.instance) (dataGridRef.value.instance as any).state(null) }
 
 const onSelectionChanged = (e: any): void => {
   selectedRows.value = e.selectedRowsData // Seçilen satırların tüm verileri
@@ -1879,13 +1954,14 @@ const refreshGrid = (): void => {
 
 onMounted(async () => {
   await getData()
-  loadGridState()
+  try {
+    await fetchLayouts()
+    const last = layouts.value.find(l => l?.meta?.last_used)
+    if (last?.state) { await nextTick(); applyLayoutState(last.state) }
+  } catch { }
   nextTick(() => {
-    if (dataGridRef.value && dataGridRef.value.instance) {
-      dataGridRef.value.instance.clearSelection()
-    }
+    if (dataGridRef.value && dataGridRef.value.instance) dataGridRef.value.instance.clearSelection()
   })
-  console.log('Kullanıcı bilgileri:', userData.value)
 })
 
 const Yenile = async (): Promise<void> => {
@@ -1972,13 +2048,15 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
         AksesuarGoster()
         break;
       case 'Düzen Yükle':
-        loadGridState()
+        openLoadLayouts()
         break;
       case 'Teknik Resim Göster':
         ResimGoster()
         break;
       case 'Düzen Kaydet':
-        saveGridState()
+        layoutName.value = ''
+        layoutIncludeFilters.value = true
+        layoutDialog.value = true
         break;
       case 'Düzen Sıfırla':
         onStateResetClick()
