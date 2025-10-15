@@ -143,7 +143,9 @@ class PhotoController extends Controller
     {
         // Base'i config(app.photo_kk_dir) ile al, ayırıcıları normalize et
         $base = rtrim(config('app.photo_kk_dir', self::BASE_NETWORK_DIR), '\\/');
-        $cleanIsEmri = trim($isEmriNo, '\\/');
+        // Olası baş/son boşlukları ve ayırıcıları temizle
+        $cleanIsEmri = trim($isEmriNo);
+        $cleanIsEmri = trim($cleanIsEmri, '\\/');
         return rtrim($base, '\\/') . DIRECTORY_SEPARATOR . $cleanIsEmri . DIRECTORY_SEPARATOR;
     }
 
@@ -344,6 +346,10 @@ class PhotoController extends Controller
      */
     public function serveImage(string $isemri_no, string $filename)
     {
+        // URL-encoded parametreleri gerçek değerlere çevir
+        $isemri_no = rawurldecode($isemri_no);
+        $filename = rawurldecode($filename);
+
         // Güvenlik: path traversal engelle
         if (Str::contains($filename, ['..', '/', '\\'])) {
             return response()->json(['message' => 'Geçersiz dosya adı'], 400);

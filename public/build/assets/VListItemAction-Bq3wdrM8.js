@@ -1,0 +1,1 @@
+import{a1 as a,B as o,I as n,b as i,ab as m,K as c}from"./main-Buc254Rl.js";const r=o({start:Boolean,end:Boolean,...c(),...m()},"VListItemAction"),V=a()({name:"VListItemAction",props:r(),setup(t,e){let{slots:s}=e;return n(()=>i(t.tag,{class:["v-list-item-action",{"v-list-item-action--start":t.start,"v-list-item-action--end":t.end},t.class],style:t.style},s)),{}}});export{V};
