@@ -2244,6 +2244,8 @@ const RalKodlariGuncelle = async () => {
   loadingVisible.value = false
 }
 
+// Not: İş Emri kapatma akışı bu sayfadan kaldırıldı. ProductionCard üzerinde yürütülecek.
+
 
 </script>
 

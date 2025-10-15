@@ -17,7 +17,7 @@
         {{ isemriNo }} &nbsp;
         <span style="font-size: 16px;">{{
           sebep != null ? sebep.substring(0, 30) : ""
-        }}</span>
+          }}</span>
       </span>
       <span class="time-display">{{ sonDurumSuresi }}</span>
     </VRow>
@@ -220,6 +220,17 @@
       :options="{ ...vazgecOptions, disabled: actionLoading }" />
   </DxPopup>
 
+  <!-- Kapatma Engeli Uyarı Popup -->
+  <DxPopup v-model:visible="popupKapatmaEngelVisible" :width="480" :height="320" :hide-on-outside-click="true"
+    :show-close-button="true" title="İş Emri Kapatma Engellendi">
+    <template #content>
+      <VCardText>
+        <div :style="{ marginBlockEnd: '8px', fontWeight: 600 }">{{ isemriNo }}</div>
+        <pre :style="{ margin: 0, fontFamily: 'inherit', whiteSpace: 'pre-wrap' }">{{ kapatmaMesaji }}</pre>
+      </VCardText>
+    </template>
+  </DxPopup>
+
   <PersonelSecDialog v-model="ekipSecDialog" :isemriID="Number(props.isemriId)"
     :istasyon-id="Number(userData.istasyon_id)" :guid="props.guid" @iptal="console.log('Dialog kapatıldı')"
     @kaydedildi="handleDialogKayit" />
@@ -249,6 +260,8 @@ function triggerGlobalRefresh() {
 
 const showUretimMiktariDialog = ref(false);
 const uretimMiktari = ref(0);
+const popupKapatmaEngelVisible = ref(false);
+const kapatmaMesaji = ref('');
 const userData = useCookie<any>("userData");
 const popupDurusSecGosterVisible = ref(false);
 const durusSebepleri = ref([]);
@@ -278,36 +291,72 @@ const kapat = async () => {
   actionLoading.value = true;
   try {
     await topluBitir();
-    await isEmriKapat();
+    const ok = await isEmriKapat();
+    if (!ok) {
+      // Kapatma engellendiyse fade/close yapma
+      return;
+    }
     afterActionRefresh();
+    // Başarılı kapatma: kartı kapat
+    isFading.value = true;
+    const FADE_DURATION_MS = 1500;
+    setTimeout(() => {
+      emit('panelKapatildi', props.isemriNo);
+    }, FADE_DURATION_MS);
   } finally {
     actionLoading.value = false;
   }
-  isFading.value = true;
-  // Fade süresi (CSS ile senkronize edilmeli). Daha belirgin olması için 1500ms'ye çıkarıldı.
-  const FADE_DURATION_MS = 1500;
-  setTimeout(() => {
-    emit('panelKapatildi', props.isemriNo);
-  }, FADE_DURATION_MS);
 };
 
-const isEmriKapat = async () => {
-  // console.log(props.isemriId, props.guid, userData.value.id, props.sebep, uretimMiktari.value)
+// İş emri kapatma: Önce stok yeterliliği kontrol et; eksik varsa popup ile engelle
+const isEmriKapat = async (): Promise<boolean> => {
   try {
-    const response = await axios.post('/api/insert-workorder', {
+    // 1) Ön-kontrol: malzeme yeterlilik kontrolü
+    const { data } = await axios.get('/api/isEmriDetay', {
+      params: {
+        tablo: 'DETAY',
+        depo: 0, // Not: CIKIS_DEPO bilgisi kartta yok; 0 gönderiyoruz (varsayılan). Gerekirse backend tarafında ele alınır.
+        isemri_id: Number(props.isemriId),
+        coID: userData.value?.co_id,
+        cikisDepo: props.cikisDepo,
+      },
+    });
+
+    const malzemeler: any[] = Array.isArray(data?.malzemeler) ? data.malzemeler : [];
+    const eksikler = malzemeler.filter(m => Number(m?.qty_prm ?? 0) < Number(m?.ihtiyac ?? 0));
+
+    if (eksikler.length > 0) {
+      const detaylar = eksikler.slice(0, 10).map(m => {
+        const bakiye = (m?.bakiye != null) ? Number(m.bakiye) : (Number(m?.qty_prm ?? 0) - Number(m?.ihtiyac ?? 0));
+        const fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(bakiye);
+        return `• ${m?.stok_kodu ?? '-'} - ${m?.stok_adi ?? '-'} (Bakiye: ${fmt})`;
+      }).join('\n');
+
+      kapatmaMesaji.value = `Stok yetersiz olan malzemeler var. Kapatma yapılamaz.\n\n${detaylar}${eksikler.length > 10 ? '\n…' : ''}`;
+      showUretimMiktariDialog.value = false;
+      popupKapatmaEngelVisible.value = true;
+      notify('Kapatma engellendi: eksik malzemeler var.', 'warning', 2500);
+      return false;
+    }
+
+    // 2) Kapatma işlemi
+    await axios.post('/api/insert-workorder', {
       WorderMId: Number(props.isemriId),
       guid: props.guid,
       userId: userData.value.id,
       selectedDurus: props.sebep,
       uretimMiktari: uretimMiktari.value,
-    })
-    uretimMiktari.value = 0
+    });
+    uretimMiktari.value = 0;
     triggerGlobalRefresh();
+    showUretimMiktariDialog.value = false;
+    notify('İş emri başarıyla kapatıldı.', 'success', 1800);
+    return true;
   } catch (err) {
-    console.error(err)
+    console.error(err);
+    notify('İş emri kapatma sırasında hata oluştu.', 'error', 2200);
+    return false;
   }
-  showUretimMiktariDialog.value = false
-
 }
 const handleDialogKayit = () => {
   afterActionRefresh();
@@ -371,6 +420,7 @@ const props = defineProps<{
   baslangicZamani: string;
   aksesuarli: string;
   ekipSayisi: number;
+  cikisDepo: string;
 }>();
 
 const kaydetOptions = {

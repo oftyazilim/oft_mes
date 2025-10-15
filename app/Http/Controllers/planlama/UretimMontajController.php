@@ -797,7 +797,8 @@ class UretimMontajController extends Controller
           $malzeme->qty_prm = $stok->qty_prm;
           $malzeme->qty_min_inv = $stok->qty_min_inv;
           $malzeme->qty_max_inv = $stok->qty_max_inv;
-          $malzeme->ihtiyac = ($malzeme->kalan ?? 0) * ($stok->qty_base_bom ?? 0);
+          $miktar = $request->input('miktar', $malzeme->kalan ?? 0);
+          $malzeme->ihtiyac = $miktar * ($stok->qty_base_bom ?? 0);
           $bakiye = ($stok->qty_prm ?? 0) - (($stok->kalan ?? 0) * ($stok->qty_base_bom ?? 0));
           $malzeme->bakiye = round($bakiye, 2);
         }
@@ -1042,6 +1043,7 @@ class UretimMontajController extends Controller
         'teknik_not1',
         'teknik_not2',
         'aksesuar',
+        'CIKIS_DEPO',
       )
       ->whereIn('isemri_id', $isemriIDs)
       ->distinct()
@@ -1062,6 +1064,7 @@ class UretimMontajController extends Controller
       $veriListesi = $sureler[$item->isemri_id] ?? collect();
       $calismaList = $calismalar[$item->isemri_id] ?? collect();
       $sonDurum = $calismaList->last();
+      $cikisDepo = $item->CIKIS_DEPO;
       $now = now();
 
       $status = $sonDurum?->durum;
@@ -1135,6 +1138,7 @@ class UretimMontajController extends Controller
         'is_check_quality_opr' => $sonDurum->is_check_quality_opr ?? 'false',
         'isemriId' => $item->isemri_id,
         'isemriNo' => $item->isemri_no,
+        'cikis_depo' => $item-> CIKIS_DEPO,
         'runTime' => gmdate('H:i', $calisma),
         'totalDown' => gmdate('H:i', $durus + $ayar + $mola),
         'totalTime' => gmdate('H:i', $toplamSure),

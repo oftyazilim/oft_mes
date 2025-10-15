@@ -175,8 +175,10 @@ const uploadPhoto = async (itemID: any) => {
     notify('Ürün kodu yok.', 'error', 2000)
     return
   }
+  // — İstemci tarafı sıkıştırma —
+  const compressed = await compressImage(photo.value, { maxWidth: 1600, maxHeight: 1600, quality: 0.8, mimeType: 'image/jpeg', targetKB: 900 })
   const formData = new FormData()
-  formData.append('photo', photo.value)
+  formData.append('photo', compressed, renameToJpeg(photo.value.name))
   formData.append('itemCode', formDatam.value.urunKodu)
   try {
     await axios.post('/api/stok-foto/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
@@ -223,10 +225,70 @@ const previewPhoto = (url: string) => {
   previewDialog.value = true
 }
 
-const formatNumber = number => {
+const formatNumber = (number: number) => {
   return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 }).format(
     number,
   )
+}
+
+// ---- Yardımcılar: Görsel Sıkıştırma ----
+type CompressOpts = { maxWidth?: number; maxHeight?: number; quality?: number; mimeType?: string; targetKB?: number }
+
+function renameToJpeg(originalName: string): string {
+  const base = originalName.replace(/\.[^.]+$/, '')
+  return `${base}.jpg`
+}
+
+async function compressImage(file: File, opts: CompressOpts): Promise<Blob> {
+  const { maxWidth = 1600, maxHeight = 1600, quality = 0.8, mimeType = 'image/jpeg', targetKB = 900 } = opts || {}
+  const dataUrl = await fileToDataURL(file)
+  const img = await loadImage(dataUrl)
+  const { width, height } = fitWithin(img.naturalWidth, img.naturalHeight, maxWidth, maxHeight)
+
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')!
+  canvas.width = width
+  canvas.height = height
+  ctx.drawImage(img, 0, 0, width, height)
+
+  // Kaliteyi hedef boyuta yakınsamak için basit geri besleme
+  let q = quality
+  let blob = await canvasToBlob(canvas, mimeType, q)
+  const targetBytes = targetKB * 1024
+  let attempts = 0
+  while (blob.size > targetBytes && q > 0.4 && attempts < 4) {
+    q -= 0.1
+    blob = await canvasToBlob(canvas, mimeType, q)
+    attempts++
+  }
+  return blob
+}
+
+function fitWithin(w: number, h: number, maxW: number, maxH: number) {
+  const ratio = Math.min(maxW / w, maxH / h, 1)
+  return { width: Math.round(w * ratio), height: Math.round(h * ratio) }
+}
+
+function fileToDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality?: number): Promise<Blob> {
+  return new Promise(resolve => canvas.toBlob(blob => resolve(blob || new Blob()), type, quality))
 }
 </script>
 

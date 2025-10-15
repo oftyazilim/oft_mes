@@ -145,7 +145,8 @@
               </VCol>
 
 
-              <VBtn variant="outlined" class="d-flex justify-center mt-4" block color="warning" @click="kaydetKontroller">
+              <VBtn variant="outlined" class="d-flex justify-center mt-4" block color="warning"
+                @click="kaydetKontroller">
                 Kaydet / Güncelle
               </VBtn>
 
@@ -373,8 +374,8 @@
       <VCombobox v-model="aciklama" :items="hazirGerekceler" label="Gerekçe" variant="outlined" item-title="tanim"
         item-value="id" :disabled="isEmriNo.length === 0 || secilenSatirlar.length === 0" auto-grow clearable
         rows="1" />
-      <VBtn variant="outlined" :disabled="isEmriNo.length === 0 || secilenSatirlar.length === 0" color="warning" :height="37"
-        @click="GerekceGir">
+      <VBtn variant="outlined" :disabled="isEmriNo.length === 0 || secilenSatirlar.length === 0" color="warning"
+        :height="37" @click="GerekceGir">
         Gerekçe Gir
       </VBtn>
     </VCol>
@@ -499,14 +500,8 @@
 
     </DxDataGrid>
 
-    <DxToolbarItem
-      :disabled="isSavingAgac"
-      widget="dxButton"
-      toolbar="bottom"
-      location="center"
-      :options="{ ...kaydetOptions, text: isSavingAgac ? 'Kaydediliyor...' : 'Kaydet' }"
-      @click="AgacKaydet"
-    />
+    <DxToolbarItem :disabled="isSavingAgac" widget="dxButton" toolbar="bottom" location="center"
+      :options="{ ...kaydetOptions, text: isSavingAgac ? 'Kaydediliyor...' : 'Kaydet' }" @click="AgacKaydet" />
     <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="vazgecOptions" />
   </DxPopup>
 
@@ -583,6 +578,21 @@
       <v-card-actions>
         <v-spacer />
         <v-btn text @click="previewDialog = false">Kapat</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- Kayıt sonrası yinele onayı -->
+  <v-dialog v-model="repeatConfirm" max-width="520">
+    <v-card>
+      <v-card-title>Onay</v-card-title>
+      <v-card-text>
+        Yinele işlemine devam edilsin mi?
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn variant="text" @click="onRepeatNo">Hayır</v-btn>
+        <v-btn color="primary" variant="elevated" @click="onRepeatYes">Evet</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -754,6 +764,7 @@ const photo = ref<File | null>(null)
 const photos = ref<PhotoItem[]>([])
 let photoIdCounter = 1
 const selectedPhotos = ref([])
+const repeatConfirm = ref(false)
 const zoom = ref(1)
 const agacKontrolTarih = ref('...')
 const agacKontrolPersonel = ref('...')
@@ -1422,19 +1433,23 @@ const KontrolKaydet = async () => {
     return
   }
   isSavingKontrol.value = true
+  // Fotoğrafları sıkıştır ve base64'e çevir (JSON ile göndermek için)
   const base64Resimler: Array<{ base64: string; extension: string }> = []
-
-  // for (const p of photos.value) {
-  //   if (p.file) {
-  //     const base64 = await fileToBase64(p.file)
-  //     const extension = p.file.name.split('.').pop() || 'jpg'
-
-  //     base64Resimler.push({
-  //       base64: base64.replace(/^data:image\/\w+;base64,/, ''), // sadece base64 içeriği
-  //       extension,
-  //     })
-  //   }
-  // }
+  for (const p of photos.value) {
+    if (!p.file) continue
+    try {
+      const { base64, extension } = await compressFileToBase64(p.file, {
+        maxWidth: 1600,
+        maxHeight: 1600,
+        quality: 0.8,
+        targetKB: 700, // base64 overhead'i düşünerek ~700KB hedef
+        mimeType: 'image/jpeg',
+      })
+      base64Resimler.push({ base64, extension })
+    } catch (e) {
+      console.error('Görsel sıkıştırma hatası:', e)
+    }
+  }
 
   const payload = {
     urun_kontrol_m_id: kontroller.value.masterId,
@@ -1442,7 +1457,7 @@ const KontrolKaydet = async () => {
     serino: serino.value,
     hatalar: Object.keys(seciliHatalar.value).filter(k => seciliHatalar.value[k]),
     sonuc: sonuc.value,
-    // resimler: base64Resimler,
+    resimler: base64Resimler,
     hataOzet: hataOzet.value,
     user_id: userData.value.id,
     isPhoto: photos.value.length > 0 ? 1 : 0, // Fotoğraf var mı?
@@ -1456,7 +1471,8 @@ const KontrolKaydet = async () => {
         type: "success",
         displayTime: 2000,
       })
-      popupVisible.value = false
+      // Kayıt sonrası kullanıcıya yineleme sor
+      repeatConfirm.value = true
     } else {
       alert('Kayıt başarısız!')
     }
@@ -1474,6 +1490,92 @@ const fileToBase64 = (file: File): Promise<string> => {
     reader.readAsDataURL(file)
     reader.onload = () => resolve(reader.result as string)
     reader.onerror = error => reject(error)
+  })
+}
+
+type CompressOpts = { maxWidth?: number; maxHeight?: number; quality?: number; mimeType?: string; targetKB?: number }
+
+// "Yinele" akışı: bir sonraki seri için aynı seçimlerle devam et
+const onRepeatYes = async () => {
+  repeatConfirm.value = false
+  try {
+    // Mevcut kayıtları tazele ki serinoListesi kalanları doğru hesaplasın
+    await KontrolleriAl()
+  } catch { }
+  // Kayıtlı serileri çıkar, kalan ilk seriye geç
+  try {
+    KontrolEdilmeyenleriAl()
+  } catch { }
+
+  // Foto ve notları temizle; sonuç ve seçilen hataları koru
+  photos.value = []
+  selectedPhotos.value = []
+  hataOzet.value = ''
+
+  // Sonraki seriyi ata (kalan listeden ilkini kullan)
+  const next = serinoListesi.value[0]?.serino
+  if (next) {
+    serino.value = next
+  } else {
+    // Kalan yoksa popup'ı kapat
+    popupVisible.value = false
+    return
+  }
+  // Açık kalsın ve odağı serino alanına ver
+  nextTick(() => serinoRef.value?.focus())
+}
+
+const onRepeatNo = () => {
+  repeatConfirm.value = false
+  popupVisible.value = false
+}
+
+async function compressFileToBase64(file: File, opts: CompressOpts): Promise<{ base64: string; extension: string }> {
+  const { maxWidth = 1600, maxHeight = 1600, quality = 0.8, mimeType = 'image/jpeg', targetKB = 700 } = opts || {}
+  const dataUrl = await fileToDataURL(file)
+  const img = await loadImage(dataUrl)
+  const { width, height } = fitWithin(img.naturalWidth, img.naturalHeight, maxWidth, maxHeight)
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')!
+  canvas.width = width
+  canvas.height = height
+  ctx.drawImage(img, 0, 0, width, height)
+
+  let q = quality
+  let base64 = canvas.toDataURL(mimeType, q)
+  const targetBytes = targetKB * 1024
+  let attempts = 0
+  // Base64 uzunluğunu yaklaşık byte'a çevirmek için kabaca oran: base64_len * 3/4
+  const estSize = (b64: string) => Math.floor((b64.length - (b64.split(',')[0]?.length || 0) - 1) * 3 / 4)
+  while (estSize(base64) > targetBytes && q > 0.4 && attempts < 4) {
+    q -= 0.1
+    base64 = canvas.toDataURL(mimeType, q)
+    attempts++
+  }
+
+  return { base64: base64.replace(/^data:image\/\w+;base64,/, ''), extension: 'jpg' }
+}
+
+function fitWithin(w: number, h: number, maxW: number, maxH: number) {
+  const ratio = Math.min(maxW / w, maxH / h, 1)
+  return { width: Math.round(w * ratio), height: Math.round(h * ratio) }
+}
+
+function fileToDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
   })
 }
 

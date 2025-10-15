@@ -17,7 +17,7 @@
               :plnNote="item.plnNote" :prdNote="item.prdNote" :personelName="item.personelName"
               :personelId="item.personelId" :aksesuarli="item.aksesuarli" @ekipGuncellendi="onCardAction"
               @panelKapatildi="panelKapat(item)" :baslangicZamani="item.baslangicZamani" @durusGirildi="onDurusGirildi"
-              :ekipSayisi="item.ekipSayisi" />
+              :ekipSayisi="item.ekipSayisi" :cikisDepo="item.cikisDepo" />
           </div>
         </div>
       </VCol>
@@ -2047,6 +2047,7 @@ const fetchKartlar = async () => {
       },
     });
     items.value = data;
+    console.log("Kart verisi:", items.value);
   } catch (e) {
     console.error("Veri hatası:", e);
   }

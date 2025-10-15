@@ -170,59 +170,76 @@ class KaliteController extends Controller
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
 
-        // if ($request->has('resimler') && is_array($request->resimler)) {
-        //     $serino = $request->serino;
-        //     $isemri_no = $request->isemri_no;
+        // Front-end'den base64 olarak gelen resimleri kk-fotolar klasörüne kaydet
+        if ($request->has('resimler') && is_array($request->resimler) && count($request->resimler) > 0) {
+            $serino = (string) $request->serino;
+            $isemri_no = (string) $request->isemri_no;
 
-        //     // Foto klasörü kökünü .env PHOTO_KK_DIR ile yapılandırılabilir yap (Windows UNC veya Linux mount)
-        //     $photoBase = rtrim(env('PHOTO_KK_DIR', "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\kk-fotolari\\"), '\\/');
-        //     $klasorYolu = $photoBase . DIRECTORY_SEPARATOR . $isemri_no;
+            // Foto klasörü kökünü .env PHOTO_KK_DIR ile yapılandırılabilir yap (Windows UNC veya Linux mount)
+            $photoBase = rtrim(config('app.photo_kk_dir', "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\kk-fotolari\\"), '\\/');
+            $klasorYolu = $photoBase . DIRECTORY_SEPARATOR . $isemri_no;
 
-        //     if (!File::exists($klasorYolu)) {
-        //         File::makeDirectory($klasorYolu, 0777, true);
-        //     }
+            if (!File::exists($klasorYolu)) {
+                // 0777: ağ paylaşımında yetki sorunlarını azaltmak için geniş izin; ortamınıza göre kısıtlayın
+                File::makeDirectory($klasorYolu, 0777, true);
+            }
 
-        //     // Intervention Image opsiyonel: paket kurulu değilse (class bulunamazsa) orijinal base64 doğrudan yazılır.
-        //     $interventionAvailable = class_exists(ImageManager::class) && class_exists(Driver::class);
-        //     $manager = $interventionAvailable ? new ImageManager(new Driver()) : null; // 👈 Opsiyonel
+            // Intervention Image opsiyonel: paket kurulu değilse (class bulunamazsa) orijinal base64 doğrudan yazılır.
+            $interventionAvailable = class_exists(ImageManager::class) && class_exists(Driver::class);
+            $manager = $interventionAvailable ? new ImageManager(new Driver()) : null; // Opsiyonel
 
-        //     $sira = 1;
-        //     foreach ($request->resimler as $resim) {
-        //         if (!isset($resim['base64']) || !isset($resim['extension'])) {
-        //             continue;
-        //         }
+            $sira = 1;
+            $kaydedilenAdet = 0;
+            foreach ($request->resimler as $resim) {
+                if (!is_array($resim) || !isset($resim['base64'])) {
+                    continue;
+                }
 
-        //         $dosyaAdi = $serino . '-' . str_pad($sira, 2, '0', STR_PAD_LEFT) . '.jpg';
-        //         $tamYol = $klasorYolu . DIRECTORY_SEPARATOR . $dosyaAdi;
+                $dosyaAdi = $serino . '-' . str_pad($sira, 2, '0', STR_PAD_LEFT) . '.jpg';
+                $tamYol = $klasorYolu . DIRECTORY_SEPARATOR . $dosyaAdi;
 
-        //         try {
-        //             $imageData = base64_decode($resim['base64']);
-        //             if ($imageData === false) {
-        //                 throw new \RuntimeException('Base64 decode başarısız.');
-        //             }
+                try {
+                    // Front-end base64 prefix'i kaldırıyor; yine de güvenli olsun diye olası data URL prefix'ini temizle
+                    $b64 = preg_replace('/^data:image\/[a-zA-Z0-9.+-]+;base64,/', '', (string) $resim['base64']);
+                    $imageData = base64_decode($b64);
+                    if ($imageData === false) {
+                        throw new \RuntimeException('Base64 decode başarısız.');
+                    }
 
-        //             if ($manager) {
-        //                 // Paket mevcutsa yeniden boyutlandır + kalite düşür
-        //                 $image = $manager->read($imageData);
-        //                 $originalWidth = $image->width();
-        //                 $originalHeight = $image->height();
-        //                 $targetWidth = 1024;
-        //                 $targetHeight = $originalWidth > 0 ? intval($originalHeight * $targetWidth / $originalWidth) : $originalHeight;
-        //                 $image = $image->resize($targetWidth, $targetHeight, function ($constraint) {
-        //                     $constraint->aspectRatio();
-        //                     $constraint->upsize();
-        //                 })->toJpeg(80);
-        //                 File::put($tamYol, (string) $image);
-        //             } else {
-        //                 // Paket yok: orijinal veriyi olduğu gibi yaz
-        //                 File::put($tamYol, $imageData);
-        //             }
-        //             $sira++;
-        //         } catch (\Throwable $e) {
-        //             Log::error('Resim kaydetme hatası: ' . $e->getMessage());
-        //         }
-        //     }
-        // }
+                    if ($manager) {
+                        // Paket mevcutsa en azından yeniden encode ederek JPEG kalite uygula
+                        $image = $manager->read($imageData);
+                        $encoded = $image->toJpeg(82);
+                        File::put($tamYol, (string) $encoded);
+                    } else {
+                        // Paket yok: orijinal veriyi yaz
+                        File::put($tamYol, $imageData);
+                    }
+                    $sira++;
+                    $kaydedilenAdet++;
+                } catch (\Throwable $e) {
+                    Log::error('Resim kaydetme hatası: ' . $e->getMessage(), [
+                        'isemri_no' => $isemri_no,
+                        'serino' => $serino,
+                        'dosya' => $dosyaAdi ?? null,
+                    ]);
+                }
+            }
+
+            // En az bir foto kaydedildiyse ilgili seri için is_photo=1 yap
+            if ($kaydedilenAdet > 0) {
+                try {
+                    DB::connection('pgsql_oft')
+                        ->table('oftt_urun_kontrol_d')
+                        ->where('seri_no', $serino)
+                        ->update(['is_photo' => 1]);
+                } catch (\Throwable $e) {
+                    Log::warning('is_photo alanı güncellenemedi: ' . $e->getMessage(), [
+                        'seri_no' => $serino,
+                    ]);
+                }
+            }
+        }
 
 
 
