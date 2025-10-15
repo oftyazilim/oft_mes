@@ -171,6 +171,7 @@ class KaliteController extends Controller
         }
 
         // Front-end'den base64 olarak gelen resimleri kk-fotolar klasörüne kaydet
+        $kaydedilenAdet = 0;
         if ($request->has('resimler') && is_array($request->resimler) && count($request->resimler) > 0) {
             $serino = (string) $request->serino;
             $isemri_no = (string) $request->isemri_no;
@@ -189,7 +190,6 @@ class KaliteController extends Controller
             $manager = $interventionAvailable ? new ImageManager(new Driver()) : null; // Opsiyonel
 
             $sira = 1;
-            $kaydedilenAdet = 0;
             foreach ($request->resimler as $resim) {
                 if (!is_array($resim) || !isset($resim['base64'])) {
                     continue;

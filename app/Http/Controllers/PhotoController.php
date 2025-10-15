@@ -361,11 +361,20 @@ class PhotoController extends Controller
             ]);
             return response()->json(['message' => 'Dosya bulunamadı'], 404);
         }
-
-        return Response::make(File::get($dosyaYolu), 200, [
-            'Content-Type' => File::mimeType($dosyaYolu),
-            'Content-Disposition' => 'inline; filename="' . $filename . '"'
-        ]);
+        try {
+            $content = File::get($dosyaYolu);
+            $mime = File::mimeType($dosyaYolu) ?: 'application/octet-stream';
+            return Response::make($content, 200, [
+                'Content-Type' => $mime,
+                'Content-Disposition' => 'inline; filename="' . $filename . '"'
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('oft-resimler read error', [
+                'path' => $dosyaYolu,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['message' => 'Dosya okunamadı'], 500);
+        }
     }
 
     /**
