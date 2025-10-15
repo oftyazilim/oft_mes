@@ -184,7 +184,7 @@ Route::middleware('auth:sanctum')->group(function () {
   
   Route::post('/insert-workorder', [UretimMontajController::class, 'insertWorkOrder']);
   Route::post('/ekip-bitir-toplu', [UretimMontajController::class, 'bitirToplu']);
-  Route::post('/aktif-ekipler', [UretimMontajController::class, 'EkipKaydet']);
+  Route::post('/ekip-kaydet', [UretimMontajController::class, 'EkipKaydet']);
   Route::post('/kontrolcu-cagir-guncelle', [UretimMontajController::class, 'guncelleIsCheckQualityOpr']);
   Route::post('/durumKaydet', [UretimMontajController::class, 'DurumKaydet']);
   Route::post('/durusKaydet', [UretimMontajController::class, 'DurusKaydet']);

@@ -6,7 +6,8 @@
         <!-- template starts above -->
         <div class="carousel-scroll pa-2 mb-2 mt-0" ref="carouselScroll" @mouseenter="pauseAutoScroll"
           @mouseleave="resumeAutoScroll">
-          <div v-for="(item, index) in items" :key="index" class="carousel-card" @click="detaylariGoster(item)">
+          <div v-for="(item, index) in items" :key="item.guid || item.isemriId || item.isemriNo || index"
+            class="carousel-card" @click="detaylariGoster(item)">
             <ProductionCard :isemriNo="item.isemriNo" :isemriId="item.isemriId" :runTime="item.runTime"
               :totalDown="item.totalDown" :totalTime="item.totalTime" :sonDurumSuresi="item.sonDurumSuresi"
               :target="item.target" :actual="item.actual" :efficiency="item.efficiency" :quality="item.quality"
@@ -22,7 +23,7 @@
         </div>
       </VCol>
 
-      <VCol cols="12" md="2" class="d-flex ps-0  pt-0">
+      <VCol cols="12" md="2" class="d-flex ps-0 pt-0">
         <VCard class="gosterge pa-0 ma-0 flex-grow-1" height="318">
           <VCardTitle class="text-h5 mb-4" style="border-block-end: 2px solid #ccc;">
             <div class="d-flex justify-space-between align-center mt-0">
@@ -35,7 +36,7 @@
         </VCard>
       </VCol>
 
-      <VCol cols="12" md="2" class="d-flex ps-0  pt-0">
+      <VCol cols="12" md="2" class="d-flex ps-0 pt-0">
         <VCard class="gosterge pa-0 ma-0 flex-grow-1" height="318">
           <VCardTitle class="text-h5 mb-4" style="border-block-end: 2px solid #ccc;">
             <div class="d-flex justify-space-between align-center mt-0">
@@ -48,7 +49,7 @@
             </div>
           </VCardTitle>
           <div class="px-2 py-0">
-            <div class=" text-center pa-0 ma-0">
+            <div class="text-center pa-0 ma-0">
               <DxLinearGauge id="gauge" :value="uretimHizi">
                 <DxScale :start-value="-100" :end-value="100" :tick-interval="100" :minor-tick-interval="0.1">
                   <DxMinorTick :visible="true" />
@@ -61,7 +62,6 @@
                   <DxFont :size="18" />
                 </DxTitle>
               </DxLinearGauge>
-
             </div>
             <div class="d-flex flex-column justify-center mt-10" style="gap: 18px;">
               <div class="d-flex justify-space-between uretim">
@@ -80,7 +80,6 @@
           </div>
         </VCard>
       </VCol>
-
 
       <!-- 
       <VCol cols="12" md="4" class="d-flex">
@@ -110,7 +109,6 @@
 
   <!-- Detay ve sekmeli alan -->
   <div class="detail-section pa-0 ma-0">
-
     <VCard class="pa-0">
       <VTabs v-model="currentTab" fixed-tabs class="baslik">
         <VTab class="text-h5 baslik">İş Emirleri</VTab>
@@ -121,15 +119,18 @@
       <VWindow v-model="currentTab">
         <VWindowItem value="tab-1">
           <VCardText class="pa-2">
-            <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick" />
+            <DxContextMenu :data-source="menuItems" :width="200" target="#grid" @item-click="itemClick"
+              :auto-navigate-to-focused-row="false" />
             <DxDataGrid id="grid" class="grid" ref="dataGridRef" :key="gridKey" :data-source="gridData"
-              :key-expr="['isemri_id', 'OPERASYON']" :show-borders="true" :focused-row-enabled="true"
-              :row-alternation-enabled="true" :min-width="200" @exporting="onExporting" :allow-column-reordering="true"
-              :column-auto-width="false" @content-ready="onContentReady" @focused-row-changed="onFocusedRowChanged"
-              :allow-column-resizing="true" column-resizing-mode="widget" @cell-prepared="onCellPrepared"
-              @selection-changed="onSelectionChanged" :auto-navigate-to-focused-row="true"
-              v-model:focused-row-key="focusedRowKey" height="670">
+              column-resizing-mode="widget" :key-expr="['isemri_id', 'OPERASYON']" :show-borders="true"
+              :focused-row-enabled="true" :allow-column-resizing="true" :hover-state-enabled="false"
+              :active-state-enabled="false" :row-alternation-enabled="true" :allow-column-reordering="true"
+              :column-auto-width="false" :min-width="200" height="670" :repaint-changes-only="true"
+              @exporting="onExporting" @content-ready="onContentReady" @focused-row-changed="onFocusedRowChanged"
+              @contextMenuPreparing="onMainGridContextMenuPreparing" @cell-prepared="onCellPrepared">
               <!-- <DxColumn type="selection" :fixed="true" fixedPosition="left" /> -->
+              <DxSelection mode="none" />
+              <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
               <DxColumn data-field="id" caption="ID" :visible="false" :min-width="90" />
               <DxColumn data-field="aktif" caption="AKTIF" :visible="true" :min-width="50"
                 cell-template="aktifTemplate" />
@@ -376,7 +377,7 @@
                 precision: 2,
                 thousandsSeparator: ',',
               }" />
-              <DxColumn data-field="qty_net" caption="İHTİYAÇ" :width="120" data-type="number" :format="{
+              <DxColumn data-field="ihtiyac" caption="İHTİYAÇ" :width="120" data-type="number" :format="{
                 type: 'fixedPoint',
                 precision: 2,
                 thousandsSeparator: ',',
@@ -643,7 +644,7 @@
   </DxPopup>
 
   <DxPopup v-model:visible="popupDetayGosterVisible" :width="1320" :height="800" :hide-on-outside-click="true"
-    :show-close-button="true" :title=notBaslik>
+    :show-close-button="true" :title="notBaslik">
     <template #content>
       <VCard>
         <VCardText class="mb-0 pb-0">
@@ -723,7 +724,7 @@
                         <DxSelectBox v-model="selectedNot" :items="notlar" display-expr="not" value-expr="not"
                           :disabled="!canManagePlanlama" label="Planlama Notu Eklemeleri" class="kalin" />
                       </VCol>
-                      <VCol cols="5" class="mt-4 pa-0 ps-0  pe-0">
+                      <VCol cols="5" class="mt-4 pa-0 ps-0 pe-0">
                         <VRow>
                           <VCol cols="2" class="pe-0 ps-1">
                             <VBtn text="" icon="tabler-arrow-down" rounded color="warning" block
@@ -735,19 +736,20 @@
                               Kaydet
                             </VBtn>
                           </VCol>
-                          <VCol cols="3" class="pe-6 ps-0 ">
+                          <VCol cols="3" class="pe-6 ps-0">
                             <VBtn text="" icon="tabler-copy" rounded color="success" block
                               v-model="selectedRow.teknik_not1" @click="copyToClipboard" id="kopyala" />
                           </VCol>
                           <DxTooltip :hide-on-outside-click="false" target="#kopyala" show-event="mouseenter"
                             hide-event="mouseleave" position="right">
-                            <b>Malzeme listesindeki 0'dan küçük satırları kopyalar</b><br> * satırları seçmenize gerek
-                            yoktur
+                            <b>Malzeme listesindeki 0'dan küçük satırları
+                              kopyalar</b><br />
+                            * satırları seçmenize gerek yoktur
                           </DxTooltip>
                         </VRow>
                       </VCol>
 
-                      <VCol cols="12" class="mt-0 pa-0 ps-2 pe-3  pt-3">
+                      <VCol cols="12" class="mt-0 pa-0 ps-2 pe-3 pt-3">
                         <DxTextArea v-model="textAreaValue" label="Planlamanın Notu"
                           style="font-weight: bold !important;" styling-mode="outlined" label-mode="static" :height="98"
                           :max-length="950" />
@@ -766,18 +768,20 @@
                   </VCol>
 
                   <VCol cols="8" class="mt-0 pa-0 ps-2">
-
                     <!-- ********** Eksik Parçalar ***************************************************** -->
                     <VRow>
                       <VCol cols="12" class="mt-2 pa-0 ps-2 pe-3 text-center">
-                        <h4>Malzeme Listesi ({{ gridDataMalzemeler.length }} parça) (Depo ID: {{ selectedRow.CIKIS_DEPO
-                        }})</h4>
+                        <h4>
+                          Malzeme Listesi ({{
+                            gridDataMalzemeler.length
+                          }}
+                          parça) (Depo ID: {{ selectedRow.CIKIS_DEPO }})
+                        </h4>
                         <div style="block-size: 613px;">
                           <DxDataGrid id="gridMalzemeler" ref="dataGridRefM" :data-source="gridDataMalzemeler"
                             key-expr="item_id" :show-borders="true" :min-width="400" :column-auto-width="false"
                             :allow-column-resizing="true" column-resizing-mode="widget" @cell-prepared="onCellPreparedM"
                             height="100%" :row-alternation-enabled="true" @row-click="onRowClickDetay">
-
                             <DxColumn data-field="tipi" caption="TİPİ" data-type="string" :visible="true" :width="65"
                               :cell-template="tipCellTemplate" />
                             <DxColumn data-field="user_line_no" caption="LINE NO" :width="60" :visible="false" />
@@ -785,12 +789,12 @@
                             <DxColumn data-field="stok_kodu" caption="STOK KODU" :min-width="120" />
                             <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="180" />
                             <DxColumn data-field="worder_m_id" caption="İŞ EMRİ ID" :width="150" :visible="false" />
-                            <DxColumn data-field="qty_base_bom" caption="BOM" :width="80" data-type=number :format="{
+                            <DxColumn data-field="qty_base_bom" caption="BOM" :width="80" data-type="number" :format="{
                               type: 'fixedPoint',
                               precision: 2,
                               thousandsSeparator: ',',
                             }" />
-                            <DxColumn data-field="qty_net" caption="İHTİYAÇ" :width="80" data-type="number" :format="{
+                            <DxColumn data-field="ihtiyac" caption="İHTİYAÇ" :width="80" data-type="number" :format="{
                               type: 'fixedPoint',
                               precision: 2,
                               thousandsSeparator: ',',
@@ -821,19 +825,13 @@
 
                             <DxGroupPanel :visible="false" />
                             <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
-
-
                           </DxDataGrid>
                         </div>
                       </VCol>
                     </VRow>
                   </VCol>
-
                 </VRow>
-
-
               </VWindowItem>
-
 
               <VWindowItem>
                 <VRow>
@@ -841,7 +839,6 @@
                     :key-expr="['isemri_id', 'OPERASYON']" :show-borders="true" :min-width="200"
                     :column-auto-width="false" :allow-column-resizing="true" column-resizing-mode="widget"
                     @cell-prepared="onCellPrepared" height="195">
-
                     <DxColumn data-field="IS_ISTASYONU" caption="İSTASYON ADI" :width="180" />
                     <DxColumn data-field="OPERASYON" caption="OPERASYON" :width="180" />
                     <DxColumn data-field="stok_adi" caption="STOK ADI" :min-width="200" />
@@ -891,22 +888,20 @@
 
                     <template #aksesuarTemplate="{ data }">
                       <template v-if="data.value === 'Aksesuarlı'">
-                        <i :class="['dx-icon', 'dx-icon-gift']"
-                          :style="{ fontSize: '16px', color: staticPrimaryColor }"></i>
+                        <i :class="['dx-icon', 'dx-icon-gift']" :style="{
+                          fontSize: '16px',
+                          color: staticPrimaryColor,
+                        }"></i>
                       </template>
                     </template>
-
                   </DxDataGrid>
                 </VRow>
               </VWindowItem>
 
               <VWindowItem>
-                <VRow>
-
-                </VRow>
+                <VRow> </VRow>
               </VWindowItem>
             </VWindow>
-
           </VForm>
         </VCardText>
       </VCard>
@@ -950,6 +945,7 @@ import {
   DxHeaderFilter,
   DxScrolling,
   DxSearchPanel,
+  DxSelection,
   DxSorting,
   DxSummary,
   DxToolbar,
@@ -966,12 +962,13 @@ import { VSelect } from "vuetify/components";
 import Grafik from "./Grafik.vue";
 // @ts-ignore: SFC tipleri shims.d.ts üzerinden çözülüyor
 import {
-  DxFont, DxLabel,
+  DxFont,
+  DxLabel,
   DxLinearGauge,
   DxMinorTick,
   DxScale,
   DxTitle,
-} from 'devextreme-vue/linear-gauge';
+} from "devextreme-vue/linear-gauge";
 // @ts-ignore: SFC tipi shims.d.ts ile sağlanır
 import DxSelectBox from "devextreme-vue/select-box";
 import DxTextBox from "devextreme-vue/text-box";
@@ -983,6 +980,39 @@ import ProductionCard from "./ProductionCard.vue";
 
 const carouselScroll = ref<HTMLElement | null>(null);
 let autoScrollInterval: ReturnType<typeof setInterval> | null = null;
+// Kısa süre önce kapatılan kartları bastırmak için TTL'li harita
+type Suppressed = { until: number };
+const suppressedMap = ref<Record<string, Suppressed>>({});
+function suppressIdOf(it: any): string {
+  return String(
+    it?.guid ||
+    it?.isemriId ||
+    it?.isemriNo ||
+    it?.isemri_id ||
+    it?.isemri_no ||
+    it?.id ||
+    ""
+  );
+}
+function addSuppression(id: string, ttlMs = 60000) {
+  if (!id) return;
+  suppressedMap.value[id] = { until: Date.now() + ttlMs };
+}
+function isSuppressed(id: string): boolean {
+  const rec = suppressedMap.value[id];
+  if (!rec) return false;
+  if (Date.now() > rec.until) {
+    delete suppressedMap.value[id];
+    return false;
+  }
+  return true;
+}
+function pruneSuppressed() {
+  const now = Date.now();
+  Object.keys(suppressedMap.value).forEach((k) => {
+    if (suppressedMap.value[k].until <= now) delete suppressedMap.value[k];
+  });
+}
 interface SeciliType {
   isEmriId: number;
   isEmriNo: string;
@@ -1144,9 +1174,9 @@ const onShowDetails = (detail: any) => {
 const onExporting = (_e: any) => {
   /* export ayarları gerekirse */
 };
-const onSelectionChanged = (_e: any) => {
-  /* seçim değişti */
-};
+// const onSelectionChanged = (_e: any) => {
+//   /* seçim değişti */
+// };
 // Filtre satırı görünürlüğü
 const goster = ref<boolean>(false);
 const FiltreTemizle = () => {
@@ -1173,7 +1203,7 @@ const right: "right" = "right";
 const planlamaNotu = ref("");
 const notBaslik = ref("");
 const popupMesajGosterVisible = ref(false);
-const popupDetayGosterVisible = ref(false)
+const popupDetayGosterVisible = ref(false);
 
 // Placeholder ikon şablonu kullanılan kolon için
 const getIconType = (cellElement: HTMLElement, cellInfo: any) => {
@@ -1186,6 +1216,7 @@ const selectedRow = ref({
   teslim_tarihi: "",
   siparis_belge_no: "",
   isemri_id: "",
+  OPERASYON: "",
   sip_not1: "",
   sip_not2: "",
   sip_not3: "",
@@ -1207,7 +1238,7 @@ const selectedRow = ref({
 });
 const gridData = ref<GridDataItem[]>([]);
 const gridDataEksikListesi = ref([]);
-const gridDataMalzemeler = ref<any[]>([])
+const gridDataMalzemeler = ref<any[]>([]);
 const gridKey = ref(Date.now());
 const gridBakiyeler = ref([]);
 
@@ -1220,7 +1251,7 @@ const montajVerileri = ref<MontajVeri[]>([]);
 const guid = ref("");
 const ekipSecDialog = ref(false);
 // Composite key kullanıldığı için focusedRowKey bir dizi veya nesne olabilir
-const focusedRowKey = ref<any>(null);
+const focusedRowKey = ref(0);
 const selectedSebep = ref<{
   break_reason_code: string;
   description: string;
@@ -1241,25 +1272,28 @@ const eksikStokKodu = ref("");
 const eksikStokAdi = ref("");
 
 // Tema rengi ve yetki bayrakları / yardımcı alanlar
-const staticPrimaryColor = '#7367F0';
-const gaugeLabelColor = '#7367F0';
+const staticPrimaryColor = "#7367F0";
+const gaugeLabelColor = "#7367F0";
 const canManagePlanlama = computed(() => true);
 
 // Planlama notu seçimi ve alanı
 const selectedNot = ref<any>(null);
 const notlar = ref<Array<{ not: string }>>([
-  { not: 'Mekanik eksik' },
-  { not: 'Satınalma eksik' },
-  { not: 'Revizyon yapıldı. Müşteri / Arge' },
-  { not: 'Ürün ağacı yok' },
-  { not: 'Beklemede - Yönetim - Fiyat' },
-  { not: 'İptal - Müşteri' },
+  { not: "Mekanik eksik" },
+  { not: "Satınalma eksik" },
+  { not: "Revizyon yapıldı. Müşteri / Arge" },
+  { not: "Ürün ağacı yok" },
+  { not: "Beklemede - Yönetim - Fiyat" },
+  { not: "İptal - Müşteri" },
 ]);
 const textAreaValue = ref<string>("");
 const addToTextArea = () => {
-  const val = (selectedNot.value && (selectedNot.value.not || selectedNot.value)) || '';
+  const val =
+    (selectedNot.value && (selectedNot.value.not || selectedNot.value)) || "";
   if (!val) return;
-  textAreaValue.value = textAreaValue.value ? `${textAreaValue.value}\n${val}` : String(val);
+  textAreaValue.value = textAreaValue.value
+    ? `${textAreaValue.value}\n${val}`
+    : String(val);
 };
 const copyToClipboard = async () => {
   try {
@@ -1280,14 +1314,30 @@ const onRowClick = (e: any) => {
 };
 
 const onRowClickDetay = (e: any): void => {
-  if (e.rowType === 'data') {
-    gridBakiyeler.value = []
-    eksikStokKodu.value = e.data.stok_kodu
-    eksikStokAdi.value = e.data.stok_adi
-    getBakiyeler(e.data.item_id)
-    popupDepolarGosterVisible.value = true
+  if (e.rowType === "data") {
+    gridBakiyeler.value = [];
+    eksikStokKodu.value = e.data.stok_kodu;
+    eksikStokAdi.value = e.data.stok_adi;
+    getBakiyeler(e.data.item_id);
+    popupDepolarGosterVisible.value = true;
   }
-}
+};
+
+// Ana gridde bağlam menüsü açılırken satırı seçili state'e yansıt
+const onMainGridContextMenuPreparing = (e: any) => {
+  if (e?.row?.rowType === "data") {
+    const data = e.row.data;
+    selectedRow.value.isemri_id = data.isemri_id;
+    selectedRow.value.OPERASYON = data.OPERASYON;
+    selectedRow.value.isemri_no = data.isemri_no;
+    selectedRow.value.siparis_belge_no = data.siparis_belge_no ?? "";
+    // bazı yerlerde istasyon id lazim
+    selectedRow.value.IS_ISTASYONU_ID = data.IS_ISTASYONU_ID ?? selectedRow.value.IS_ISTASYONU_ID;
+    if (!guid.value) {
+      guid.value = uuidv4();
+    }
+  }
+};
 
 const updateTime = () => {
   const now = new Date();
@@ -1371,7 +1421,7 @@ const vazgecOptions = {
   stylingMode: "contained",
   onClick: () => {
     popupNotGirVisible.value = false;
-    popupDetayGosterVisible.value = false
+    popupDetayGosterVisible.value = false;
   },
 };
 const kapatOptions = {
@@ -1502,25 +1552,28 @@ const renkleriGoster = (cellElement: HTMLElement, cellInfo: any): void => {
 };
 const panelKapat = async (item: any) => {
   secili.value = item;
-  // await topluBitir();
-  if (item.isemriId) {
-    const index = montajVerileri.value.findIndex(
-      (item) =>
-        item.isEmriNo === secili.value.isEmriNo &&
-        item.personelID === userData.value.id
-    );
-    if (index !== -1) {
-      montajVerileri.value.splice(index, 1);
-    }
+  // Önce ekrandaki slider'dan bu kartı optimistik olarak kaldır
+  if (item?.isemriId != null) {
+    const idx = items.value.findIndex((x: any) => x.isemriId === item.isemriId);
+    if (idx !== -1) items.value.splice(idx, 1);
   }
 
+  // Eski montajVerileri listesinden de temizle (varsa)
+  if (item?.isemriId) {
+    const index = montajVerileri.value.findIndex(
+      (m) => m.isEmriNo === item.isEmriNo && m.personelID === userData.value.id
+    );
+    if (index !== -1) montajVerileri.value.splice(index, 1);
+  }
+  // Bastır: 60 sn tekrar görünmesin
+  addSuppression(suppressIdOf(item), 60000);
+
+  // Statüyü güncelle ve server'dan taze listeyi çek
   await durumuGuncelle("KAPANDI");
-  // await nextTick(); // Vue reaktif güncellemeleri tamamlansın
-  // await Pasif();
-  // await isEmriKapat();
-  // await fetchKartlar();
   gridDataDuruslar.value = [];
   resetSeciliIsEmri();
+  // Kartların güncel halini getir
+  await fetchKartlar();
 };
 const resetSeciliIsEmri = () => {
   secili.value = {
@@ -1818,7 +1871,6 @@ const tipCellTemplate = (cellElement: HTMLElement, cellInfo: any): void => {
   cellElement.insertBefore(plnIcon, cellElement.firstChild);
 };
 
-
 const aktifEt = async () => {
   secili.value = {
     isEmriId: Number(selectedRow.value.isemri_id),
@@ -1957,6 +2009,7 @@ let interval: ReturnType<typeof setInterval>;
 let zaman: ReturnType<typeof setInterval>;
 
 const verileriAl = async () => {
+  pruneSuppressed();
   await fetchKartlar();
   //await veriHaftalikUretimler();
 };
@@ -2046,7 +2099,9 @@ const fetchKartlar = async () => {
         istasyon: userData.value.istasyon_id,
       },
     });
-    items.value = data;
+    const arr = Array.isArray(data) ? data : [];
+    const filtered = arr.filter((it: any) => !isSuppressed(suppressIdOf(it)));
+    items.value = filtered;
     console.log("Kart verisi:", items.value);
   } catch (e) {
     console.error("Veri hatası:", e);
@@ -2169,53 +2224,55 @@ const onEkipIptal = () => {
 
 const DetayGoster = (): void => {
   if (selectedRow.value === null) {
-    notify('Önce iş emrini seçmelisiniz...', 'error', 1500)
+    notify("Önce iş emrini seçmelisiniz...", "error", 1500);
 
-    return
+    return;
   }
-  gridDataMalzemeler.value = []
-  notBaslik.value = `${selectedRow.value.isemri_no} nolu iş emri detayı` + ` ( ${selectedRow.value.stok_adi} )`
-  getDetay()
-  popupDetayGosterVisible.value = true
-}
-const gridDataDetay = ref<any[]>([])
+  gridDataMalzemeler.value = [];
+  notBaslik.value =
+    `${selectedRow.value.isemri_no} nolu iş emri detayı` +
+    ` ( ${selectedRow.value.stok_adi} )`;
+  getDetay();
+  popupDetayGosterVisible.value = true;
+};
+const gridDataDetay = ref<any[]>([]);
 const numberedSteps = ref([
   {
-    title: 'Sipariş Detayı',
-    subtitle: 'Seçilmedi',
+    title: "Sipariş Detayı",
+    subtitle: "Seçilmedi",
   },
   {
-    title: 'Alt İş Emirleri',
-    subtitle: 'Seçilmedi',
+    title: "Alt İş Emirleri",
+    subtitle: "Seçilmedi",
   },
   {
-    title: 'Rota',
-    subtitle: 'Tasarım aşamasında',
+    title: "Rota",
+    subtitle: "Tasarım aşamasında",
   },
-])
+]);
 const getDetay = async () => {
   try {
-    const response = await axios.get('/api/isEmriDetay', {
+    const response = await axios.get("/api/isEmriDetay", {
       params: {
-        tablo: 'DETAY',
+        tablo: "DETAY",
         depo: selectedRow.value.CIKIS_DEPO || 0,
         isemri_id: selectedRow.value.isemri_id,
       },
-    })
+    });
 
-    gridDataDetay.value = response.data.data
-    numberedSteps.value[1].subtitle = `${response.data.toplamIsEmri} ad / ${response.data.toplamSure} dk`
-    gridDataMalzemeler.value = response.data.malzemeler
+    gridDataDetay.value = response.data.data;
+    numberedSteps.value[1].subtitle = `${response.data.toplamIsEmri} ad / ${response.data.toplamSure} dk`;
+    gridDataMalzemeler.value = response.data.malzemeler;
+  } catch (error) {
+    console.error("Veri çekilirken hata oluştu: ", error);
   }
-  catch (error) {
-    console.error('Veri çekilirken hata oluştu: ', error)
-  }
-}
-
+};
 
 const formatNumber = (num: number): string => {
-  return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(num)
-}
+  return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(
+    num
+  );
+};
 
 const menuItems = [
   { text: "Yenile" },
@@ -2300,14 +2357,17 @@ function itemClickM({ itemData }: DxContextMenuTypes.ItemClickEvent) {
 
 const onFocusedRowChanged = (e: any) => {
   if (e.rowIndex === -1) return;
-  const data = e.row!.data!;
-  selectedRow.value = data;
-  // Ana gridde composite key: ['isemri_id','OPERASYON']
-  focusedRowKey.value = [data.isemri_id, data.OPERASYON];
-  selectedRow.value.siparis_belge_no =
-    data.siparis_belge_no != null ? data.siparis_belge_no : "";
-  // textAreaValue.value = data.teknik_not1 != null ? data.teknik_not1 : '';
-  // uretimNotu.value = data.teknik_not2 != null ? data.teknik_not2 : '';
+  const data = e.row?.data;
+  if (!data) return;
+  // Composite key set, minimal state update
+  focusedRowKey.value = data.isemri_id;
+  // focusedRowKey.value = [data.isemri_id, data.OPERASYON];
+  selectedRow.value.isemri_id = data.isemri_id;
+  selectedRow.value.OPERASYON = data.OPERASYON;
+  selectedRow.value.isemri_no = data.isemri_no;
+  selectedRow.value.siparis_belge_no = data.siparis_belge_no ?? "";
+  // Istasyon ID de bazı iş akışlarında gerekli
+  selectedRow.value.IS_ISTASYONU_ID = data.IS_ISTASYONU_ID ?? selectedRow.value.IS_ISTASYONU_ID;
 };
 
 const onCellPrepared = (e: any) => {

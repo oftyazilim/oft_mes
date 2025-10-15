@@ -1,9 +1,9 @@
 <template>
   <VDialog v-model="dialog" max-width="800" @update:model-value="onDialogChange">
     <VCard class="personel-dialog-card">
-      <div v-if="loading" class="dialog-loading-overlay d-flex flex-column align-center justify-center">
+      <div v-if="busy" class="dialog-loading-overlay d-flex flex-column align-center justify-center">
         <v-progress-circular indeterminate color="primary" size="48" class="mb-3" />
-        <span style="font-weight: 600;">Kayıt yapılıyor...</span>
+        <span style="font-weight: 600;">{{ loading ? 'Kayıt yapılıyor...' : 'Yükleniyor...' }}</span>
       </div>
       <VCardTitle class="text-h6 d-flex justify-space-between align-center">
         Personel Seçimi
@@ -12,7 +12,7 @@
         </div>
       </VCardTitle>
       <div class="ps-6">
-        <VBtn variant="outlined" @click="EkipAktar()" :disabled="loading">
+        <VBtn variant="outlined" @click="EkipAktar()" :disabled="busy">
           <VIcon start icon="tabler-users" />
           Ekip Aktar
         </VBtn>
@@ -24,12 +24,15 @@
           <VCol cols="6">
             <!-- <h5 class="text-subtitle-2">Tüm Personeller</h5> -->
             <DxDataGrid :data-source="kalanPersoneller" :height="600" key-expr="kimlik_no" :show-borders="true"
-              :hover-state-enabled="true" @row-click="e => secById(e.data.kimlik_no)">
+              :hover-state-enabled="false" :repaint-changes-only="true" :focused-row-enabled="false"
+              :auto-navigate-to-focused-row="false" @row-click="onRowClick">
               <DxColumn data-field="ad_soyad" caption="Ad Soyad" sort-order="asc" />
               <DxColumn data-field="sicil_no" caption="Sicil No" width="100" :visible="false" />
               <DxSearchPanel :visible="true" :highlight-case-sensitive="false" />
 
               <DxScrolling mode="virtual" row-rendering-mode="virtual" show-scrollbar="always" />
+
+              <DxSelection mode="none" />
 
             </DxDataGrid>
           </VCol>
@@ -49,8 +52,8 @@
 
       <VCardActions>
         <VSpacer />
-        <VBtn variant="outlined" color="warning" @click="iptal" :disabled="loading">Vazgeç</VBtn>
-        <VBtn @click="kaydet" variant="outlined" color="success" :disabled="loading">Kaydet</VBtn>
+        <VBtn variant="outlined" color="warning" @click="iptal" :disabled="busy">Vazgeç</VBtn>
+        <VBtn @click="kaydet" variant="outlined" color="success" :disabled="busy">Kaydet</VBtn>
       </VCardActions>
     </VCard>
   </VDialog>
@@ -59,8 +62,8 @@
 <script setup lang="ts">
 import axios from 'axios'
 import dayjs from 'dayjs'
-import { DxColumn, DxDataGrid, DxScrolling, DxSearchPanel } from 'devextreme-vue/data-grid'
-import { onMounted, ref, watch } from 'vue'
+import { DxColumn, DxDataGrid, DxScrolling, DxSearchPanel, DxSelection } from 'devextreme-vue/data-grid'
+import { computed, onMounted, ref, watch } from 'vue'
 
 const emit = defineEmits(['kaydedildi', 'iptal'])
 const dialog = defineModel<boolean>()
@@ -78,14 +81,44 @@ const tumPersoneller = ref<Personel[]>([])
 const kalanPersoneller = ref<Personel[]>([])
 const secilenPersoneller = ref<Personel[]>([])
 const loading = ref(false)
+const personellerHazir = ref(false)
+const initializing = ref(false)
+const busy = computed(() => loading.value || initializing.value)
+
+function normalizePersonel(p: any): Personel {
+  return {
+    register_id: Number(p.register_id),
+    ad_soyad: String(p.ad_soyad ?? ''),
+    kimlik_no: String(p.kimlik_no ?? ''),
+    sicil_no: String(p.sicil_no ?? ''),
+    istasyon_id: Number(p.istasyon_id ?? 0),
+  }
+}
+
+async function yuklePersoneller() {
+  if (personellerHazir.value) return
+  const { data } = await axios.get('/api/personeller')
+  const arr = Array.isArray(data) ? data : Object.values(data)
+  tumPersoneller.value = arr.map(normalizePersonel)
+  personellerHazir.value = true
+}
 
 onMounted(async () => {
-  const { data } = await axios.get('/api/personeller')
-  tumPersoneller.value = data
+  try {
+    await yuklePersoneller()
+  } catch (e) {
+    console.error('Personeller yüklenemedi', e)
+  }
 })
 
 watch(dialog, async (acik) => {
   if (acik) {
+    initializing.value = true
+    // Dialog açılırken personel listesi hazır değilse yükle
+    if (!personellerHazir.value) {
+      try { await yuklePersoneller() } catch (e) { console.error('Personeller yüklenemedi', e) }
+    }
+    // Kalan listeyi tüm personellerden başlat (kopyalayarak)
     kalanPersoneller.value = tumPersoneller.value.map(p => ({ ...p }))
     try {
       const response = await axios.get('/api/aktif-ekipler', {
@@ -95,36 +128,58 @@ watch(dialog, async (acik) => {
         },
       })
 
-      const aktifEkip = Array.isArray(response.data) ? response.data : Object.values(response.data)
+      const raw = response?.data ?? []
+      const aktifEkip = Array.isArray(raw) ? raw : Object.values(raw || {})
 
       secilenPersoneller.value = aktifEkip.map((p: any) => ({
-        register_id: p.register_id,
+        register_id: Number(p.register_id),
         ad_soyad: p.personel_full_name,
-        kimlik_no: p.citizenship_no,
-        istasyon_id: p.istasyon_id,
-        sicil_no: p.sicil_no,
+        kimlik_no: String(p.citizenship_no ?? p.kimlik_no ?? ''),
+        istasyon_id: Number(p.istasyon_id ?? 0),
+        sicil_no: String(p.sicil_no ?? ''),
       }))
 
-      const secilenIdSet = new Set(secilenPersoneller.value.map(p => p.register_id))
-      kalanPersoneller.value = kalanPersoneller.value.filter(p => !secilenIdSet.has(p.register_id))
+      // Seçilenleri citizenship_no (kimlik_no) üzerinden eşleştirip soldan düş
+      const secilenKimSet = new Set(
+        secilenPersoneller.value
+          .map(p => String(p.kimlik_no))
+          .filter(v => v.length > 0)
+      )
+      kalanPersoneller.value = kalanPersoneller.value.filter(p => !secilenKimSet.has(String(p.kimlik_no)))
     } catch (err) {
       console.error('Aktif ekip yüklenemedi:', err)
+    } finally {
+      initializing.value = false
     }
+  } else {
+    // Dialog kapanırken sağ ve sol listeleri temizle
+    secilenPersoneller.value = []
+    kalanPersoneller.value = []
   }
 })
 
 const sec = (index: number) => {
+  if (busy.value) return
   const secilen = kalanPersoneller.value.splice(index, 1)[0]
+  if (!secilen) return
+  // Zaten ekli ise tekrar ekleme
+  if (secilenPersoneller.value.some(p => p.kimlik_no === secilen.kimlik_no)) return
   secilenPersoneller.value.push(secilen)
 }
 
 const kaldir = (index: number) => {
+  if (busy.value) return
   const geriAlinan = secilenPersoneller.value.splice(index, 1)[0]
-  kalanPersoneller.value.push(geriAlinan)
+  if (!geriAlinan) return
+  const already = kalanPersoneller.value.some(p => p.kimlik_no === geriAlinan.kimlik_no)
+  if (!already) kalanPersoneller.value.push(geriAlinan)
 }
 
-const secById = (register_id: number) => {
-  const index = kalanPersoneller.value.findIndex(p => p.register_id === register_id)
+const secById = (kimlik_no: string) => {
+  if (busy.value) return
+  // Sağ listede varsa yapma
+  if (secilenPersoneller.value.some(p => p.kimlik_no === kimlik_no)) return
+  const index = kalanPersoneller.value.findIndex(p => p.kimlik_no === kimlik_no)
   if (index !== -1) sec(index)
 }
 
@@ -137,14 +192,14 @@ const kaydet = async () => {
       params: { isemriID: props.isemriID, guid: props.guid },
     })
 
-    const mevcutSet = new Set(
-      (Array.isArray(mevcutKayitlar) ? mevcutKayitlar : Object.values(mevcutKayitlar))
-        .filter((p: any) => p.end_work_time === null)
-        .map((p: any) => p.register_id)
+    const mevcutArr = Array.isArray(mevcutKayitlar) ? mevcutKayitlar : Object.values(mevcutKayitlar || {})
+    const aktifler = mevcutArr.filter((p: any) => p && p.end_work_time === null)
+    const mevcutKimSet = new Set(
+      aktifler.map((p: any) => String(p.citizenship_no ?? p.kimlik_no ?? ''))
     )
-    const simdikiSet = new Set(secilenPersoneller.value.map(p => p.register_id))
-    const eklenecekler = secilenPersoneller.value.filter(p => !mevcutSet.has(p.register_id))
-    const kapatilacaklar = Array.from(mevcutSet).filter(id => !simdikiSet.has(id))
+    const simdikiKimSet = new Set(secilenPersoneller.value.map(p => String(p.kimlik_no)))
+    const eklenecekler = secilenPersoneller.value.filter(p => !mevcutKimSet.has(String(p.kimlik_no)))
+    const kapatilacakKimlikler = Array.from(mevcutKimSet).filter(id => !simdikiKimSet.has(String(id)))
 
     if (eklenecekler.length) {
       const payload = eklenecekler.map(p => ({
@@ -160,14 +215,16 @@ const kaydet = async () => {
         guid: props.guid,
       }))
       console.log('Eklenecekler:', payload)
-      await axios.post('/api/aktif-ekipler', payload)
+      await axios.post('/api/ekip-kaydet', payload)
     }
 
-    if (kapatilacaklar.length) {
+    if (kapatilacakKimlikler.length) {
       await axios.put('/api/aktif-ekipler/kapat', {
-        register_ids: kapatilacaklar,
+        kimlikler: kapatilacakKimlikler,
         guid: props.guid,
         end_work_time: now,
+        worder_m_id: props.isemriID,
+        istasyon_id: props.istasyonId,
       })
     }
 
@@ -188,28 +245,35 @@ const iptal = () => {
   emit('iptal')
 }
 
-const onDialogChange = (val: boolean) => {
-  if (!val) emit('iptal')
+const onDialogChange = (_val: boolean) => {
+// Kapanışta iptal event'i göndermiyoruz; iptal butonu zaten emit ediyor.
 }
 
 const EkipAktar = () => {
-  const secilenIdSet = new Set(secilenPersoneller.value.map(p => Number(p.register_id)))
+  if (busy.value) return
+  // citizenship_no (kimlik_no) üzerinden karşılaştır
+  const secilenKimSet = new Set(secilenPersoneller.value.map(p => p.kimlik_no))
 
   const aktarilacaklar: Personel[] = []
 
   for (let i = kalanPersoneller.value.length - 1; i >= 0; i--) {
     const p = kalanPersoneller.value[i]
-    const id = Number(p.register_id)
-    if (p.istasyon_id === props.istasyonId && !secilenIdSet.has(id)) {
+    const id = p.kimlik_no
+    if (p.istasyon_id === props.istasyonId && !secilenKimSet.has(id)) {
       aktarilacaklar.push(p)
       kalanPersoneller.value.splice(i, 1)
     }
   }
 
-  const zatenEklenmisSet = new Set(secilenPersoneller.value.map(p => Number(p.register_id)))
-  const temizAktarilacaklar = aktarilacaklar.filter(p => !zatenEklenmisSet.has(Number(p.register_id)))
+  const zatenEklenmisSet = new Set(secilenPersoneller.value.map(p => p.kimlik_no))
+  const temizAktarilacaklar = aktarilacaklar.filter(p => !zatenEklenmisSet.has(p.kimlik_no))
 
   secilenPersoneller.value.push(...temizAktarilacaklar)
+}
+
+function onRowClick(e: any) {
+  if (busy.value) return
+  secById(e?.data?.kimlik_no)
 }
 </script>
 

@@ -148,11 +148,11 @@ class UretimMontajController extends Controller
 
   public function EkipleriKapat(Request $request)
   {
-    $registerIds = $request->input('register_ids', []);
+    $kimlikler = $request->input('kimlikler', []);
     $guid = $request->input('guid');
     $endWorkTime = $request->input('end_work_time');
 
-    if (empty($registerIds) || !$guid || !$endWorkTime) {
+    if (empty($kimlikler) || !$guid || !$endWorkTime) {
       return response()->json(['message' => 'Eksik parametre'], 400);
     }
 
@@ -160,7 +160,7 @@ class UretimMontajController extends Controller
       ->table('oftt_aktif_ekipler')
       ->where('guid', $guid)
       ->whereNull('end_work_time')
-      ->whereIn('register_id', $registerIds)
+      ->whereIn('citizenship_no', $kimlikler)
       ->update(['end_work_time' => $endWorkTime]);
 
     return response()->json(['message' => 'Kapatma işlemi tamamlandı']);

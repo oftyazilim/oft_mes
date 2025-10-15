@@ -222,13 +222,17 @@
 
   <!-- Kapatma Engeli Uyarı Popup -->
   <DxPopup v-model:visible="popupKapatmaEngelVisible" :width="480" :height="320" :hide-on-outside-click="true"
-    :show-close-button="true" title="İş Emri Kapatma Engellendi">
+    :show-close-button="true">
+    <template #title>
+      <p class="popup-title">İş Emri Kapatma Engellendi</p>
+    </template>
     <template #content>
       <VCardText>
         <div :style="{ marginBlockEnd: '8px', fontWeight: 600 }">{{ isemriNo }}</div>
         <pre :style="{ margin: 0, fontFamily: 'inherit', whiteSpace: 'pre-wrap' }">{{ kapatmaMesaji }}</pre>
       </VCardText>
     </template>
+    <DxToolbarItem widget="dxButton" toolbar="bottom" location="center" :options="kapatmaKapatOptions" />
   </DxPopup>
 
   <PersonelSecDialog v-model="ekipSecDialog" :isemriID="Number(props.isemriId)"
@@ -315,21 +319,24 @@ const isEmriKapat = async (): Promise<boolean> => {
     const { data } = await axios.get('/api/isEmriDetay', {
       params: {
         tablo: 'DETAY',
-        depo: 0, // Not: CIKIS_DEPO bilgisi kartta yok; 0 gönderiyoruz (varsayılan). Gerekirse backend tarafında ele alınır.
+        depo: props.cikisDepo, 
         isemri_id: Number(props.isemriId),
         coID: userData.value?.co_id,
-        cikisDepo: props.cikisDepo,
       },
     });
 
     const malzemeler: any[] = Array.isArray(data?.malzemeler) ? data.malzemeler : [];
-    const eksikler = malzemeler.filter(m => Number(m?.qty_prm ?? 0) < Number(m?.ihtiyac ?? 0));
+    const eksikler = malzemeler.filter(m => Number(m?.qty_prm ?? 0) < Number(uretimMiktari.value));
+
+    console.log('Malzemeler:', malzemeler);
+    console.log('Eksikler:', eksikler);
 
     if (eksikler.length > 0) {
       const detaylar = eksikler.slice(0, 10).map(m => {
-        const bakiye = (m?.bakiye != null) ? Number(m.bakiye) : (Number(m?.qty_prm ?? 0) - Number(m?.ihtiyac ?? 0));
+        const bakiye = (m?.bakiye != null) ? Number(m.bakiye) : (Number(m?.qty_prm ?? 0) - Number(uretimMiktari.value));
         const fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(bakiye);
-        return `• ${m?.stok_kodu ?? '-'} - ${m?.stok_adi ?? '-'} (Bakiye: ${fmt})`;
+        return `• ${(m && m.stok_kodu ? m.stok_kodu : '-')} - ${(m && m.stok_adi ? m.stok_adi : '-')}`;
+        // return `• ${m?.stok_kodu ?? '-'} - ${m?.stok_adi ?? '-'} (Bakiye: ${fmt})`;
       }).join('\n');
 
       kapatmaMesaji.value = `Stok yetersiz olan malzemeler var. Kapatma yapılamaz.\n\n${detaylar}${eksikler.length > 10 ? '\n…' : ''}`;
@@ -441,6 +448,15 @@ const vazgecOptions = {
     showUretimMiktariDialog.value = false;
   },
 };
+
+// Kapatma engeli popup'ı için tek bir "Kapat" düğmesi
+const kapatmaKapatOptions = {
+  width: 120,
+  type: 'normal',
+  text: 'Kapat',
+  stylingMode: 'contained',
+  onClick: () => { popupKapatmaEngelVisible.value = false },
+}
 
 
 status.value = props.status;

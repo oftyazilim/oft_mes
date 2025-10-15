@@ -116,6 +116,42 @@
 			"type": "shell",
 			"command": "pnpm -s build",
 			"group": "build"
+		},
+		{
+			"label": "Build Frontend (Vite)",
+			"type": "shell",
+			"command": "pnpm -s build",
+			"group": "build"
+		},
+		{
+			"label": "Build Frontend (Vite)",
+			"type": "shell",
+			"command": "pnpm -s build",
+			"group": "build"
+		},
+		{
+			"label": "Build Frontend (Vite)",
+			"type": "shell",
+			"command": "pnpm -s build",
+			"group": "build"
+		},
+		{
+			"label": "Build Frontend (Vite)",
+			"type": "shell",
+			"command": "pnpm -s build",
+			"group": "build"
+		},
+		{
+			"label": "Build Frontend (Vite)",
+			"type": "shell",
+			"command": "pnpm -s build",
+			"group": "build"
+		},
+		{
+			"label": "Build Frontend (Vite)",
+			"type": "shell",
+			"command": "pnpm -s build",
+			"group": "build"
 		}
 	]
 }
