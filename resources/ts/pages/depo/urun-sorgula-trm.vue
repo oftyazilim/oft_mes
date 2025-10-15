@@ -181,7 +181,8 @@ const uploadPhoto = async (itemID: any) => {
   formData.append('photo', compressed, renameToJpeg(photo.value.name))
   formData.append('itemCode', formDatam.value.urunKodu)
   try {
-    await axios.post('/api/stok-foto/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+    // Content-Type'i elle vermeyelim; tarayıcı boundary ile doğru ayarlar
+    await axios.post('/api/stok-foto/upload', formData)
     notify('Fotoğraf yüklendi', 'success', 1500)
     photo.value = null
     preview.value = ''

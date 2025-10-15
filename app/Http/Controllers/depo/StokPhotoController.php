@@ -22,7 +22,10 @@ class StokPhotoController extends Controller
     {
         // .env PHOTO_SK_DIR varsa onu kullan, değilse Windows UNC default'u kullan
         // Sağ ve sol ayırıcıları temizleyip platforma uygun ayırıcı ile bağlayacağız
-    return rtrim(config('app.photo_sk_dir', self::BASE_NETWORK_DIR), '\\/');
+        $cfg = config('app.photo_sk_dir', self::BASE_NETWORK_DIR);
+        // Olası baştaki/sondaki boşlukları temizle (örn .env: "PHOTO_SK_DIR= /mnt/..." )
+        $cfg = trim((string)$cfg);
+        return rtrim($cfg, '\\/');
     }
 
     private function cleanItemCode(string $code): string
@@ -101,9 +104,30 @@ class StokPhotoController extends Controller
         ]);
         $itemCode = $validated['itemCode'];
         $dir = $this->dirFor($itemCode);
-        if (!File::exists($dir)) File::makeDirectory($dir, 0775, true, true);
+
+        // Klasör oluşturmayı güvenle yap ve hatayı detaylı logla
+        if (!File::exists($dir)) {
+            try {
+                File::makeDirectory($dir, 0775, true, true);
+            } catch (\Throwable $e) {
+                Log::error('Stok foto klasör oluşturma hata', [
+                    'dir' => $dir,
+                    'baseDir' => $this->baseDir(),
+                    'itemCode' => $itemCode,
+                    'error' => $e->getMessage(),
+                ]);
+                return response()->json(['status' => 'error', 'code' => 'dir_create_failed', 'message' => 'Klasör oluşturulamadı'], 500);
+            }
+        }
 
         $file = $request->file('photo');
+        if (!$file) {
+            Log::warning('Stok foto yükleme: photo dosyası gelmedi veya parse edilemedi', [
+                'contentType' => $request->header('Content-Type'),
+                'size' => $request->header('Content-Length'),
+            ]);
+            return response()->json(['status' => 'error', 'code' => 'no_file', 'message' => 'Dosya alınamadı'], 400);
+        }
         $ext = strtolower($file->getClientOriginalExtension());
         if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) $ext = 'jpg';
 
@@ -141,8 +165,15 @@ class StokPhotoController extends Controller
             }
             $encoded->save($targetPath);
         } catch (\Throwable $e) {
-            Log::error('Stok foto kaydetme hata: ' . $e->getMessage());
-            return response()->json(['status' => 'error', 'message' => 'Kaydedilemedi'], 500);
+            Log::error('Stok foto kaydetme hata', [
+                'error' => $e->getMessage(),
+                'dir' => $dir,
+                'target' => $targetPath,
+                'baseDir' => $this->baseDir(),
+                'mime' => $file->getMimeType(),
+                'origName' => $file->getClientOriginalName(),
+            ]);
+            return response()->json(['status' => 'error', 'code' => 'save_failed', 'message' => 'Kaydedilemedi'], 500);
         }
 
         return response()->json([
