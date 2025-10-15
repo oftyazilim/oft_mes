@@ -980,7 +980,9 @@ watch(photo, newPhoto => {
       if (typeof reader.result === 'string') {
         photos.value.push({
           id: photoIdCounter++,
-          url: reader.result
+          url: reader.result,
+          // Kameradan gelen dosyayı da kaydedelim ki sunucuya gönderebilelim
+          file: newPhoto as File,
         })
       }
     }
