@@ -315,6 +315,25 @@ const kapat = async () => {
 // İş emri kapatma: Önce stok yeterliliği kontrol et; eksik varsa popup ile engelle
 const isEmriKapat = async (): Promise<boolean> => {
   try {
+    // 0) Kalan miktar kontrolü: girilen üretim kalan miktarı aşmamalı
+    try {
+      const kalanResp = await axios.get('/api/dataUretimEmirler', {
+        params: { istasyon: userData.value.istasyon_id },
+      });
+      const emirler: any[] = Array.isArray(kalanResp.data?.emirler) ? kalanResp.data.emirler : [];
+      const buEmir = emirler.find((x: any) => Number(x?.isemri_id) === Number(props.isemriId));
+      const kalanMiktar = Number(buEmir?.kalan_miktar ?? 0);
+      if (Number(uretimMiktari.value) > kalanMiktar) {
+        popupKapatmaEngelVisible.value = true;
+        kapatmaMesaji.value = `Girilen üretim miktarı (${Number(uretimMiktari.value)}) kalan miktarı (${kalanMiktar}) aşamaz.`;
+        notify('Girilen üretim kalan miktarı aşamaz.', 'warning', 2200);
+        return false;
+      }
+    } catch (e) {
+      console.warn('Kalan miktar kontrolü yapılamadı:', e);
+      // Devam ediyoruz; bir alt kontrolde stok yeterliliği yine engelleyebilir
+    }
+
     // 1) Ön-kontrol: malzeme yeterlilik kontrolü
     const { data } = await axios.get('/api/isEmriDetay', {
       params: {
@@ -326,7 +345,7 @@ const isEmriKapat = async (): Promise<boolean> => {
     });
 
     const malzemeler: any[] = Array.isArray(data?.malzemeler) ? data.malzemeler : [];
-    const eksikler = malzemeler.filter(m => Number(m?.qty_prm ?? 0) < Number(uretimMiktari.value));
+    const eksikler = malzemeler.filter(m => Number(m?.qty_prm ?? 0) < Number(uretimMiktari.value * Number(m?.qty_base_bom)));
 
     console.log('Malzemeler:', malzemeler);
     console.log('Eksikler:', eksikler);
