@@ -556,8 +556,9 @@
 
                     <VRow>
                       <VCol cols="7" class="pa-0 ps-2 pe-3">
-                        <DxSelectBox v-model="selectedNot" :items="notlar" display-expr="not" value-expr="not"
-                          :disabled="!canManagePlanlama" label="Planlama Notu Eklemeleri" class="kalin" />
+                        <DxSelectBox v-model="selectedNot" :items="notlar" display-expr="note" value-expr="note"
+                          :disabled="!canManagePlanlama" label="Planlama Notu Eklemeleri" class="kalin"
+                          placeholder="Bir not seçin..." />
                       </VCol>
                       <VCol cols="5" class="mt-4 pa-0 ps-0  pe-0">
                         <VRow>
@@ -2117,6 +2118,7 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
 
 // const ability = useAbility()
 // const canManagePlanlama = computed(() => ability.can('manage', 'planlama'))
+const canManagePlanlama = computed(() => canByPolicyKey('button:planlama:manage'))
 
 const baseMenuItems = [
   { text: 'Yenile' },
