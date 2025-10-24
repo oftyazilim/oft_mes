@@ -9,12 +9,20 @@ use Illuminate\Support\Facades\Storage;
 
 Route::get('/deneme', function (Request $request) {
 
-  $path = Storage::disk('fotolar_disk')->path('fotolar'); 
-  return $files = File::files($path);
+    $path = Storage::disk('fotolar_disk')->path('fotolar');
+    //return 
+    $files = File::files($path);
 
-  foreach ($files as $file) {
-    echo $file->getFilename() . '<br>';
-  }
+    $data = [];
+
+    foreach ($files as $file) {
+        $data[] = $file->getFilename();
+    }
+
+    return response()->json([
+        'files' => $files,
+        'data' => $data,
+    ]);
 });
 
 Route::middleware('auth')->get('/photo/{name}', [PhotoController::class, 'show'])->name('photo.show');

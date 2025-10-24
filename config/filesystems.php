@@ -63,7 +63,7 @@ return [
         'fotolar_disk' => [
             'driver' => 'local',
             'root' => '/mnt/fotolar/',
-            'throw' => false,
+            'throw' => true,
             'visibility' => 'public',
             'permissions' => [
                 'file' => ['public' => 0775, 'private' => 0775],
