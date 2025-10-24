@@ -1,0 +1,23 @@
+import{p as e}from"./index-BQIgBoUx.js";import{af as l}from"./m_row_dragging-BGM0kDgc.js";import{d as t}from"./main-DCUJhUhR.js";import{S as i}from"./text-area-CSOqVb-h.js";/*!
+ * devextreme-vue
+ * Version: 25.1.5
+ * Build date: Wed Sep 03 2025
+ *
+ * Copyright (c) 2012 - 2025 Developer Express Inc. ALL RIGHTS RESERVED
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file in the root of the project for details.
+ *
+ * https://github.com/DevExpress/devextreme-vue
+ */const n={props:{accessKey:String,activeStateEnabled:Boolean,cellTemplate:{},dateSerializationFormat:String,disabled:Boolean,disabledDates:[Array,Function],elementAttr:Object,firstDayOfWeek:Number,focusStateEnabled:Boolean,height:[Number,String],hint:String,hoverStateEnabled:Boolean,isDirty:Boolean,isValid:Boolean,max:[Date,Number,String],maxZoomLevel:String,min:[Date,Number,String],minZoomLevel:String,name:String,onDisposing:Function,onInitialized:Function,onOptionChanged:Function,onValueChanged:Function,readOnly:Boolean,rtlEnabled:Boolean,selectionMode:String,selectWeekOnClick:Boolean,showTodayButton:Boolean,showWeekNumbers:Boolean,tabIndex:Number,validationError:{},validationErrors:Array,validationMessageMode:String,validationMessagePosition:String,validationStatus:String,value:[Array,Date,Number,String],visible:Boolean,weekNumberRule:String,width:[Number,String],zoomLevel:String},emits:{"update:isActive":null,"update:hoveredElement":null,"update:accessKey":null,"update:activeStateEnabled":null,"update:cellTemplate":null,"update:dateSerializationFormat":null,"update:disabled":null,"update:disabledDates":null,"update:elementAttr":null,"update:firstDayOfWeek":null,"update:focusStateEnabled":null,"update:height":null,"update:hint":null,"update:hoverStateEnabled":null,"update:isDirty":null,"update:isValid":null,"update:max":null,"update:maxZoomLevel":null,"update:min":null,"update:minZoomLevel":null,"update:name":null,"update:onDisposing":null,"update:onInitialized":null,"update:onOptionChanged":null,"update:onValueChanged":null,"update:readOnly":null,"update:rtlEnabled":null,"update:selectionMode":null,"update:selectWeekOnClick":null,"update:showTodayButton":null,"update:showWeekNumbers":null,"update:tabIndex":null,"update:validationError":null,"update:validationErrors":null,"update:validationMessageMode":null,"update:validationMessagePosition":null,"update:validationStatus":null,"update:value":null,"update:visible":null,"update:weekNumberRule":null,"update:width":null,"update:zoomLevel":null},model:{prop:"value",event:"update:value"},computed:{instance(){return this.$_instance}},beforeCreate(){this.$_WidgetClass=l,this.$_hasAsyncTemplate=!0}};e(n);const s=t(n);/*!
+ * devextreme-vue
+ * Version: 25.1.5
+ * Build date: Wed Sep 03 2025
+ *
+ * Copyright (c) 2012 - 2025 Developer Express Inc. ALL RIGHTS RESERVED
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file in the root of the project for details.
+ *
+ * https://github.com/DevExpress/devextreme-vue
+ */const a={props:{accessKey:String,activeStateEnabled:Boolean,disabled:Boolean,elementAttr:Object,focusStateEnabled:Boolean,height:[Number,String],hint:String,hoverStateEnabled:Boolean,isDirty:Boolean,isValid:Boolean,name:String,onContentReady:Function,onDisposing:Function,onInitialized:Function,onOptionChanged:Function,onValueChanged:Function,readOnly:Boolean,rtlEnabled:Boolean,switchedOffText:String,switchedOnText:String,tabIndex:Number,validationError:{},validationErrors:Array,validationMessageMode:String,validationMessagePosition:String,validationStatus:String,value:Boolean,visible:Boolean,width:[Number,String]},emits:{"update:isActive":null,"update:hoveredElement":null,"update:accessKey":null,"update:activeStateEnabled":null,"update:disabled":null,"update:elementAttr":null,"update:focusStateEnabled":null,"update:height":null,"update:hint":null,"update:hoverStateEnabled":null,"update:isDirty":null,"update:isValid":null,"update:name":null,"update:onContentReady":null,"update:onDisposing":null,"update:onInitialized":null,"update:onOptionChanged":null,"update:onValueChanged":null,"update:readOnly":null,"update:rtlEnabled":null,"update:switchedOffText":null,"update:switchedOnText":null,"update:tabIndex":null,"update:validationError":null,"update:validationErrors":null,"update:validationMessageMode":null,"update:validationMessagePosition":null,"update:validationStatus":null,"update:value":null,"update:visible":null,"update:width":null},model:{prop:"value",event:"update:value"},computed:{instance(){return this.$_instance}},beforeCreate(){this.$_WidgetClass=i,this.$_hasAsyncTemplate=!0}};e(a);const p=t(a);export{s as D,p as a};

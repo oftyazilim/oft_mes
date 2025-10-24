@@ -29,6 +29,20 @@ use App\Http\Controllers\NotificationSettingsController;
 use App\Http\Controllers\planlama\UrunAgaciController;
 use App\Http\Controllers\AbilityPolicyController;
 use App\Http\Controllers\UserGridLayoutController;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+
+Route::get('/deneme', function (Request $request) {
+
+  $path = Storage::disk('fotolar_disk'); 
+  $files = File::files($path);
+
+  foreach ($files as $file) {
+    echo $file->getFilename() . '<br>';
+  }
+});
+
+
 
 Route::group(['prefix' => 'auth'], function () {
   Route::post('login', [AuthController::class, 'login']);
@@ -97,7 +111,7 @@ Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () 
   Route::get('/{id}/roles', [UsersController::class, 'getUserRoles']);
   Route::get('/{id}/permissions', [UsersController::class, 'getUserPermissions']);
   // Route::get('/company', [UsersController::class, 'getCompany']);
-  
+
   Route::post('/{id}/permissions/{permissionId}', [UsersController::class, 'assignUserPermission']);
   Route::post('/{id}/roles', [UsersController::class, 'assignRoles']);
   Route::post('/', [UsersController::class, 'store']);
@@ -129,7 +143,7 @@ Route::middleware('auth:sanctum')->group(function () {
   // Route::get('/isEmriDetay', [EmirlerController::class, 'getIsEmriDetay']);
   Route::get('/digerdepobakiyeleri', [EmirlerController::class, 'getDepoBakiyeleri']);
   Route::get('/isEmriKapanmislar', [EmirlerController::class, 'getIsEmriKapanmislar']);
-  
+
   Route::post('/log-kayit', [UsersController::class, 'LogKayit']);
   Route::post('/istasyonKaydet', [EmirlerController::class, 'istasyonKaydet']);
   Route::post('/aksesuarKaydet', [EmirlerController::class, 'AksesuarKaydet']);
@@ -181,7 +195,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/dataUretimPerformans', [UretimMontajController::class, 'getUretimPerformans']);
   Route::get('/durus-sebepleri-al', [UretimMontajController::class, 'DurusSebepleriAl']);
   Route::put('/duruslar-montaj/{id}/reason', [UretimMontajController::class, 'UpdateDurusSebebi']);
-  
+
   Route::post('/insert-workorder', [UretimMontajController::class, 'insertWorkOrder']);
   Route::post('/ekip-bitir-toplu', [UretimMontajController::class, 'bitirToplu']);
   Route::post('/ekip-kaydet', [UretimMontajController::class, 'EkipKaydet']);
@@ -190,7 +204,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('/durusKaydet', [UretimMontajController::class, 'DurusKaydet']);
   Route::post('/mola-baslat', [UretimMontajController::class, 'baslat']);
   Route::post('/kontrolGerekKaydet', [UretimMontajController::class, 'KontrolGerekKaydet']);
-  
+
   Route::put('/aktif-ekipler/kapat', [UretimMontajController::class, 'EkipleriKapat']);
 });
 
@@ -203,7 +217,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/uretim-rollform/kpi', [UretimMekanikController::class, 'kpi']);
   Route::get('/duruslar-mekanik', [UretimMekanikController::class, 'MekanikDuruslar']);
   Route::get('/uretim-rollform/detect-station', [UretimMekanikController::class, 'detectStation']);
-  
+
   Route::post('/uretim-rollform/hurda-gir', [UretimMekanikController::class, 'hurdaGir']);
   Route::post('/uretim-rollform/close-and-open-down', [UretimMekanikController::class, 'closeAndOpenDown']);
   Route::post('/uretim-rollform/set-operator', [UretimMekanikController::class, 'setOperator']);
