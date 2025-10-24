@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 
 Route::get('/deneme', function (Request $request) {
 
-    $path = Storage::disk('fotolar_disk')->path('fotolar/');
+    $path = Storage::disk('fotolar_disk')->path('fotolar/kk-fotolari');
     //return 
     $files = File::files($path);
 
