@@ -4,6 +4,18 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Uretim\TechnicalDrawingController;
 use App\Http\Controllers\FeedbackActionController;
 use App\Http\Controllers\PhotoController;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+
+Route::get('/deneme', function (Request $request) {
+
+  $path = Storage::disk('fotolar_disk'); 
+  $files = File::files($path);
+
+  foreach ($files as $file) {
+    echo $file->getFilename() . '<br>';
+  }
+});
 
 Route::middleware('auth')->get('/photo/{name}', [PhotoController::class, 'show'])->name('photo.show');
 

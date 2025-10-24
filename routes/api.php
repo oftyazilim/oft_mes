@@ -29,18 +29,7 @@ use App\Http\Controllers\NotificationSettingsController;
 use App\Http\Controllers\planlama\UrunAgaciController;
 use App\Http\Controllers\AbilityPolicyController;
 use App\Http\Controllers\UserGridLayoutController;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 
-Route::get('/deneme', function (Request $request) {
-
-  $path = Storage::disk('fotolar_disk'); 
-  $files = File::files($path);
-
-  foreach ($files as $file) {
-    echo $file->getFilename() . '<br>';
-  }
-});
 
 
 
