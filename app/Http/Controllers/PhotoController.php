@@ -41,7 +41,7 @@ class PhotoController extends Controller
         // $path = $disk->path($safeName);
 
         // Veya sabit mount yolu:
-        $base = '/mnt/fotolar';
+        $base = Storage::disk('fotolar_disk')->path('fotolar/sk-fotolari');
         $path = $base . DIRECTORY_SEPARATOR . $safeName;
 
         if (! file_exists($path) || ! is_file($path)) {
