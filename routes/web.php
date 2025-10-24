@@ -8,22 +8,49 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 Route::get('/deneme', function (Request $request) {
+    $disk = Storage::disk('fotolar_disk');
 
-    $path = Storage::disk('fotolar_disk')->path('fotolar/kk-fotolari/IEN-25017682');
-    //return 
+    // Ana dizin yolu
+    $relativePath = 'fotolar/kk-fotolari/IEN-25017682';
+    $path = $disk->path($relativePath);
+
+    // Dosyaları al
     $files = File::files($path);
 
-    $data = [];
+    // Liste oluştur
+    $data = collect($files)->map(function ($file) use ($disk, $relativePath) {
+        $filename = $file->getFilename();
+        $url = $disk->url($relativePath . '/' . $filename);
 
-    foreach ($files as $file) {
-        $data[] = $file->getFilename();
-    }
+        return [
+            'name' => $filename,
+            'url' => $url,
+        ];
+    });
 
     return response()->json([
-        'files' => $files,
-        'data' => $data,
+        'files' => $data,
     ]);
 });
+
+
+// Route::get('/deneme', function (Request $request) {
+
+//     $path = Storage::disk('fotolar_disk')->path('fotolar/kk-fotolari/IEN-25017682');
+//     //return 
+//     $files = File::files($path);
+
+//     $data = [];
+
+//     foreach ($files as $file) {
+//         $data[] = $file->getFilename();
+//     }
+
+//     return response()->json([
+//         'files' => $files,
+//         'data' => $data,
+//     ]);
+// });
 
 Route::middleware('auth')->get('/photo/{name}', [PhotoController::class, 'show'])->name('photo.show');
 
