@@ -65,7 +65,21 @@ class FeedbackController extends Controller
 
         $path = null;
         if ($request->hasFile('screenshot')) {
+            Log::info('Feedback dosya upload', [
+                'hasFile' => true,
+                'file_info' => [
+                    'originalName' => $request->file('screenshot')->getClientOriginalName(),
+                    'size' => $request->file('screenshot')->getSize(),
+                    'mime' => $request->file('screenshot')->getMimeType(),
+                ],
+            ]);
             $path = $request->file('screenshot')->store('feedback_screens', 'public');
+            Log::info('Feedback dosya store', [
+                'path' => $path,
+                'fullPath' => Storage::disk('public')->path($path),
+            ]);
+        } else {
+            Log::info('Feedback dosya upload', ['hasFile' => false]);
         }
 
         $fb = Feedback::create([

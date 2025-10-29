@@ -17,9 +17,10 @@ use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 class PhotoController extends Controller
 {
     // Varsayılan UNC kökleri (Windows). Linux/macOS'ta .env ile override edilebilir.
-    // Artık storage tabanlı local dizinler kullanılacak
-    private const BASE_NETWORK_DIR = 'public/storage/kk-fotolari';
-    private const BASE_SK_NETWORK_DIR = 'public/storage/sk-fotolari';
+    // Artık storage/app/public/kk_fotolar ve storage/app/public/sk_fotolar kullanılacak
+    // Use the hyphenated folder names that exist under storage/app/public
+    private const KK_DIR = 'kk-fotolari';
+    private const SK_DIR = 'sk-fotolari';
     // private const DEFAULT_PUBLIC_PHOTO_BASE = 'http://192.6.2.110:8080/photos/';
 
     // private function fotoBaseUrl(): string
@@ -36,21 +37,34 @@ class PhotoController extends Controller
 
         // Güvenlik: sadece dosya adı al, path traversal önle
         $safeName = basename($name);
-
-        // Sadece dosya adı al, path traversal önle
-        $safeName = basename($name);
-        $dir = rtrim(config('app.photo_sk_dir', self::BASE_SK_NETWORK_DIR), '\/');
-        $path = $dir . DIRECTORY_SEPARATOR . $safeName;
-
-        if (!file_exists($path) || !is_file($path)) {
-            abort(404);
+        if (Str::contains($safeName, ['..', '/', '\\'])) {
+            abort(400);
         }
 
-        $mime = mime_content_type($path) ?: 'application/octet-stream';
-        return response()->file($path, [
-            'Content-Type' => $mime,
-            'Content-Disposition' => 'inline; filename="'.basename($path).'"'
-        ]);
+        $disk = Storage::disk('public');
+        $candidates = [
+            self::KK_DIR . '/' . $safeName,
+            self::SK_DIR . '/' . $safeName,
+            $safeName,
+        ];
+
+        foreach ($candidates as $p) {
+            if ($disk->exists($p)) {
+                $content = $disk->get($p);
+                try {
+                    $fullPath = $disk->path($p);
+                    $mime = File::mimeType($fullPath) ?: 'application/octet-stream';
+                } catch (\Throwable $_) {
+                    $mime = 'application/octet-stream';
+                }
+                return Response::make($content, 200, [
+                    'Content-Type' => $mime,
+                    'Content-Disposition' => 'inline; filename="' . basename($p) . '"'
+                ]);
+            }
+        }
+
+        abort(404);
     }
 
     /**
@@ -93,7 +107,7 @@ class PhotoController extends Controller
                 $php_group = null;
             }
         }
-        $exists = Storage::disk('kk_fotolar')->exists($path);
+        $exists = Storage::disk('public')->exists($path);
         $info = [
             'path' => $path,
             'exists' => $exists,
@@ -125,7 +139,7 @@ class PhotoController extends Controller
 
             // Dosyayı açıp ilk birkaç baytı okumayı deneyelim
             try {
-                $bytes = Storage::disk('kk_fotolar')->get($path);
+                $bytes = Storage::disk('public')->get($path);
                 $info['open'] = true;
                 $info['read_first_bytes_hex'] = bin2hex(substr($bytes, 0, 16));
             } catch (\Throwable $e) {
@@ -151,12 +165,10 @@ class PhotoController extends Controller
     
     private function buildDir(string $isEmriNo): string
     {
-        // Base'i config(app.photo_kk_dir) ile al, ayırıcıları normalize et
-        $base = rtrim(config('app.photo_kk_dir', self::BASE_NETWORK_DIR), '\\/');
-        // Olası baş/son boşlukları ve ayırıcıları temizle
+        // storage/app/public/kk_fotolar/{isEmriNo}/ (relative to 'public' disk)
         $cleanIsEmri = trim($isEmriNo);
-        $cleanIsEmri = trim($cleanIsEmri, '\\/');
-        return rtrim($base, '\\/') . DIRECTORY_SEPARATOR . $cleanIsEmri . DIRECTORY_SEPARATOR;
+        $cleanIsEmri = trim($cleanIsEmri, '\/');
+        return self::KK_DIR . '/' . $cleanIsEmri . '/';
     }
 
     private function buildFilePath(string $isEmriNo, string $filename): string
@@ -175,21 +187,23 @@ class PhotoController extends Controller
 
     private function stockDirFor(string $code): string
     {
-        $base = rtrim(config('app.photo_sk_dir', self::BASE_SK_NETWORK_DIR), '\\/');
-        return $base . DIRECTORY_SEPARATOR . $this->cleanCode($code) . DIRECTORY_SEPARATOR;
+        // storage/app/public/sk_fotolar/{code}/ (relative to 'public' disk)
+        return self::SK_DIR . '/' . $this->cleanCode($code) . '/';
     }
 
     private function nextSequentialNameStock(string $code, string $ext): string
     {
         $dir = $this->stockDirFor($code);
-        if (!File::exists($dir)) {
-            File::makeDirectory($dir, 0775, true, true);
+        // gerçek filesystem path
+        $fullDir = Storage::disk('public')->path($dir);
+        if (!File::exists($fullDir)) {
+            File::makeDirectory($fullDir, 0775, true, true);
         }
         $clean = $this->cleanCode($code);
         // mevcut dosyaları tarayıp en büyük XXX'ı bul (CLEAN-XXX.ext)
         $pattern = '/^' . preg_quote($clean, '/') . '-(\d{3})\.(?:jpe?g|png|webp)$/i';
         $max = 0;
-        foreach (File::files($dir) as $f) {
+        foreach (File::files($fullDir) as $f) {
             if (preg_match($pattern, $f->getFilename(), $m)) {
                 $num = (int) $m[1];
                 if ($num > $max) $max = $num;
@@ -198,7 +212,7 @@ class PhotoController extends Controller
         $next = $max + 1;
         $base = $clean . '-' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
         $candidate = $base . '.' . $ext;
-        while (File::exists($dir . $candidate)) {
+        while (File::exists($fullDir . DIRECTORY_SEPARATOR . $candidate)) {
             $next++;
             $base = $clean . '-' . str_pad((string) $next, 3, '0', STR_PAD_LEFT);
             $candidate = $base . '.' . $ext;
@@ -237,10 +251,9 @@ class PhotoController extends Controller
 
         $dir = $this->stockDirFor($itemId);
         $targetName = $this->nextSequentialNameStock($itemId, $ext);
-        $targetPath = $dir . $targetName;
 
+        // Intervention Image ile kalite düşür, sonra feedback mantığıyla kaydet
         try {
-            // Intervention Image ile yeniden boyutlandır/kalite düşürerek kaydet
             $manager = new ImageManager(new GdDriver());
             $image = $manager->read($file->getRealPath());
             $maxDim = 1600;
@@ -257,7 +270,6 @@ class PhotoController extends Controller
             if ($ext === 'png') {
                 $ext = 'jpg';
                 $targetName = pathinfo($targetName, PATHINFO_FILENAME) . '.jpg';
-                $targetPath = $dir . $targetName;
             }
 
             if ($ext === 'webp') {
@@ -265,16 +277,22 @@ class PhotoController extends Controller
             } else {
                 $encoded = $image->toJpeg(70);
             }
-            Storage::disk('sk_fotolar')->put($targetPath, (string) $encoded);
+            // Dosyayı 'public' diskine kaydet
+            $storedPath = $dir . $targetName;
+            Storage::disk('public')->put($storedPath, (string) $encoded);
+            Log::info('Stok foto store', [
+                'path' => $storedPath,
+                'fullPath' => Storage::disk('public')->path($storedPath),
+            ]);
         } catch (\Throwable $e) {
             Log::error('Depo foto kaydetme hatası: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Kaydedilemedi'], 500);
         }
 
-        $url = url('/api/stok-resimler/' . $this->cleanCode($itemId) . '/' . $targetName);
+        $url = asset('storage/' . $dir . $targetName);
 
         $photo = Photo::create([
-            'file_path' => $targetPath, // tam UNC yolu sakla
+            'file_path' => $dir . $targetName,
             'url' => $url,
             'item_id' => (int) $validated['itemID'],
         ]);
@@ -289,7 +307,7 @@ class PhotoController extends Controller
     {
         $photo = Photo::findOrFail($id);
         try {
-            Storage::disk('sk_fotolar')->delete($photo->file_path);
+            Storage::disk('public')->delete($photo->file_path);
         } catch (\Throwable $e) {
             Log::warning('Foto silerken hata: ' . $e->getMessage());
         }
@@ -312,18 +330,18 @@ class PhotoController extends Controller
 
         $klasorYolu = $this->buildDir($isemriNo);
         Log::info('Fotoğraf klasör yolu', ['path' => $klasorYolu, 'serino' => $serino]);
-        if (!Storage::disk('kk_fotolar')->exists($klasorYolu)) {
+        if (!Storage::disk('public')->exists($klasorYolu)) {
             return response()->json([]);
         }
         $prefix = Str::substr($serino, 0, 18);
-        $fotolar = collect(Storage::disk('kk_fotolar')->files($klasorYolu))
+        $fotolar = collect(Storage::disk('public')->files($klasorYolu))
             ->filter(fn($dosya) => Str::startsWith(basename($dosya), $prefix))
             ->map(function ($dosya) use ($isemriNo) {
                 $encodedName = rawurlencode(basename($dosya));
                 $encodedIsemri = rawurlencode($isemriNo);
                 return [
                     'dosya_adi' => basename($dosya),
-                    'url' => "/api/oft-resimler/{$encodedIsemri}/{$encodedName}",
+                    'url' => asset('storage/' . $dosya),
                 ];
             })
             ->values();
@@ -345,7 +363,7 @@ class PhotoController extends Controller
         }
 
         $dosyaYolu = $this->buildFilePath($isemri_no, $filename);
-        if (!Storage::disk('kk_fotolar')->exists($dosyaYolu)) {
+        if (!Storage::disk('public')->exists($dosyaYolu)) {
             Log::warning('oft-resimler 404: file not found', [
                 'resolved_path' => $dosyaYolu,
                 'isemri_no' => $isemri_no,
@@ -354,9 +372,8 @@ class PhotoController extends Controller
             return response()->json(['message' => 'Dosya bulunamadı'], 404);
         }
         try {
-            $disk = Storage::disk('kk_fotolar');
+            $disk = Storage::disk('public');
             $content = $disk->get($dosyaYolu);
-            // tam dosya yolunu alıp mime tipini tespit edelim
             try {
                 $fullPath = $disk->path($dosyaYolu);
                 $mime = File::mimeType($fullPath) ?: 'application/octet-stream';
@@ -400,21 +417,20 @@ class PhotoController extends Controller
         $klasor = $this->buildDir($isemriNo);
         $tamYol = $this->buildFilePath($isemriNo, $dosyaAdi);
 
-        if (!Storage::disk('kk_fotolar')->exists($tamYol)) {
+        if (!Storage::disk('public')->exists($tamYol)) {
             return response()->json(['status' => 'not_found'], 404);
         }
 
         try {
-            Storage::disk('kk_fotolar')->delete($tamYol);
+            Storage::disk('public')->delete($tamYol);
 
-            // Dosya adından SERİNO-XX.jpg formatında seri_no çıkar
             $nameOnly = pathinfo($dosyaAdi, PATHINFO_FILENAME);
             $seriNo = $nameOnly;
             if (preg_match('/^(.*)-(\d{2})$/', $nameOnly, $m)) {
                 $seriNo = $m[1];
             }
 
-            $kalan = collect(Storage::disk('kk_fotolar')->files($klasor))
+            $kalan = collect(Storage::disk('public')->files($klasor))
                 ->filter(fn($f) => Str::startsWith(basename($f), $seriNo . '-'))
                 ->count();
 

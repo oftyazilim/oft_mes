@@ -29,21 +29,21 @@ return [
     */
 
     'disks' => [
-        'kk_fotolar' => [
-            'driver' => 'local',
-            'root' => public_path('storage/fotolar/kk-fotolari'),
-            'url' => env('APP_URL') . '/storage/fotolar/kk-fotolari',
-            'visibility' => 'public',
-            'throw' => false,
-        ],
+'kk_fotolar' => [
+    'driver' => 'local',
+    'root' => storage_path('app/public/kk_fotolar'),
+    'url' => env('APP_URL') . '/storage/kk_fotolar',
+    'visibility' => 'public',
+    'throw' => false,
+],
 
-        'sk_fotolar' => [
-            'driver' => 'local',
-            'root' => public_path('storage/sk-fotolari'),
-            'url' => env('APP_URL') . '/storage/sk-fotolari',
-            'visibility' => 'public',
-            'throw' => false,
-        ],
+        // 'sk_fotolar' => [
+        //     'driver' => 'local',
+        //     'root' => public_path('storage/sk-fotolari'),
+        //     'url' => env('APP_URL') . '/storage/sk-fotolari',
+        //     'visibility' => 'public',
+        //     'throw' => false,
+        // ],
 
         'local' => [
             'driver' => 'local',

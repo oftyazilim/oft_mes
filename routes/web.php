@@ -7,31 +7,31 @@ use App\Http\Controllers\PhotoController;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
-Route::get('/deneme', function (Request $request) {
-    $disk = Storage::disk('sk_fotolar');
+// Route::get('/deneme', function (Request $request) {
+//     $disk = Storage::disk('sk_fotolar');
 
-    // Ana dizin yolu
-    $relativePath = '000422H00';
-    $path = $disk->path($relativePath);
+//     // Ana dizin yolu
+//     $relativePath = '000422H00';
+//     $path = $disk->path($relativePath);
 
-    // Dosyaları al
-    $files = File::files($path);
+//     // Dosyaları al
+//     $files = File::files($path);
 
-    // Liste oluştur
-    $data = collect($files)->map(function ($file) use ($disk, $relativePath) {
-        $filename = $file->getFilename();
-        $url = $disk->url($relativePath . '/' . $filename);
+//     // Liste oluştur
+//     $data = collect($files)->map(function ($file) use ($disk, $relativePath) {
+//         $filename = $file->getFilename();
+//         $url = $disk->url($relativePath . '/' . $filename);
 
-        return [
-            'name' => $filename,
-            'url' => $url,
-        ];
-    });
+//         return [
+//             'name' => $filename,
+//             'url' => $url,
+//         ];
+//     });
 
-    return response()->json([
-        'files' => $data,
-    ]);
-});
+//     return response()->json([
+//         'files' => $data,
+//     ]);
+// });
 
 
 // Route::get('/deneme', function (Request $request) {
