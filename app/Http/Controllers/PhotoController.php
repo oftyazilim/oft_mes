@@ -69,8 +69,9 @@ class PhotoController extends Controller
             return response()->json(['error' => 'isemri and name required'], 400);
         }
 
-        $dir = rtrim(config('app.photo_kk_dir', self::BASE_NETWORK_DIR), '\/');
-        $path = $dir . DIRECTORY_SEPARATOR . trim($isemri, '\/') . DIRECTORY_SEPARATOR . basename($name);
+        $subdir = trim($isemri, '\/');
+        $filename = basename($name);
+        $path = $subdir . '/' . $filename;
 
         $php_user = null;
         if (function_exists('posix_geteuid') && function_exists('posix_getpwuid')) {
@@ -92,11 +93,12 @@ class PhotoController extends Controller
                 $php_group = null;
             }
         }
+        $exists = Storage::disk('kk_fotolar')->exists($path);
         $info = [
             'path' => $path,
-            'exists' => file_exists($path),
-            'is_file' => is_file($path),
-            'readable' => is_readable($path),
+            'exists' => $exists,
+            'is_file' => $exists,
+            'readable' => $exists,
             'owner' => null,
             'group' => null,
             'perms_octal' => null,
@@ -123,16 +125,9 @@ class PhotoController extends Controller
 
             // Dosyayı açıp ilk birkaç baytı okumayı deneyelim
             try {
-                $fh = @fopen($path, 'rb');
-                if ($fh === false) {
-                    $info['open'] = false;
-                    $info['open_error'] = error_get_last()['message'] ?? 'unknown';
-                } else {
-                    $info['open'] = true;
-                    $bytes = @fread($fh, 16);
-                    $info['read_first_bytes_hex'] = bin2hex($bytes ?: '');
-                    @fclose($fh);
-                }
+                $bytes = Storage::disk('kk_fotolar')->get($path);
+                $info['open'] = true;
+                $info['read_first_bytes_hex'] = bin2hex(substr($bytes, 0, 16));
             } catch (\Throwable $e) {
                 $info['open'] = false;
                 $info['open_exception'] = $e->getMessage();
@@ -241,10 +236,6 @@ class PhotoController extends Controller
         }
 
         $dir = $this->stockDirFor($itemId);
-        if (!File::exists($dir)) {
-            File::makeDirectory($dir, 0775, true, true);
-        }
-
         $targetName = $this->nextSequentialNameStock($itemId, $ext);
         $targetPath = $dir . $targetName;
 
@@ -274,7 +265,7 @@ class PhotoController extends Controller
             } else {
                 $encoded = $image->toJpeg(70);
             }
-            $encoded->save($targetPath);
+            Storage::disk('sk_fotolar')->put($targetPath, (string) $encoded);
         } catch (\Throwable $e) {
             Log::error('Depo foto kaydetme hatası: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Kaydedilemedi'], 500);
@@ -297,20 +288,10 @@ class PhotoController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $photo = Photo::findOrFail($id);
-        // Önce doğrudan dosya sisteminden silmeyi dene (UNC)
         try {
-            if ($photo->file_path && File::exists($photo->file_path)) {
-                File::delete($photo->file_path);
-            } else {
-                // Eski kayıtlar Storage üzerinde olabilir
-                Storage::delete($photo->file_path);
-            }
+            Storage::disk('sk_fotolar')->delete($photo->file_path);
         } catch (\Throwable $e) {
-            Log::warning('Foto silerken hata, Storage fallback denenecek: ' . $e->getMessage());
-            try {
-                Storage::delete($photo->file_path);
-            } catch (\Throwable $e2) {
-            }
+            Log::warning('Foto silerken hata: ' . $e->getMessage());
         }
         $photo->delete();
         return response()->json(['success' => true]);
@@ -330,29 +311,22 @@ class PhotoController extends Controller
         $isemriNo = $validated['isEmriNo'];
 
         $klasorYolu = $this->buildDir($isemriNo);
-
         Log::info('Fotoğraf klasör yolu', ['path' => $klasorYolu, 'serino' => $serino]);
-
-        if (!File::exists($klasorYolu)) {
-            // Klasör yoksa boş sonuç dön (404 yerine boş liste mantıksal olarak UI için daha yumuşak)
+        if (!Storage::disk('kk_fotolar')->exists($klasorYolu)) {
             return response()->json([]);
         }
-
-        $prefix = Str::substr($serino, 0, 18); // İlk 18 karakter (uygulamadaki mevcut varsayım)
-        $fotolar = collect(File::files($klasorYolu))
-            ->filter(fn($dosya) => Str::startsWith($dosya->getFilename(), $prefix))
+        $prefix = Str::substr($serino, 0, 18);
+        $fotolar = collect(Storage::disk('kk_fotolar')->files($klasorYolu))
+            ->filter(fn($dosya) => Str::startsWith(basename($dosya), $prefix))
             ->map(function ($dosya) use ($isemriNo) {
-                // APP_URL bağımlılığını kaldır: relative URL dön.
-                // Özel karakter/boşluk içeren dosya adları için güvenli encode uygula
-                $encodedName = rawurlencode($dosya->getFilename());
+                $encodedName = rawurlencode(basename($dosya));
                 $encodedIsemri = rawurlencode($isemriNo);
                 return [
-                    'dosya_adi' => $dosya->getFilename(),
-                'url' => "/api/oft-resimler/{$encodedIsemri}/{$encodedName}",
-            ];
-        })
+                    'dosya_adi' => basename($dosya),
+                    'url' => "/api/oft-resimler/{$encodedIsemri}/{$encodedName}",
+                ];
+            })
             ->values();
-
         return response()->json($fotolar);
     }
 
@@ -371,20 +345,17 @@ class PhotoController extends Controller
         }
 
         $dosyaYolu = $this->buildFilePath($isemri_no, $filename);
-
-        if (!File::exists($dosyaYolu)) {
-            // 404 durumunda resolved path’i loglayalım (izin/yol hatası teşhisi için)
+        if (!Storage::disk('kk_fotolar')->exists($dosyaYolu)) {
             Log::warning('oft-resimler 404: file not found', [
                 'resolved_path' => $dosyaYolu,
                 'isemri_no' => $isemri_no,
                 'filename' => $filename,
-                'photo_kk_dir' => config('app.photo_kk_dir')
             ]);
             return response()->json(['message' => 'Dosya bulunamadı'], 404);
         }
         try {
-            $content = File::get($dosyaYolu);
-            $mime = File::mimeType($dosyaYolu) ?: 'application/octet-stream';
+            $content = Storage::disk('kk_fotolar')->get($dosyaYolu);
+            $mime = 'image/jpeg';
             return Response::make($content, 200, [
                 'Content-Type' => $mime,
                 'Content-Disposition' => 'inline; filename="' . $filename . '"'
@@ -421,12 +392,12 @@ class PhotoController extends Controller
         $klasor = $this->buildDir($isemriNo);
         $tamYol = $this->buildFilePath($isemriNo, $dosyaAdi);
 
-        if (!File::exists($tamYol)) {
+        if (!Storage::disk('kk_fotolar')->exists($tamYol)) {
             return response()->json(['status' => 'not_found'], 404);
         }
 
         try {
-            File::delete($tamYol);
+            Storage::disk('kk_fotolar')->delete($tamYol);
 
             // Dosya adından SERİNO-XX.jpg formatında seri_no çıkar
             $nameOnly = pathinfo($dosyaAdi, PATHINFO_FILENAME);
@@ -435,8 +406,8 @@ class PhotoController extends Controller
                 $seriNo = $m[1];
             }
 
-            $kalan = collect(File::files($klasor))
-                ->filter(fn($f) => Str::startsWith($f->getFilename(), $seriNo . '-'))
+            $kalan = collect(Storage::disk('kk_fotolar')->files($klasor))
+                ->filter(fn($f) => Str::startsWith(basename($f), $seriNo . '-'))
                 ->count();
 
             if ($kalan === 0) {
