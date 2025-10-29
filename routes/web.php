@@ -8,10 +8,10 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 Route::get('/deneme', function (Request $request) {
-    $disk = Storage::disk('fotolar_disk');
+    $disk = Storage::disk('public');
 
     // Ana dizin yolu
-    $relativePath = 'fotolar/kk-fotolari/IEN-25017682';
+    $relativePath = 'kk-fotolari';
     $path = $disk->path($relativePath);
 
     // Dosyaları al

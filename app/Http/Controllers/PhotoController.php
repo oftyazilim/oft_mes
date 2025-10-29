@@ -37,22 +37,16 @@ class PhotoController extends Controller
         // Güvenlik: sadece dosya adı al, path traversal önle
         $safeName = basename($name);
 
-        // Eğer Storage disk tanımlıysa kullan:
-        // $disk = Storage::disk('fotolar');
-        // $path = $disk->path($safeName);
+        // Sadece dosya adı al, path traversal önle
+        $safeName = basename($name);
+        $dir = rtrim(config('app.photo_sk_dir', self::BASE_SK_NETWORK_DIR), '\/');
+        $path = $dir . DIRECTORY_SEPARATOR . $safeName;
 
-        // Veya sabit mount yolu:
-        $base = Storage::disk('fotolar_disk')->path('fotolar/sk-fotolari');
-        $path = $base . DIRECTORY_SEPARATOR . $safeName;
-
-        if (! file_exists($path) || ! is_file($path)) {
+        if (!file_exists($path) || !is_file($path)) {
             abort(404);
         }
 
-        // MIME tipini otomatik al
         $mime = mime_content_type($path) ?: 'application/octet-stream';
-
-        // Inline göster (tarayıcı görüntü için)
         return response()->file($path, [
             'Content-Type' => $mime,
             'Content-Disposition' => 'inline; filename="'.basename($path).'"'

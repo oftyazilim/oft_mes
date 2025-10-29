@@ -60,19 +60,7 @@ return [
             'report' => false,
         ],
 
-        'fotolar_disk' => [
-            'driver' => 'local',
-            'root' => '/mnt/fotolar/',
-            'throw' => true,
-            'visibility' => 'public',
-            'permissions' => [
-                'file' => ['public' => 0775, 'private' => 0775],
-                'dir' => ['public' => 0775, 'private' => 0775],
-            ],
-            // Eğer dosyaları Windows üzerinden URL ile göstereceksen:
-            // 'url' => 'http://182.168.1.11/resimler',
-        ],
-
+        // Artık fotolar_disk kullanılmıyor, tüm işlemler .env'den gelen public/storage/... path'lerine yönlendirildi.
     ],
 
     /*
