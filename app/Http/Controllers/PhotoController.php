@@ -17,8 +17,9 @@ use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 class PhotoController extends Controller
 {
     // Varsayılan UNC kökleri (Windows). Linux/macOS'ta .env ile override edilebilir.
-    private const BASE_NETWORK_DIR = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\kk-fotolari\\"; // backslash ile biter
-    private const BASE_SK_NETWORK_DIR = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\sk-fotolari\\"; // backslash ile biter
+    // Artık storage tabanlı local dizinler kullanılacak
+    private const BASE_NETWORK_DIR = 'public/storage/kk-fotolari';
+    private const BASE_SK_NETWORK_DIR = 'public/storage/sk-fotolari';
     // private const DEFAULT_PUBLIC_PHOTO_BASE = 'http://192.6.2.110:8080/photos/';
 
     // private function fotoBaseUrl(): string
@@ -77,6 +78,26 @@ class PhotoController extends Controller
         $dir = rtrim(config('app.photo_kk_dir', self::BASE_NETWORK_DIR), '\/');
         $path = $dir . DIRECTORY_SEPARATOR . trim($isemri, '\/') . DIRECTORY_SEPARATOR . basename($name);
 
+        $php_user = null;
+        if (function_exists('posix_geteuid') && function_exists('posix_getpwuid')) {
+            try {
+                $euid = posix_geteuid();
+                $pw = @posix_getpwuid($euid);
+                $php_user = $pw['name'] ?? null;
+            } catch (\Throwable $e) {
+                $php_user = null;
+            }
+        }
+        $php_group = null;
+        if (function_exists('posix_getegid') && function_exists('posix_getgrgid')) {
+            try {
+                $egid = posix_getegid();
+                $gr = @posix_getgrgid($egid);
+                $php_group = $gr['name'] ?? null;
+            } catch (\Throwable $e) {
+                $php_group = null;
+            }
+        }
         $info = [
             'path' => $path,
             'exists' => file_exists($path),
@@ -87,8 +108,8 @@ class PhotoController extends Controller
             'perms_octal' => null,
             'php_euid' => getmyuid(),
             'php_egid' => getmygid(),
-            'php_user' => function_exists('posix_geteuid') ? posix_getpwuid(posix_geteuid())['name'] ?? null : null,
-            'php_group' => function_exists('posix_getegid') ? posix_getgrgid(posix_getegid())['name'] ?? null : null,
+            'php_user' => $php_user,
+            'php_group' => $php_group,
         ];
 
         if ($info['exists']) {
