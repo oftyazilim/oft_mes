@@ -16,7 +16,7 @@ class StokPhotoController extends Controller
 {
     // Varsayılan (Windows UNC) kök. Linux/macOS'ta .env'den PHOTO_SK_DIR ile override edilmelidir (örn. /mnt/oft/sk-fotolari)
     private const BASE_NETWORK_DIR = "\\\\192.6.2.4\\canovate_elektronik\\01_GENEL\\15_OFT\\fotolar\\sk-fotolari\\"; // backslash ile biter
-    private const BASE_PUBLIC_URL = '/api/stok-resimler';
+    // Artık stok fotoğrafları doğrudan public URL ile gösterilecek.
 
     private function baseDir(): string
     {
@@ -89,7 +89,8 @@ class StokPhotoController extends Controller
             ->map(fn($f, $idx) => [
                 'name' => $f->getFilename(),
             // Relative URL + güvenli encode
-            'url' => self::BASE_PUBLIC_URL . '/' . rawurlencode($clean) . '/' . rawurlencode($f->getFilename()),
+                // Doğrudan public/storage/sk-fotolari/... URL'si
+                'url' => asset('storage/sk-fotolari/' . rawurlencode($clean) . '/' . rawurlencode($f->getFilename())),
                 'size' => $f->getSize(),
                 'index' => $idx,
             ]);
@@ -180,7 +181,8 @@ class StokPhotoController extends Controller
             'status' => 'ok',
             'name' => $targetName,
             // Relative URL + güvenli encode
-            'url' => self::BASE_PUBLIC_URL . '/' . rawurlencode($this->cleanItemCode($itemCode)) . '/' . rawurlencode($targetName),
+            // Doğrudan public/storage/sk-fotolari/... URL'si
+            'url' => asset('storage/sk-fotolari/' . rawurlencode($this->cleanItemCode($itemCode)) . '/' . rawurlencode($targetName)),
         ]);
     }
 
@@ -200,14 +202,5 @@ class StokPhotoController extends Controller
         return response()->json(['status' => 'ok']);
     }
 
-    public function serve(string $itemCode, string $filename)
-    {
-        if (Str::contains($filename, ['..', '/', '\\'])) return response()->json(['message' => 'Geçersiz'], 400);
-        $path = $this->dirFor($itemCode) . $filename;
-        if (!File::exists($path)) return response()->json(['message' => 'Yok'], 404);
-        return Response::make(File::get($path), 200, [
-            'Content-Type' => File::mimeType($path),
-            'Content-Disposition' => 'inline; filename="' . $filename . '"'
-        ]);
-    }
+    // serve fonksiyonu kaldırıldı. Artık doğrudan public URL ile erişim var.
 }

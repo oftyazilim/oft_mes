@@ -266,7 +266,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // PUBLIC: Tekil fotoğraf dosyasını sun (auth gerektirmez). Güvenlik gerekirse signed URL eklenebilir.
 Route::get('/oft-resimler/{isemri_no}/{filename}', [PhotoController::class, 'serveImage']);
-Route::get('/stok-resimler/{itemCode}/{filename}', [StokPhotoController::class, 'serve']);
+// Stok fotoğrafları artık doğrudan public URL ile gösteriliyor. Bu endpoint kaldırıldı.
 
 // Debug: FPM kullanıcı yetkisi tanılama
 // APP_DEBUG=true iken public; değilse Sanctum korumalı
