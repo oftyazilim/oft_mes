@@ -354,8 +354,16 @@ class PhotoController extends Controller
             return response()->json(['message' => 'Dosya bulunamadı'], 404);
         }
         try {
-            $content = Storage::disk('kk_fotolar')->get($dosyaYolu);
-            $mime = 'image/jpeg';
+            $disk = Storage::disk('kk_fotolar');
+            $content = $disk->get($dosyaYolu);
+            // tam dosya yolunu alıp mime tipini tespit edelim
+            try {
+                $fullPath = $disk->path($dosyaYolu);
+                $mime = File::mimeType($fullPath) ?: 'application/octet-stream';
+            } catch (\Throwable $_) {
+                $mime = 'application/octet-stream';
+            }
+
             return Response::make($content, 200, [
                 'Content-Type' => $mime,
                 'Content-Disposition' => 'inline; filename="' . $filename . '"'
