@@ -396,10 +396,10 @@ const formatNumber = (num: number) => {
 
           <v-row>
             <v-col v-for="photo in photos" :key="photo.id" cols="12" sm="4" md="3">
+              <!-- Fotoğrafı doğrudan public URL ile göster -->
               <v-img :src="photo.url" max-height="200" style="cursor: pointer; margin-inline-start: -18px;"
                 class="rounded-lg" @click="previewPhoto(photo.url)" />
               <VBtn icon="tabler-trash" color="error" rounded @click="deletePhoto(photo.id)" class="mt-1"></VBtn>
-
             </v-col>
           </v-row>
 

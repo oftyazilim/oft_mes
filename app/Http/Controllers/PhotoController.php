@@ -29,6 +29,7 @@ class PhotoController extends Controller
     //     return rtrim(config('app.photo_base_url', env('PHOTO_BASE_URL', self::DEFAULT_PUBLIC_PHOTO_BASE)), '/') . '/';
     // }
 
+ 
     public function show(Request $request, $name)
     {
         // Yetki kontrolü (örnek: auth middleware üstte var)
@@ -153,7 +154,8 @@ class PhotoController extends Controller
         $walk = [];
         $cur = DIRECTORY_SEPARATOR;
         foreach ($parts as $p) {
-            if ($p === '') continue;
+            if ($p === '')
+                continue;
             $cur = rtrim($cur, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $p;
             $ok = is_dir($cur) ? is_readable($cur) : is_readable($cur);
             $walk[] = ['path' => $cur, 'exists' => file_exists($cur), 'readable' => $ok, 'is_dir' => is_dir($cur)];
@@ -162,7 +164,7 @@ class PhotoController extends Controller
 
         return response()->json($info);
     }
-    
+
     private function buildDir(string $isEmriNo): string
     {
         // storage/app/public/kk_fotolar/{isEmriNo}/ (relative to 'public' disk)
@@ -206,7 +208,8 @@ class PhotoController extends Controller
         foreach (File::files($fullDir) as $f) {
             if (preg_match($pattern, $f->getFilename(), $m)) {
                 $num = (int) $m[1];
-                if ($num > $max) $max = $num;
+                if ($num > $max)
+                    $max = $num;
             }
         }
         $next = $max + 1;
