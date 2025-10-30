@@ -771,7 +771,9 @@
 // *********** İzinler *****************************************************
 // import type { Rule } from "./ability";
 
-import { useAbility } from "@casl/vue";
+import { canByPolicyKey } from '@/@layouts/plugins/casl';
+import { refreshAbilityPolicies } from '@/plugins/1.router/guards';
+
 import { computed, nextTick, onMounted, ref } from "vue";
 
 // import { DxTooltip } from 'devextreme-vue/tooltip';
@@ -1998,24 +2000,29 @@ const onExporting = (e: DxDataGridTypes.ExportingEvent) => {
   e.cancel = true
 }
 
-const ability = useAbility()
-const canManagePlanlama = computed(() =>
-  ability.can('manage', 'planlama') || ability.can('update', 'mekanik')
-)
+const canManagePlanlama = computed(() => canByPolicyKey('button:planlama:manage'))
 
 const baseMenuItems = [
   { text: 'Yenile' },
   { text: 'Haftaya Göre Grupla' },
   { text: 'Detay Göster' },
-  { text: 'İstasyona Gönder', requiresManage: true },
-  { text: 'Üretim Tarihini Değiştir', requiresManage: true },
-  { text: 'Teslim Tarihini Değiştir', requiresManage: true },
-  { text: 'Aksesuar', requiresManage: true },
+  { text: 'İstasyona Gönder', policyKey: 'button:planlama:isemri-rota-mekanik' },
+  { text: 'Üretim Tarihini Değiştir', policyKey: 'button:planlama:isemri-uretim-tarihi-mekanik' },
+  { text: 'Teslim Tarihini Değiştir', policyKey: 'button:planlama:isemri-teslim-tarihi-mekanik' },
   { text: 'Teknik Resim Göster' },
   { text: 'Düzen Yükle' },
   { text: 'Düzen Kaydet' },
   { text: 'Düzen Sıfırla' },
 ]
+
+// Policy/ability hazır olana kadar kısıtlı öğeleri göstermeyelim
+const policiesReady = ref(false)
+  // policiesReady işaretini policy refresh sonrası set et
+  ; (async () => { try { await refreshAbilityPolicies(); policiesReady.value = true } catch { policiesReady.value = true } })()
+
+// ContextMenu yeniden mount anahtarı (policy sonrası)
+const contextMenuKey = ref(0)
+watch(policiesReady, v => { if (v) contextMenuKey.value++ })
 
 const menuItems = computed(() =>
   baseMenuItems.filter(item => canManagePlanlama.value || !('requiresManage' in item))
@@ -2043,9 +2050,6 @@ function itemClick({ itemData }: DxContextMenuTypes.ItemClickEvent) {
       case 'Teslim Tarihini Değiştir':
         notBaslik.value = 'Teslim tarihini seçiniz'
         TeslimTarihGoster('teslim_tarihi')
-        break;
-      case 'Aksesuar':
-        AksesuarGoster()
         break;
       case 'Düzen Yükle':
         openLoadLayouts()

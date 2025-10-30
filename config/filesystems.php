@@ -37,13 +37,13 @@ return [
 //     'throw' => false,
 // ],
 
-        // 'sk_fotolar' => [
-        //     'driver' => 'local',
+// 'sk_fotolar' => [
+//     'driver' => 'local',
 //     'root' => env('PHOTO_SK_DIR', storage_path('app/public/sk-fotolari')),
-        //     'url' => env('APP_URL') . '/storage/sk-fotolari',
-        //     'visibility' => 'public',
-        //     'throw' => false,
-        // ],
+//     'url' => env('APP_URL') . '/storage/sk-fotolari',
+//     'visibility' => 'public',
+//     'throw' => false,
+// ],
 
         'local' => [
             'driver' => 'local',
