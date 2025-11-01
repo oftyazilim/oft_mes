@@ -62,6 +62,13 @@ export default [
         policyKey: "menu:sistem:acl-policy-yonetimi",
         target: "_self",
       },
+      {
+        title: "Dosya Yönetimi",
+        to: { path: "/sistem/dosya-yonetimi" },
+        icon: { icon: "tabler-folder-open" },
+        policyKey: "menu:sistem:dosya-yonetimi",
+        target: "_self",
+      },
     ],
   },
 ];

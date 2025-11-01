@@ -299,4 +299,10 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::delete('/stok-foto/delete', [StokPhotoController::class, 'delete']);
 });
 
+// file manager
+Route::get('/file-manager', [\App\Http\Controllers\FileManagerController::class, 'index']);
+Route::post('/file-manager', [\App\Http\Controllers\FileManagerController::class, 'handle']);
+Route::delete('/file-manager', [\App\Http\Controllers\FileManagerController::class, 'handle']);
+Route::put('/file-manager', [\App\Http\Controllers\FileManagerController::class, 'handle']);
+
 Route::post('/upload-yemek-listesi', [DigerController::class, 'uploadYemekListesi']);

@@ -560,7 +560,7 @@
           <VCol v-for="(foto, index) in seciliKayitFotolar" :key="index" cols="12" md="4">
             <VImg :src="foto" aspect-ratio="4/3" cover class="mb-2" />
             <div class="d-flex justify-space-between">
-              <VBtn variant="tonal" icon="tabler-trash" rounded @click="confirmDelete(foto)" />
+              <VBtn v-if="canDeletePhoto" variant="tonal" icon="tabler-trash" rounded @click="confirmDelete(foto)" />
               <VBtn variant="tonal" icon="tabler-eye" rounded @click="showFullscreen(foto)" />
             </div>
           </VCol>
@@ -633,7 +633,7 @@ import DxSelectBox from 'devextreme-vue/select-box';
 import ArrayStore from 'devextreme/data/array_store';
 import notify from "devextreme/ui/notify";
 import Swal from "sweetalert2";
-import { nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { VBtn } from "vuetify/components";
 
 // const pdfUrl = ref('/api/pdf-goster')
@@ -1047,14 +1047,6 @@ const AgacYukle = async () => {
   }
 }
 
-const KontrolAcikKaydet = async () => {
-
-  await axios.post('/api/kontrolAcKaydet', {
-    isEmriID: seciliIsEmri.value.isEmriId,
-    userId: userData.value.id,
-  })
-  EmirleriAl()
-};
 
 // *************** Olaylar *********************************************************** //
 
@@ -1205,37 +1197,47 @@ const KontrolEdilmeyenleriAl = () => {
   serinoListesi.value = kalanlar;
 };
 
-const KontrolAcKaydet = () => {
-  const swalWithBootstrapButtons = Swal.mixin({
-    customClass: {
-      confirmButton: "btn btn-primary",
-      cancelButton: "btn btn-error",
-    },
-    buttonsStyling: true,
-  });
+// const KontrolAcKaydet = () => {
+//   const swalWithBootstrapButtons = Swal.mixin({
+//     customClass: {
+//       confirmButton: "btn btn-primary",
+//       cancelButton: "btn btn-error",
+//     },
+//     buttonsStyling: true,
+//   });
 
-  swalWithBootstrapButtons
-    .fire({
-      title: "Emin misiniz?",
-      text: "Kontrol aktifleştirilecek!!!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#88efb3",
-      cancelButtonColor: "#ed9595",
-      reverseButtons: true,
-      confirmButtonText: "Evet, aktif yapalım!",
-      cancelButtonText: "Hayır, vazcgeçtim!",
-    })
-    .then(async (result: Awaited<ReturnType<typeof Swal.fire>>) => {
-      if (result.isConfirmed) {
-        await nextTick();
-        temizle();
-        KontrolAcikKaydet();
-        bosalt();
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        // Cancelled
-      }
-    });
+//   swalWithBootstrapButtons
+//     .fire({
+//       title: "Emin misiniz?",
+//       text: "Kontrol aktifleştirilecek!!!",
+//       icon: "warning",
+//       showCancelButton: true,
+//       confirmButtonColor: "#88efb3",
+//       cancelButtonColor: "#ed9595",
+//       reverseButtons: true,
+//       confirmButtonText: "Evet, aktif yapalım!",
+//       cancelButtonText: "Hayır, vazcgeçtim!",
+//     })
+//     .then(async (result: Awaited<ReturnType<typeof Swal.fire>>) => {
+//       if (result.isConfirmed) {
+//         await nextTick();
+//         temizle();
+//         KontrolAcikKaydet();
+//         bosalt();
+//       } else if (result.dismiss === Swal.DismissReason.cancel) {
+//         // Cancelled
+//       }
+//     });
+// };
+
+
+const KontrolAcKaydet = async () => {
+
+  await axios.post('/api/kontrolAcKaydet', {
+    isEmriID: seciliIsEmri.value.isEmriId,
+    userId: userData.value.id,
+  })
+  EmirleriAl()
 };
 
 const fotoGoster = () => {
@@ -1374,6 +1376,11 @@ const photoHeaderTemplate = (header: HTMLElement, info: any) => {
 function focusSerino(): void {
   // Placeholder
 }
+
+const canDeletePhoto = computed(() => {
+  const policies = userData.value?.policies || userData.value?.abilities || [];
+  return policies.includes('button:kalite:resim-sil');
+});
 </script>
 
 
